@@ -5,14 +5,12 @@ import (
 	"github.com/hailocab/gossie/src/gossie"
 )
 
-// Erdos represents a keyspace in cassa, or an index in ES (a similar analogy is a DataBase in RDMS terminology)
-type Erdos struct {
-	namespace          string
-	//pluginConstructors map[string]func() Plugin // no plugins yet
+type nameSpace struct {
+	name 	string
 }
 
 // New returns a new namespace. A namespace is analogous to keyspaces in Cassandra or databases in RDMSes.
-func New(namespace string) *Erdos {
+func New(namespace string) NameSpace {
 	return &Erdos{
 		namespace,
 		map[string]func() Plugin{
