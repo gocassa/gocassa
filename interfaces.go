@@ -3,7 +3,7 @@ package cmagic
 // First sketch, trying to keep this simple... simpler than erdos... so I have to change the interface, which means it is in flux.
 
 type NameSpace interface {
-	Collection() Collection
+	Collection(name string, entity interface{}) Collection
 }
 
 type Collection interface {
