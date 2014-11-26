@@ -1,7 +1,6 @@
 package cmagic
 
 import (
-	r "github.com/hailocab/om/reflect"
 	"strings"
 	"github.com/gocql/gocql"
 	"github.com/hailocab/go-service-layer/cassandra"
@@ -40,45 +39,6 @@ func (n *nameSpace) Collection(name string, entity) Collection {
 		nameSpace: n,
 		collectionInfo: newCollectionInfo(n.name, name, "id", entity),
 	}
-}
-
-type collection struct {
-	nameSpace *nameSpace,
-	collectionInfo *collectionInfo,
-}
-
-// Contains mostly analyzed information about the entity
-type collectionInfo struct {
-	keyspace, name string
-	entity         interface{}
-	primaryKey     string
-	fieldNames     map[string]struct{} // This is here only to check containment
-	fields         []string
-	fieldValues    []interface{}
-}
-
-func newCollectionInfo(keyspace, name, primaryKey string, entity interface{}) *collectionInfo {
-	cinf := &collectionInfo{
-		keyspace:   keyspace,
-		name:       name,
-		entity:     entity,
-		primaryKey: primaryKey,
-	}
-	fields, values, ok := r.FieldsAndValues(entity)
-	if !ok {
-		// panicking here since this is a programmer error
-		panic("Supplied entity is not a struct")
-	}
-	cinf.fieldNames = map[string]struct{}{}
-	for _, v := range fields {
-		if v == cinf.primaryKey {
-			continue
-		}
-		cinf.fieldNames[v] = struct{}{}
-	}
-	cinf.fields = fields
-	cinf.fieldValues = values
-	return cinf
 }
 
 // Translate errors returned by cassandra
