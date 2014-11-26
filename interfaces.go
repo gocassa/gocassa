@@ -11,6 +11,7 @@ type Collection interface {
 	// Just have a set method? How would that play with CQL?
 	Create(v interface{}) error
 	Update(v interface{}) error
+	Delete(id string) error
 	//MultiRead(ids []string) ([]interface{}, error)
 	//List(idStart, idEnd string, limit int) ([]interface{}, error)
 }

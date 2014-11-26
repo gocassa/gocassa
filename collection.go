@@ -98,3 +98,7 @@ func (c collection) Update(i interface{}) error {
 	sess := c.nameSpace.session
 	return sess.Query(stmt, append(values, id)...).Exec()
 }
+
+func (c collection) Delete(id string) error {
+	return c.nameSpace.session.Query(g.DeleteById(c.nameSpace.name, c.collectionInfo.primaryKey), id).Exec()
+}
