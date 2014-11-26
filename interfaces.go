@@ -7,10 +7,10 @@ type NameSpace interface {
 }
 
 type Collection interface {
-	Read(id string) interface{} // Read(id string, v interface{})???, that is more conventional in Go land
-	MultiRead(ids []string) ([]interface{}, error)
-	List(idStart, idEnd string, limit int) ([]interface{}, error)
-	Set(id string, v interface{}) error
+	Read(id string) (interface{}, error) // Read(id string, v interface{})???, that is more conventional in Go land
+	//MultiRead(ids []string) ([]interface{}, error)
+	//List(idStart, idEnd string, limit int) ([]interface{}, error)
+	//Set(id string, v interface{}) error
 }
 
 // These are just here to not forget about them
