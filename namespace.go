@@ -3,19 +3,35 @@ package cmagic
 import (
 	r "github.com/hailocab/om/reflect"
 	"strings"
+	"github.com/gocql/gocql"
 	"github.com/hailocab/go-service-layer/cassandra"
 	"github.com/hailocab/gossie/src/gossie"
 )
 
 type nameSpace struct {
+	session *gocql.Session
 	name 	string
+	nodeIps []string
 }
 
 // New returns a new namespace. A namespace is analogous to keyspaces in Cassandra or databases in RDMSes.
-func New(name string) NameSpace {
-	return &nameSpace{
-		name: name,
+func New(nameSpace, username, password string, nodeIps []string) (NameSpace, error) {
+	cluster := gocql.NewCluster(nodeIps...)
+	// cluster.Keyspace = nameSpace
+	cluster.Consistency = gocql.Quorum
+	cluster.Authenticator = gocql.PasswordAuthenticator{
+		Username: username,
+		Password: password,
 	}
+	sess, err := cluster.CreateSession()
+	if err != nil {
+		return nil, err
+	}
+	return &nameSpace{
+		session:    session,
+		name: 		name,
+		nodeIps: 	nodeIps,
+	}, nil
 }
 
 // Collection returns a new Collection. A collection is analogous to column families in Cassandra or tables in RDBMSes.
@@ -31,7 +47,7 @@ type collection struct {
 	collectionInfo *collectionInfo,
 }
 
-// This type tries to encapsulate most of the shared code between IOStore and MemStore
+// Contains mostly analyzed information about the entity
 type collectionInfo struct {
 	keyspace, name string
 	entity         interface{}
@@ -51,7 +67,7 @@ func newCollectionInfo(keyspace, name, primaryKey string, entity interface{}) *c
 	fields, values, ok := r.FieldsAndValues(entity)
 	if !ok {
 		// panicking here since this is a programmer error
-		panic("om.newStore: Supplied entity is not a struct")
+		panic("Supplied entity is not a struct")
 	}
 	cinf.fieldNames = map[string]struct{}{}
 	for _, v := range fields {
