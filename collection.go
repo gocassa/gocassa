@@ -5,6 +5,7 @@ import(
 	g "github.com/hailocab/cmagic/generate"
 	"reflect"
 	"encoding/json"
+	"errors"
 )
 
 type collection struct {
@@ -50,6 +51,7 @@ func (c collection) zero() interface{} {
 	return reflect.New(reflect.TypeOf(c.collectionInfo.entity)).Interface()
 }
 
+// Will return 'entity' struct what was supplied when initializing the collection
 func (c collection) Read(id string) (interface{}, error) {
 	stmt := g.ReadById(c.nameSpace.name, c.collectionInfo.primaryKey)
 	m := map[string]interface{}{}
@@ -62,4 +64,37 @@ func (c collection) Read(id string) (interface{}, error) {
 	ret := c.zero()
 	err = json.Unmarshal(bytes, ret)
 	return ret, err
+}
+
+func (c collection) Create(i interface{}) error {
+	fields, values, ok := r.FieldsAndValues(i)
+	if !ok {
+		return errors.New("can't create: entity is not a struct")
+	}
+	stmt := g.Insert(c.nameSpace.name, fields)
+	sess := c.nameSpace.session
+	return sess.Query(stmt, values...).Exec()
+}
+
+// Use structs for the time being, no maps please.
+func (c collection) Update(i interface{}) error {
+	var m map[string]interface{}
+	var ok bool
+	m, ok = r.StructToMap(i)
+	id, ok := m[c.collectionInfo.primaryKey]
+	if !ok {
+		return errors.New("collection.Set: primary key not found")
+	}
+	fields := []string{}
+	values := []interface{}{}
+	for k, v := range m {
+		if k == c.collectionInfo.primaryKey {
+			continue
+		}
+		fields = append(fields, k)
+		values = append(values, v)
+	}
+	stmt := g.UpdateById(c.nameSpace.name, c.collectionInfo.primaryKey, fields)
+	sess := c.nameSpace.session
+	return sess.Query(stmt, append(values, id)...).Exec()
 }
