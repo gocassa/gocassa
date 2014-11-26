@@ -3,6 +3,8 @@ package cmagic
 import(
 	r "github.com/hailocab/cmagic/reflect"
 	g "github.com/hailocab/cmagic/generate"
+	"reflect"
+	"encoding/json"
 )
 
 type collection struct {
@@ -44,17 +46,20 @@ func newCollectionInfo(keyspace, name, primaryKey string, entity interface{}) *c
 	return cinf
 }
 
-func (c collection) Read(id string) (Record, error) {
+func (c collection) zero() interface{} {
+	return reflect.New(reflect.TypeOf(c.collectionInfo.entity)).Interface()
+}
+
+func (c collection) Read(id string) (interface{}, error) {
 	stmt := g.ReadById(c.nameSpace.name, c.collectionInfo.primaryKey)
 	m := map[string]interface{}{}
-	sess, err := c.nameSpace.session
-	if err != nil {
-		return err
-	}
+	sess := c.nameSpace.session
 	sess.Query(stmt, id).Iter().MapScan(m)
 	bytes, err := json.Marshal(m)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return json.Unmarshal(bytes, i)
+	ret := c.zero()
+	err = json.Unmarshal(bytes, ret)
+	return ret, err
 }

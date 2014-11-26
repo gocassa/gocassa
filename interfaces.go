@@ -1,16 +1,16 @@
 package cmagic
 
-// First sketch, trying to keep this simple... simpler than erdos... so I have to change the interface, which means it is in flux.
+// This stuff is in flux.
 
 type NameSpace interface {
 	Collection(name string, entity interface{}) Collection
 }
 
 type Collection interface {
-	Read(id string) Record // Load record immediately - we need to return error, or lazy load it, which means we need to return errors at later operations
-	MultiRead(ids []string) ([]interface{}, errors)
-	List(idStart, idEnd string, limit int) ([]interface{}, errors)
-	Set(id string, interface{}) error // Use for creating a record @cruftalert
+	Read(id string) interface{} // Read(id string, v interface{})???, that is more conventional in Go land
+	MultiRead(ids []string) ([]interface{}, error)
+	List(idStart, idEnd string, limit int) ([]interface{}, error)
+	Set(id string, v interface{}) error
 }
 
 // These are just here to not forget about them
@@ -20,5 +20,5 @@ type TimeSeriesIndex interface {
 }
 
 type EqualityIndex interface {
-
+	//Equals(key string, value interface{}, idStart, endEnd, limit int)
 }

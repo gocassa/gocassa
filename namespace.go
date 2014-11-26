@@ -3,8 +3,6 @@ package cmagic
 import (
 	"strings"
 	"github.com/gocql/gocql"
-	"github.com/hailocab/go-service-layer/cassandra"
-	"github.com/hailocab/gossie/src/gossie"
 )
 
 type nameSpace struct {
@@ -14,7 +12,7 @@ type nameSpace struct {
 }
 
 // New returns a new namespace. A namespace is analogous to keyspaces in Cassandra or databases in RDMSes.
-func New(nameSpace, username, password string, nodeIps []string) (NameSpace, error) {
+func New(nameSp, username, password string, nodeIps []string) (NameSpace, error) {
 	cluster := gocql.NewCluster(nodeIps...)
 	// cluster.Keyspace = nameSpace
 	cluster.Consistency = gocql.Quorum
@@ -27,14 +25,14 @@ func New(nameSpace, username, password string, nodeIps []string) (NameSpace, err
 		return nil, err
 	}
 	return &nameSpace{
-		session:    session,
-		name: 		name,
+		session:    sess,
+		name: 		nameSp,
 		nodeIps: 	nodeIps,
 	}, nil
 }
 
 // Collection returns a new Collection. A collection is analogous to column families in Cassandra or tables in RDBMSes.
-func (n *nameSpace) Collection(name string, entity) Collection {
+func (n *nameSpace) Collection(name string, entity interface{}) Collection {
 	return &collection{
 		nameSpace: n,
 		collectionInfo: newCollectionInfo(n.name, name, "id", entity),
