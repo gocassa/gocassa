@@ -14,7 +14,7 @@ type nameSpace struct {
 // New returns a new namespace. A namespace is analogous to keyspaces in Cassandra or databases in RDMSes.
 func New(nameSp, username, password string, nodeIps []string) (NameSpace, error) {
 	cluster := gocql.NewCluster(nodeIps...)
-	// cluster.Keyspace = nameSpace
+	cluster.Keyspace = nameSp
 	cluster.Consistency = gocql.Quorum
 	cluster.Authenticator = gocql.PasswordAuthenticator{
 		Username: username,

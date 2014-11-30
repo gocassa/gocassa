@@ -2,6 +2,10 @@ package cmagic
 
 // This stuff is in flux.
 
+// This is just an alias - unfortunately aliases in Go do not really work well -
+// ie. you have to type cast to and from the original type.
+type M map[string]interface{}
+
 type NameSpace interface {
 	Collection(name string, entity interface{}) Collection
 }

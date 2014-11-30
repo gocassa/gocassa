@@ -51,6 +51,28 @@ func (c collection) zero() interface{} {
 	return reflect.New(reflect.TypeOf(c.collectionInfo.entity)).Interface()
 }
 
+func kvs(v map[string]interface{}) ([]string, []interface{}) {
+	keys := []string{}
+	values := []interface{}{}
+	for k, v := range v {
+		keys = append(keys, k)
+		values = append(values, v)
+	}
+	return keys, values
+}
+
+func keyValues(i interface{}) ([]string, []interface{}, bool) {
+	switch v := i.(type) {
+	case M:
+		keys, values := kvs(v)
+		return keys, values, true
+	case map[string]interface{}:
+		keys, values := kvs(v)
+		return keys, values, true
+	}
+	return r.FieldsAndValues(i)
+}
+
 // Will return 'entity' struct what was supplied when initializing the collection
 func (c collection) Read(id string) (interface{}, error) {
 	stmt := g.ReadById(c.nameSpace.name, c.collectionInfo.primaryKey)
@@ -67,11 +89,11 @@ func (c collection) Read(id string) (interface{}, error) {
 }
 
 func (c collection) Create(i interface{}) error {
-	fields, values, ok := r.FieldsAndValues(i)
+	fields, values, ok := keyValues(i)
 	if !ok {
 		return errors.New("can't create: entity is not a struct")
 	}
-	stmt := g.Insert(c.nameSpace.name, fields)
+	stmt := g.Insert(c.collectionInfo.name, fields)
 	sess := c.nameSpace.session
 	return sess.Query(stmt, values...).Exec()
 }
