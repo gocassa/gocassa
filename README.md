@@ -5,12 +5,11 @@ SUCH MAGIC, MUCH CASSANDRA WOW
 
 A cassandra object mapper using gocql under the hood.
 
-
 #### Wow, cool, how does it work?
 
 Here is a code snippet which may get you started:
 
-```
+```go
 package main 
 
 import(
@@ -22,7 +21,7 @@ type Customer struct {
 	Id string 
 	Firstname string
 	Lastname string
-	Nbtravel int
+	Nbtravel int  		// Number of times the customer travelled wit us
 }
 
 type LastNameUpdate struct {
@@ -46,6 +45,46 @@ func main() {
 ```
 
 The above snippet actually works in staging - go and try!
+
+#### What is the progress like?
+
+This tool pretty much only supports basic CRUD operations now.
+Even design decisions are not final yet:
+
+##### The update debate
+
+As it currently stands, one can Update by either supplying a map, or a struct:
+
+```go
+coll.Update(Customer{
+	Id: "194",
+	Firstname: "Crufter",
+	Nbtravel: 42,
+})
+```
+
+or
+```go
+coll.Update(cmagic.M{
+	"Id": "194",
+	"Firstname": "Crufter",
+	"Nbtravel": 42,
+})
+```
+
+This is in line with what one of the most popular DB drivers do in Go land, the mgo driver (https://github.com/go-mgo/mgo).
+
+So where is the debate, you may ask, rightfully.
+Our lovely DBAs are concerned by the following scenario: if someone creates an instance of a struct type with only a subset of the fields specified in the literal, like this:
+
+```go
+coll.Update(Customer{
+	Id: "194",
+	Nbtravel: 43,
+})
+```
+
+The fields Firstname and Lastname
 
 #### Anything else?
 
