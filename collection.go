@@ -122,6 +122,10 @@ func (c collection) Update(i interface{}) error {
 	return sess.Query(stmt, append(values, id)...).Exec()
 }
 
+func (c collection) ReadOpt(id string, rOpt RowOptions) (interface{}, error) {
+	return nil, errors.New("ReadOpt not implemented yet")
+}
+
 func (c collection) Delete(id string) error {
 	return c.nameSpace.session.Query(g.DeleteById(c.nameSpace.name, c.collectionInfo.primaryKey), id).Exec()
 }

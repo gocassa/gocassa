@@ -18,14 +18,35 @@ type Collection interface {
 	Delete(id string) error
 	//MultiRead(ids []string) ([]interface{}, error)
 	//List(idStart, idEnd string, limit int) ([]interface{}, error)
+	ReadOpt(id string, opts RowOptions) (interface{}, error)
+}
+
+// I don't think this is needed at all, since we won't handle index tables probably, only 'entity' ones
+type RowOptions interface {
+	ColumnNames([]string) RowOptions
+	ColumnStart(string) RowOptions 
+	ColumnEnd(string) RowOptions
+}
+
+type QueryOptions interface {
+	Start(string) QueryOptions
+	End(string) QueryOptions
+	Limit(int) QueryOptions
 }
 
 // These are just here to not forget about them
 
 type TimeSeriesIndex interface {
-
 }
 
 type EqualityIndex interface {
-	//Equals(key string, value interface{}, idStart, endEnd, limit int)
+	Equals(key string, value interface{}, opts QueryOptions)
 }
+
+// type Invoice struct {
+// 		Id string
+// 		CustomerId string
+// 		Price int
+// }
+// opts.ColumnNames("id", "name").QueryResponseLimit(500)
+// invoices, err := invoices.Equals("CustomerId", "500", "", "", 0, [])
