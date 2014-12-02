@@ -103,9 +103,9 @@ Prints:
 
 The problem here is the library can not differentiate between "intentional zero values" and "field wasn't specified in struct literal so it was given a zero value" - the end result will be the same: the fields in the database will get overwritten by zero values.  
 
-Possible solutions:
+I strongly suggest to not worry about the aformentioned hypothetical scenario (we do not know how big of an issue is it in practice), but if we do, here are possible solutions:
 
-##### Leave it as it is
+###### Leave it as it is
 
 Since everyone programming in Go must now that struct fields are initialized with zero values if the are not specified in the struct literal, we can trust them to not make mistakes.
 
@@ -113,9 +113,9 @@ Pros:
 - Keeps the API elegant and hassle free for people who now what are they using.
 
 Cons:
-- ...
+- Trusts the user (is this a con?)
 
-##### Replace/Update
+###### Replace/Update
 
 By renaming the Update method to Replace, it may be enough to make people remember that their whole row will get replaced.
 We can possibly reintroduce Update but with a stricter requirements - allowing only maps to be used. The type signature would look something like this:
@@ -129,9 +129,63 @@ type Collection interface {
 }
 ```
 
-#####
+Pros:
+- Keeps the API reasonable elegant
+- Might be enough to avoid accidental replaces
 
-Force people to use structs with pointer fields - similarly to what protocol buffers does
+Cons:
+- Still less elegant than doing nothing
+
+###### The nil pointers approach
+
+Force people to use structs with pointer fields - similarly to what protocol buffers does. This way we can differentiate between zero value, or lack of a value altogether (nil pointer).
+
+Pros:
+- Let's us use structs, but prevents the aforementioned scenario
+
+Cons:
+- People have to use structs with pointer fields just for the sake of this library - even if they have no intention to do it otherwise.
+- Increases boilerplate, one can not take the address of primitive literal in go (eg. &"Joe", or &42), rather methods like proto.String() or proto.Int() must be used
+
+###### The explicit approach
+
+We could force people to list the fields they want to update, or specify "ALL" (this is not a final design, only direction):
+
+```go
+var All = "" // A special value signifying we want to update all fields.
+
+type Collection interface {
+	// ...
+	Update(i iterface{}, ...string) error
+	// ...
+}
+```
+
+And then people could:
+
+```go
+coll.Update(Customer{
+	Id: "194",
+	Nbtravel: 42,
+}, "Nbtravel")
+```
+
+or: 
+
+```go
+coll.Update(Customer{
+	Id: "194",
+	Nbtravel: 42,
+}, "Nbtravel")
+```
+
+Pros:
+- Reminds people to not f*ck up
+
+Cons:
+- Very-very inelegant
+- Optional parameters can be ignored, but using slices would further increase boilerplate.
+- This only serves as a reminder to the users - it is not a type safe solution, people can mistype fieldnames and there data won't be saved.
 
 #### Anything else?
 
