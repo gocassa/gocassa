@@ -51,26 +51,26 @@ func (c collection) zero() interface{} {
 	return reflect.New(reflect.TypeOf(c.collectionInfo.entity)).Interface()
 }
 
-func kvs(v map[string]interface{}) ([]string, []interface{}) {
+// Since we cant have Map -> [(k, v)] we settle for Map -> ([k], [v])
+// #tupleLessLifeSucks
+func keyValues(m map[string]interface{}) ([]string, []interface{}) {
 	keys := []string{}
 	values := []interface{}{}
-	for k, v := range v {
+	for k, v := range m {
 		keys = append(keys, k)
 		values = append(values, v)
 	}
 	return keys, values
 }
 
-func keyValues(i interface{}) ([]string, []interface{}, bool) {
+func toMap(i interface{}) (map[string]interface{}, bool) {
 	switch v := i.(type) {
 	case M:
-		keys, values := kvs(v)
-		return keys, values, true
+		return map[string]interface{}(v), true
 	case map[string]interface{}:
-		keys, values := kvs(v)
-		return keys, values, true
+		return v, true
 	}
-	return r.FieldsAndValues(i)
+	return r.StructToMap(i)
 }
 
 // Will return 'entity' struct what was supplied when initializing the collection
@@ -89,10 +89,11 @@ func (c collection) Read(id string) (interface{}, error) {
 }
 
 func (c collection) Create(i interface{}) error {
-	fields, values, ok := keyValues(i)
+	m, ok := toMap(i)
 	if !ok {
-		return errors.New("can't create: entity is not a struct")
+		return errors.New("Can't create: value not understood")
 	}
+	fields, values := keyValues(m)
 	stmt := g.Insert(c.collectionInfo.name, fields)
 	sess := c.nameSpace.session
 	return sess.Query(stmt, values...).Exec()
@@ -100,15 +101,15 @@ func (c collection) Create(i interface{}) error {
 
 // Use structs for the time being, no maps please.
 func (c collection) Update(i interface{}) error {
-	var m map[string]interface{}
-	var ok bool
-	m, ok = r.StructToMap(i)
+	m, ok := toMap(i)
+	if !ok {
+		return errors.New("Update: value not understood")
+	}
 	id, ok := m[c.collectionInfo.primaryKey]
 	if !ok {
-		return errors.New("collection.Set: primary key not found")
+		return errors.New("Update: primary key not found")
 	}
-	fields := []string{}
-	values := []interface{}{}
+	fields, values := keyValues(m)
 	for k, v := range m {
 		if k == c.collectionInfo.primaryKey {
 			continue
