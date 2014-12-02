@@ -11,8 +11,41 @@ A cassandra object mapper using gocql under the hood.
 Here is a code snippet which may get you started:
 
 ```
+package main 
 
+import(
+	"github.com/hailocab/cmagic"
+	"fmt"
+)
+
+type Customer struct {
+	Id string 
+	Firstname string
+	Lastname string
+	Nbtravel int
+}
+
+type LastNameUpdate struct {
+	Lastname 
+}
+
+func main() {
+	nameSpace, err := cmagic.New("cmagic", "", "", []string{"10.12.12.170", "10.12.21.83", "10.12.4.102"})
+	if err != nil {
+		panic(err)
+	}
+	coll := nameSpace.Collection("customer", Customer{})
+	customer := Customer{
+		Id: "194",
+		Firstname: "Crufter",
+		Nbtravel: 42,
+	}
+	err = coll.Create(customer)
+	fmt.Println(err)
+}
 ```
+
+The above snippet actually works in staging - go and try!
 
 #### Anything else?
 
