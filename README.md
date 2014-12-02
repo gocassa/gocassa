@@ -103,7 +103,7 @@ Prints:
 
 The problem here is the library can not differentiate between "intentional zero values" and "field wasn't specified in struct literal so it was given a zero value" - the end result will be the same: the fields in the database will get overwritten by zero values.  
 
-I strongly suggest to not worry about the aformentioned hypothetical scenario (we do not know how big of an issue is it in practice), but if we do, here are possible solutions:
+Here are possible solutions:
 
 ###### Leave it as it is
 
@@ -113,7 +113,7 @@ Pros:
 - Keeps the API elegant and hassle free for people who now what are they using.
 
 Cons:
-- Trusts the user (is this a con?)
+- Trusts the user
 
 ###### Replace/Update
 
@@ -134,7 +134,7 @@ Pros:
 - Might be enough to avoid accidental replaces
 
 Cons:
-- Still less elegant than doing nothing
+- We have two methods instead of one for update now
 
 ###### The nil pointers approach
 
@@ -183,9 +183,16 @@ Pros:
 - Reminds people to not f*ck up
 
 Cons:
-- Very-very inelegant
 - Optional parameters can be ignored, but using slices would further increase boilerplate.
 - This only serves as a reminder to the users - it is not a type safe solution, people can mistype fieldnames and there data won't be saved.
+
+###### Introduce a record type
+
+We could potentially tweak the API a bit to introduce a record type. We could even embed our record type in custom struct types for a relly native feel. Given a record:
+
+```go
+
+```
 
 #### Anything else?
 
