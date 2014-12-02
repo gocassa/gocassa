@@ -167,7 +167,7 @@ And then people could:
 coll.Update(Customer{
 	Id: "194",
 	Nbtravel: 42,
-}, "Nbtravel")
+}, "ALL")
 ```
 
 or: 
