@@ -39,8 +39,7 @@ func main() {
 		Firstname: "Crufter",
 		Nbtravel: 42,
 	}
-	err = coll.Create(customer)
-	fmt.Println(err)
+	fmt.Println(coll.Create(customer))
 }
 ```
 
@@ -48,8 +47,9 @@ The above snippet actually works in staging - go and try!
 
 #### What is the progress like?
 
-This tool pretty much only supports basic CRUD operations now.
-Even design decisions are not final yet:
+This tool has support for CRUD operations now.
+
+Although, even basic design decisions are not final yet:
 
 ##### The update debate
 
@@ -84,7 +84,54 @@ coll.Update(Customer{
 })
 ```
 
-The fields Firstname and Lastname
+The fields Firstname and Lastname will be overwritten by empty strings, since:
+
+```go
+dat, err := json.Marshal(Customer{
+	Id: "194",
+	Nbtravel: 43,
+})
+fmt.Println(string(dat), err)
+```
+(playground link: http://play.golang.org/p/_KS9HFJkc0)
+
+Prints:
+
+```go
+{"Id":"194","Firstname":"","Lastname":"","Nbtravel":43} <nil>
+```
+
+The problem here is the library can not differentiate between "intentional zero values" and "field wasn't specified in struct literal so it was given a zero value" - the end result will be the same: the fields in the database will get overwritten by zero values.  
+
+Possible solutions:
+
+##### Leave it as it is
+
+Since everyone programming in Go must now that struct fields are initialized with zero values if the are not specified in the struct literal, we can trust them to not make mistakes.
+
+Pros:
+- Keeps the API elegant and hassle free for people who now what are they using.
+
+Cons:
+- ...
+
+##### Replace/Update
+
+By renaming the Update method to Replace, it may be enough to make people remember that their whole row will get replaced.
+We can possibly reintroduce Update but with a stricter requirements - allowing only maps to be used. The type signature would look something like this:
+
+```go
+type Collection interface {
+	// ...
+	Replace(v interface{}) error
+	Update(m map[string]iterface{}) error
+	// ...
+}
+```
+
+#####
+
+Force people to use structs with pointer fields - similarly to what protocol buffers does
 
 #### Anything else?
 
