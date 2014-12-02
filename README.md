@@ -103,7 +103,7 @@ Prints:
 
 The problem here is the library can not differentiate between "intentional zero values" and "field wasn't specified in struct literal so it was given a zero value" - the end result will be the same: the fields in the database will get overwritten by zero values.  
 
-Here are possible solutions:
+Here are a couple of possible solutions:
 
 ###### Leave it as it is
 
@@ -185,14 +185,6 @@ Pros:
 Cons:
 - Optional parameters can be ignored, but using slices would further increase boilerplate.
 - This only serves as a reminder to the users - it is not a type safe solution, people can mistype fieldnames and there data won't be saved.
-
-###### Introduce a record type
-
-We could potentially tweak the API a bit to introduce a record type. We could even embed our record type in custom struct types for a relly native feel. Given a record:
-
-```go
-
-```
 
 #### Anything else?
 
