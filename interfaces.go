@@ -18,35 +18,68 @@ type Collection interface {
 	Delete(id string) error
 	//MultiRead(ids []string) ([]interface{}, error)
 	//List(idStart, idEnd string, limit int) ([]interface{}, error)
-	ReadOpt(id string, opts RowOptions) (interface{}, error)
-}
 
-// I don't think this is needed at all, since we won't handle index tables probably, only 'entity' ones
-type RowOptions interface {
-	ColumnNames([]string) RowOptions
-	ColumnStart(string) RowOptions 
-	ColumnEnd(string) RowOptions
-}
-
-type QueryOptions interface {
-	Start(string) QueryOptions
-	End(string) QueryOptions
-	Limit(int) QueryOptions
-}
-
-// These are just here to not forget about them
-
-type TimeSeriesIndex interface {
+	// ReadOpt, RowOptions and the QueryOptions and related things are highly experimental - even more so than this library itself
+	// I am not convinced that ReadOpts is needed at all - we should not touch the 'index tables' - we should use interfaces TimeSeries and EqualityIndex
+	ReadOpt(id string, opts *RowOptions) (interface{}, error)
 }
 
 type EqualityIndex interface {
-	Equals(key string, value interface{}, opts QueryOptions)
+	Equals(key string, value interface{}, opts *QueryOptions) ([]interface{}, error)
 }
 
-// type Invoice struct {
-// 		Id string
-// 		CustomerId string
-// 		Price int
-// }
-// opts.ColumnNames("id", "name").QueryResponseLimit(500)
-// invoices, err := invoices.Equals("CustomerId", "500", "", "", 0, [])
+type TimeSeriesIndex interface {
+	// 
+}
+
+// RowOptions
+// See comment aboove 'ReadOpt' method
+type RowOptions struct {
+	ColumnNames []string
+	ColumnStart *string
+	ColumnEnd 	*string
+}
+
+func NewRowOptions() *RowOptions {
+	return &RowOptions{
+		ColumnNames: []string{},
+	}
+}
+
+// Set column names to return
+func (r *RowOptions) ColNames(ns []string) *RowOptions {
+	r.ColumnNames = ns
+	return r
+}
+
+// Set start of the column names to return
+func (r *RowOptions) ColStart(start string) *RowOptions {
+	r.ColumnStart = &start
+	return r
+}
+
+// Set end of the column names to return
+func (r *RowOptions) ColEnd(end string) *RowOptions {
+	r.ColumnEnd = &end
+	return r
+}
+
+type QueryOptions struct {
+	StartRowId	*string
+	EndRowId 	*string
+	RowLimit 	*int
+}
+
+func NewQueryOptions() *QueryOptions {
+	return &QueryOptions{}	
+}
+
+func (q *QueryOptions) Start(rowId string) *QueryOptions {
+	q.StartRowId = &rowId 
+	return q
+}
+
+func (q *QueryOptions) End(rowId string) *QueryOptions {
+	q.EndRowId = &rowId 
+	return q
+}

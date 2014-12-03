@@ -122,7 +122,7 @@ func (c collection) Update(i interface{}) error {
 	return sess.Query(stmt, append(values, id)...).Exec()
 }
 
-func (c collection) ReadOpt(id string, rOpt RowOptions) (interface{}, error) {
+func (c collection) ReadOpt(id string, opt *RowOptions) (interface{}, error) {
 	return nil, errors.New("ReadOpt not implemented yet")
 }
 
