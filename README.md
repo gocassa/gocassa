@@ -1,11 +1,11 @@
 SUCH MAGIC, MUCH CASSANDRA WOW
 ===
 
-#### What is cmagic?
+## What is cmagic?
 
 A cassandra object mapper using gocql under the hood.
 
-#### Wow, cool, how does it work?
+## Wow, cool, how does it work?
 
 Here is a code snippet which may get you started:
 
@@ -45,13 +45,16 @@ func main() {
 
 The above snippet actually works in staging - go and try!
 
-#### What is the progress like?
+## What is the progress like?
 
 This tool has support for CRUD operations now.
+We intend to provide the following features once the tool is ready
 
 Although, even basic design decisions are not final yet:
 
-##### The update debate
+## The update debate
+
+### The problem
 
 As it currently stands, one can Update by either supplying a map, or a struct:
 
@@ -103,9 +106,9 @@ Prints:
 
 The problem here is the library can not differentiate between "intentional zero values" and "field wasn't specified in struct literal so it was given a zero value" - the end result will be the same: the fields in the database will get overwritten by zero values.  
 
-Here are a couple of possible solutions:
+### Possible solutions:
 
-###### Leave it as it is
+#### Leave it as it is
 
 Since everyone programming in Go must now that struct fields are initialized with zero values if the are not specified in the struct literal, we can trust them to not make mistakes.
 
@@ -115,7 +118,7 @@ Pros:
 Cons:
 - Trusts the user
 
-###### Replace/Update
+#### Replace/Update
 
 By renaming the Update method to Replace, it may be enough to make people remember that their whole row will get replaced.
 We can possibly reintroduce Update but with a stricter requirements - allowing only maps to be used. The type signature would look something like this:
@@ -136,7 +139,7 @@ Pros:
 Cons:
 - We have two methods instead of one for update now
 
-###### The nil pointers approach
+#### The nil pointers approach
 
 Force people to use structs with pointer fields - similarly to what protocol buffers does. This way we can differentiate between zero value, or lack of a value altogether (nil pointer).
 
@@ -147,7 +150,7 @@ Cons:
 - People have to use structs with pointer fields just for the sake of this library - even if they have no intention to do it otherwise.
 - Increases boilerplate, one can not take the address of primitive literal in go (eg. &"Joe", or &42), rather methods like proto.String() or proto.Int() must be used
 
-###### The explicit approach
+#### The explicit approach
 
 We could force people to list the fields they want to update, or specify "ALL" (this is not a final design, only direction):
 
@@ -186,7 +189,10 @@ Cons:
 - Optional parameters can be ignored, but using slices would further increase boilerplate.
 - This only serves as a reminder to the users - it is not a type safe solution, people can mistype fieldnames and there data won't be saved.
 
-#### Anything else?
+## Can you show me something more than the CRUD example above?
+
+
+## Anything else?
 
 For those who wonder - this project will be a merge of hailocab/om and hailocab/erdos.
 Using the API of erdos with the CQL backend of om.
