@@ -48,9 +48,14 @@ The above snippet actually works in staging - go and try!
 ## What is the progress like?
 
 This tool has support for CRUD operations now.
-We intend to provide the following features once the tool is ready
 
-Although, even basic design decisions are not final yet:
+We intend to provide the following features once the tool is ready:
+- automatic CQL schema management (no manual CREATE TABLE etc)
+- CRUD operations, CQL statement free
+- An 'Equality Index' recipe: query entities based on 'field A equals value B', or 'give me back all the invoices where customer id = 12'
+- A time series recipe
+
+The design decisions are not final yet, we are still contemplating about certain things, for example:
 
 ## The update debate
 
@@ -191,6 +196,49 @@ Cons:
 
 ## Can you show me something more than the CRUD example above?
 
+An example for the equality index would be (this won't work since it is not implemented yet):
+
+```go
+package main 
+
+import(
+	c "github.com/hailocab/cmagic"
+	"fmt"
+)
+
+type Customer struct {
+	Id string 
+	Firstname string
+	Lastname string
+	Nbtravel int  		// Number of times the customer travelled wit us
+}
+
+type LastNameUpdate struct {
+	Lastname 
+}
+
+func main() {
+	nameSpace, err := c.New("cmagic", "", "", []string{"10.12.12.170", "10.12.21.83", "10.12.4.102"})
+	if err != nil {
+		panic(err)
+	}
+	coll := nameSpace.Collection("customer", Customer{})
+
+	// Assuming we have an index on the Nbtravel field...
+	// Return 20 Customers who have travelled with us exactly 100 times
+	cs, err := coll.Equals("Nbtravel", 100, c.NewQueryOptions().Limit(20))
+	if err != nil {
+		panic(err)
+	}
+
+	customers := []*Customer{}
+	for _, v := range cs {
+		customers = append(customers, v.(*Customer))
+	}
+	// Do something with customers... for example... print it... Not too original I know
+	fmt.Println(customers)
+}
+```
 
 ## Anything else?
 
