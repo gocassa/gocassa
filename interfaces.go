@@ -29,7 +29,7 @@ type EqualityIndex interface {
 }
 
 type TimeSeriesIndex interface {
-	// 
+	//
 }
 
 // RowOptions
@@ -37,7 +37,7 @@ type TimeSeriesIndex interface {
 type RowOptions struct {
 	ColumnNames []string
 	ColumnStart *string
-	ColumnEnd 	*string
+	ColumnEnd   *string
 }
 
 func NewRowOptions() *RowOptions {
@@ -65,21 +65,21 @@ func (r *RowOptions) ColEnd(end string) *RowOptions {
 }
 
 type QueryOptions struct {
-	StartRowId	*string
-	EndRowId 	*string
-	RowLimit 	*int
+	StartRowId *string
+	EndRowId   *string
+	RowLimit   *int
 }
 
 func NewQueryOptions() *QueryOptions {
-	return &QueryOptions{}	
+	return &QueryOptions{}
 }
 
 func (q *QueryOptions) Start(rowId string) *QueryOptions {
-	q.StartRowId = &rowId 
+	q.StartRowId = &rowId
 	return q
 }
 
 func (q *QueryOptions) End(rowId string) *QueryOptions {
-	q.EndRowId = &rowId 
+	q.EndRowId = &rowId
 	return q
 }

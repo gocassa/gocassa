@@ -2,12 +2,13 @@ package cmagic
 
 import (
 	"strings"
+
 	"github.com/gocql/gocql"
 )
 
 type nameSpace struct {
 	session *gocql.Session
-	name 	string
+	name    string
 	nodeIps []string
 }
 
@@ -25,16 +26,16 @@ func New(nameSp, username, password string, nodeIps []string) (NameSpace, error)
 		return nil, err
 	}
 	return &nameSpace{
-		session:    sess,
-		name: 		nameSp,
-		nodeIps: 	nodeIps,
+		session: sess,
+		name:    nameSp,
+		nodeIps: nodeIps,
 	}, nil
 }
 
 // Collection returns a new Collection. A collection is analogous to column families in Cassandra or tables in RDBMSes.
 func (n *nameSpace) Collection(name string, entity interface{}) Collection {
 	return &collection{
-		nameSpace: n,
+		nameSpace:      n,
 		collectionInfo: newCollectionInfo(n.name, name, "id", entity),
 	}
 }
