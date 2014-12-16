@@ -1,16 +1,16 @@
 package cmagic
 
-import(
-	r "github.com/hailocab/cmagic/reflect"
-	g "github.com/hailocab/cmagic/generate"
-	"reflect"
+import (
 	"encoding/json"
 	"errors"
+	g "github.com/hailocab/cmagic/generate"
+	r "github.com/hailocab/cmagic/reflect"
+	"reflect"
 )
 
 type collection struct {
-	nameSpace 		*nameSpace
-	collectionInfo 	*collectionInfo
+	nameSpace      *nameSpace
+	collectionInfo *collectionInfo
 }
 
 // Contains mostly analyzed information about the entity
