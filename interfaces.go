@@ -10,18 +10,21 @@ type NameSpace interface {
 	Collection(name string, entity interface{}) Collection
 }
 
+// A Selection is a subset of a collection
+type Selection interface {
+	ReadOne()
+	Read()
+	Update(m map[string]interface{}) error
+	Replace(v interface{})
+	Delete(id string) error
+}
+
 type Collection interface {
-	Read(id string) (interface{}, error) // Read(id string, v interface{})???, that is more conventional in Go land
+	Select(id ...interface{}) Selection (interface{}, error) // Read(id string, v interface{})???, that is more conventional in Go land
 	// Just have a set method? How would that play with CQL?
 	Create(v interface{}) error
-	Update(v interface{}) error
-	Delete(id string) error
+	
 	//MultiRead(ids []string) ([]interface{}, error)
-	//List(idStart, idEnd string, limit int) ([]interface{}, error)
-
-	// ReadOpt, RowOptions and the QueryOptions and related things are highly experimental - even more so than this library itself
-	// I am not convinced that ReadOpts is needed at all - we should not touch the 'index tables' - we should use interfaces TimeSeries and EqualityIndex
-	ReadOpt(id string, opts *RowOptions) (interface{}, error)
 }
 
 type EqualityIndex interface {
