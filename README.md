@@ -240,9 +240,9 @@ func main() {
 }
 ```
 
+The timeseries index will work quiet similarly to the above example.
+The current plan is to not expose the 'index tables' unless we find that the need frequently arises.
+
 ## Anything else?
 
-For those who wonder - this project will be a merge of hailocab/om and hailocab/erdos.
-Using the API of erdos with the CQL backend of om.
-
-API is not final! Please hate as much as possible, it will probably hurt our feelings a lot but at least we will have a usable library.
+Please feel free to contribute to this project, with opinions, code, docs, whatever floats your bloat.
