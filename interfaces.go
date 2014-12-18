@@ -10,17 +10,25 @@ type NameSpace interface {
 	Collection(name string, entity interface{}) Collection
 }
 
-// A Selection is a subset of a collection
+// A Query is a subset of a collection intended to be read
+type Query() interface {
+
+}
+
+// A Selection is a subset of a collection, 1 or more rows
 type Selection interface {
-	ReadOne()
-	Read()
+	// Selection modifiers
+	Query() Query
+	Between(from, to) Selection
+	// Operations
+	Create(v interface{}) error
 	Update(m map[string]interface{}) error
-	Replace(v interface{})
+	Replace(v interface{}) 					// Replace doesn't make sense on a selection which result in more than 1 document
 	Delete(id string) error
 }
 
 type Collection interface {
-	Select(id ...interface{}) Selection (interface{}, error) // Read(id string, v interface{})???, that is more conventional in Go land
+	Select(keys []interface{}) Selection
 	// Just have a set method? How would that play with CQL?
 	Create(v interface{}) error
 	
