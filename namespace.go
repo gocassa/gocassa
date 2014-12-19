@@ -2,7 +2,6 @@ package cmagic
 
 import (
 	"strings"
-
 	"github.com/gocql/gocql"
 )
 

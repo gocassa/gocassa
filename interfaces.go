@@ -7,25 +7,24 @@ package cmagic
 type M map[string]interface{}
 
 type KeySpace interface {
-	Table(name string, row interface{}, keys Keys) Collection
+	Table(name string, row interface{}, keys Keys) Table
 }
 
-// A Query is a subset of a collection intended to be read
+// A Query is a subset of a Table intended to be read
 type Query() interface {
 	Read() (interface{}, error)
 	ReadOne() ([]interface{}, error)
-	Asc(bool) Query
+	// Asc(bool) Query
 	Options(QueryOptions) Query
-	RowOptions(RowOptions)
+	// RowOptions(RowOptions)
 }
 
-// A Selection is a subset of a collection, 1 or more rows
+// A Selection is a subset of a Table, 1 or more rows
 type Selection interface {
 	// Selection modifiers
-	Between(from, to) Selection
-	GreaterThan(v ...interface{}) Selection
-	LesserThan(v ...interface{}) Selection
-	Keys([]interface) Selection
+	From(v ...interface{}) Selection
+	To(v ...interface{}) Selection
+	Keys([]interface{}) Selection
 	Query() Query
 	// Operations
 	Update(m map[string]interface{}) error  // Probably this is danger zone (can't be implemented efficiently) on a selectuinb with more than 1 document
