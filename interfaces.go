@@ -12,11 +12,11 @@ type KeySpace interface {
 
 // A Query is a subset of a collection intended to be read
 type Query() interface {
-	Read()
-	ReadOne()
+	Read() (interface{}, error)
+	ReadOne() ([]interface{}, error)
 	Asc(bool) Query
-	Opt(QueryOptions) Query
-	RowOpt()
+	Options(QueryOptions) Query
+	RowOptions(RowOptions)
 }
 
 // A Selection is a subset of a collection, 1 or more rows
@@ -26,8 +26,8 @@ type Selection interface {
 	GreaterThan(v ...interface{}) Selection
 	LesserThan(v ...interface{}) Selection
 	Keys([]interface) Selection
+	Query() Query
 	// Operations
-	Create(v interface{}) error
 	Update(m map[string]interface{}) error  // Probably this is danger zone (can't be implemented efficiently) on a selectuinb with more than 1 document
 	Replace(v interface{}) 					// Replace doesn't make sense on a selection which result in more than 1 document
 	Delete(id string) error
@@ -39,27 +39,14 @@ type Index interface {
 
 type IndexDef struct {
 	Name string
-	Keys []string // []string{"Id"}
+	PartitionKeys []string
+	CompositeKeys []string
 }
 
 type Table interface {
 	Index(name string) Selection
+	Insert(v interface{}) error
 	SetIndex()
-	// SetIndex(IndexDef{"crud"}, PartitionKey: []string{"Id"}, CompositeKey: []string{})          -> t.Index("crud").Select(600).DeleteFields("fare")
-	// SetIndex(IndexDef{"byDriverId"}, PartitionKey: []{"DriverId"}, CompositeKey: []{"Id"})      -> t.Index("byDriverId").Select(500).Delete()
-	// SetIndex(IndexDef{"byCustomerId"}, PartitionKey: []{"CustomerId"}, CompositeKey: []{"Id"})
-	// SetIndex()
-}
-
-// Job ((driverId), jobId)
-// Table
-
-type EqualityIndex interface {
-	Equals(key string, value interface{}, opts *QueryOptions) ([]interface{}, error)
-}
-
-type TimeSeriesIndex interface {
-	//
 }
 
 // RowOptions
