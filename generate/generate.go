@@ -69,18 +69,6 @@ func UpdateById(cfName string, pkName string, fieldNames []string) string {
 	return fmt.Sprintf("UPDATE %v SET "+strings.Join(cols, ", ")+" WHERE %v = ?;", cfName, pkName)
 }
 
-// INSERT INTO Hollywood.NerdMovies (user_uuid, fan)
-//   VALUES ('cfd66ccc-d857-4e90-b1e5-df98a3d40cd6', 'johndoe')
-//
-// Gotcha: primkey must be first
-func Insert(cfName string, fieldNames []string) string {
-	placeHolders := []string{}
-	for i := 0; i < len(fieldNames); i++ {
-		placeHolders = append(placeHolders, "?")
-	}
-	return fmt.Sprintf("INSERT INTO %v ("+strings.Join(fieldNames, ", ")+") VALUES ("+strings.Join(placeHolders, ", ")+")", cfName)
-}
-
 func ReadById(cfName string, pk string) string {
 	return fmt.Sprintf("SELECT * FROM %v WHERE %v = ?", cfName, pk)
 }

@@ -19,12 +19,10 @@ type Query() interface {
 	// RowOptions(RowOptions)
 }
 
-// A Selection is a subset of a Table, 1 or more rows
-type Selection interface {
+// A Filter is a subset of a Table, filtered by Relations.
+// You can do operations or queries on a filter.
+type Filter interface {
 	// Selection modifiers
-	From(v ...interface{}) Selection
-	To(v ...interface{}) Selection
-	Keys([]interface{}) Selection
 	Query() Query
 	// Operations
 	Update(m map[string]interface{}) error  // Probably this is danger zone (can't be implemented efficiently) on a selectuinb with more than 1 document
@@ -38,8 +36,8 @@ type Keys struct {
 }
 
 type Table interface {
-	Insert(v interface{}) error // Insert needs no selection, but all keys (PartitionKeys and CompositeKeys must be present in the struct)
-	Select(keys []interface{}) Selection
+	Insert(v interface{}) error 			// Insert needs no selection, but all keys (PartitionKeys and CompositeKeys must be present in the struct)
+	Where(relation ...interface{}) Filter 	// Because we provide selections 
 }
 
 // RowOptions

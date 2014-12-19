@@ -1,8 +1,21 @@
 package cmagic
 
-type selection struct {
-	t *table
-	keys []interface{}
-	from []interface{}
-	to   []interface{}
+const (
+	Equality	 = iota 
+	GreaterThan
+	GreaterThanOrEquals
+	LesserThanOrEquals
+
+)
+
+type Relation struct {
+	Op 
+}
+
+func Eq(term interface{}) Relation {
+
+}
+
+func In(term interface{}) Relation {
+
 }

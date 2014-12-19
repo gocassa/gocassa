@@ -18,6 +18,18 @@ type query struct {
 }
 
 func (q *Query) generateRead() string {
-	fmt.Sprintf("SELECT * FROM %v WHERE %v = ?", cfName, pk)
+	fmt.Sprintf("SELECT * FROM %v WHERE %v ORDER BY %v, LIMIT %v", q.s.t.name, q.generateWhere(), q.generateOrderBy(), q.generateLimit())
+}
+
+func (q *Query) generateWhere() string {
+	if len(q.s.from) > 0 || len(q.s.to) len(q.s.t.keys.PartitionKeys) == 
+}
+
+func (q *Query) generateOrderBy() string {
+
+}
+
+func (q *Query) generateLimit() string {
+
 }
 

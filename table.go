@@ -9,7 +9,7 @@ import (
 )
 
 type table struct {
-	nameSpace      *nameSpace
+	keySpace      *keySpace
 	TableInfo *TableInfo
 }
 
@@ -74,10 +74,10 @@ func toMap(i interface{}) (map[string]interface{}, bool) {
 }
 
 // Will return 'entity' struct what was supplied when initializing the Table
-func (c table) Read(id string) (interface{}, error) {
-	stmt := g.ReadById(c.nameSpace.name, c.TableInfo.primaryKey)
+func (c table) read(id string) (interface{}, error) {
+	stmt := g.ReadById(c.keySpace.name, c.TableInfo.primaryKey)
 	m := map[string]interface{}{}
-	sess := c.nameSpace.session
+	sess := c.keySpace.session
 	sess.Query(stmt, id).Iter().MapScan(m)
 	bytes, err := json.Marshal(m)
 	if err != nil {
@@ -88,14 +88,26 @@ func (c table) Read(id string) (interface{}, error) {
 	return ret, err
 }
 
-func (c table) Create(i interface{}) error {
+// INSERT INTO Hollywood.NerdMovies (user_uuid, fan)
+//   VALUES ('cfd66ccc-d857-4e90-b1e5-df98a3d40cd6', 'johndoe')
+//
+// Gotcha: primkey must be first
+func insert(cfName string, fieldNames []string) string {
+	placeHolders := []string{}
+	for i := 0; i < len(fieldNames); i++ {
+		placeHolders = append(placeHolders, "?")
+	}
+	return fmt.Sprintf("INSERT INTO %v ("+strings.Join(fieldNames, ", ")+") VALUES ("+strings.Join(placeHolders, ", ")+")", cfName)
+}
+
+func (c table) Insert(i interface{}) error {
 	m, ok := toMap(i)
 	if !ok {
 		return errors.New("Can't create: value not understood")
 	}
 	fields, values := keyValues(m)
 	stmt := g.Insert(c.TableInfo.name, fields)
-	sess := c.nameSpace.session
+	sess := c.keySpace.session
 	return sess.Query(stmt, values...).Exec()
 }
 
@@ -117,8 +129,8 @@ func (c table) Update(i interface{}) error {
 		fields = append(fields, k)
 		values = append(values, v)
 	}
-	stmt := g.UpdateById(c.nameSpace.name, c.TableInfo.primaryKey, fields)
-	sess := c.nameSpace.session
+	stmt := g.UpdateById(c.keySpace.name, c.TableInfo.primaryKey, fields)
+	sess := c.keySpace.session
 	return sess.Query(stmt, append(values, id)...).Exec()
 }
 
@@ -127,5 +139,5 @@ func (c table) ReadOpt(id string, opt *RowOptions) (interface{}, error) {
 }
 
 func (c table) Delete(id string) error {
-	return c.nameSpace.session.Query(g.DeleteById(c.nameSpace.name, c.TableInfo.primaryKey), id).Exec()
+	return c.keySpace.session.Query(g.DeleteById(c.keySpace.name, c.TableInfo.primaryKey), id).Exec()
 }
