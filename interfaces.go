@@ -23,8 +23,8 @@ type Query() interface {
 type Selection interface {
 	// Selection modifiers
 	Between(from, to) Selection
-	GreaterThan(value) Selection
-	LesserThan(value) Selection
+	GreaterThan(v ...interface{}) Selection
+	LesserThan(v ...interface{}) Selection
 	Keys([]interface) Selection
 	// Operations
 	Create(v interface{}) error
@@ -35,7 +35,6 @@ type Selection interface {
 
 type Index interface {
 	Select(keys []interface{}) Selection
-	// ((driverId), jobId) Select(700).Delete()
 }
 
 type IndexDef struct {
@@ -46,7 +45,7 @@ type IndexDef struct {
 type Table interface {
 	Index(name string) Selection
 	SetIndex()
-	// SetIndex(IndexDef{"crud"}, PartitionKey: []string{"Id"}, CompositeKey: []string{})          -> t.Index("crud").Select(600).Delete()
+	// SetIndex(IndexDef{"crud"}, PartitionKey: []string{"Id"}, CompositeKey: []string{})          -> t.Index("crud").Select(600).DeleteFields("fare")
 	// SetIndex(IndexDef{"byDriverId"}, PartitionKey: []{"DriverId"}, CompositeKey: []{"Id"})      -> t.Index("byDriverId").Select(500).Delete()
 	// SetIndex(IndexDef{"byCustomerId"}, PartitionKey: []{"CustomerId"}, CompositeKey: []{"Id"})
 	// SetIndex()
