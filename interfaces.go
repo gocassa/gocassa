@@ -7,7 +7,7 @@ package cmagic
 type M map[string]interface{}
 
 type KeySpace interface {
-	Table(name string, row interface{}) Collection
+	Table(name string, row interface{}, keys Keys) Collection
 }
 
 // A Query is a subset of a collection intended to be read
@@ -33,20 +33,14 @@ type Selection interface {
 	Delete(id string) error
 }
 
-type Index interface {
-	Select(keys []interface{}) Selection
-}
-
-type IndexDef struct {
-	Name string
+type Keys struct {
 	PartitionKeys []string
 	CompositeKeys []string
 }
 
 type Table interface {
-	Index(name string) Selection
-	Insert(v interface{}) error
-	SetIndex()
+	Insert(v interface{}) error // Insert needs no selection, but all keys (PartitionKeys and CompositeKeys must be present in the struct)
+	Select(keys []interface{}) Selection
 }
 
 // RowOptions

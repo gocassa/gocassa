@@ -17,7 +17,6 @@ type collection struct {
 type collectionInfo struct {
 	keyspace, name string
 	entity         interface{}
-	primaryKey     string
 	fieldNames     map[string]struct{} // This is here only to check containment
 	fields         []string
 	fieldValues    []interface{}

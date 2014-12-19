@@ -37,12 +37,10 @@ type GeoIndex struct {
 	Lat float64
 	Long float64
 }
-
-geot := keyspace.Table("GeoIndex", GeoIndex{})
-geot.SetIndex(IndexDef{
-	Name: "geo",
+keys := Keys{
 	PartitionKeys: []string{"Geohash", "Realm", "UniqueId"},
-})
+}
+geoTable := keyspace.Table("GeoIndex", GeoIndex{}, Keys)
 ```
 
 Then
@@ -60,7 +58,7 @@ g := GeoIndex{
 	Long: 0.2
 }
 // Note: TTL is missing, Insert needs no selection? There are problems with this...
-geot.Insert(G)
+geoTable.Insert(g)
 ```
 
 Querying:
@@ -70,6 +68,6 @@ queryString := fmt.Sprintf("SELECT geohash, realm, unique_id, lat, lon, update_t
 
 // Equals to
 geoHashesInList := []string{"absdsd3", "fddff833f", "hsbrh3g4h3", "j3hg43h4g3hg4"}
-rows, err := geot.Index("geo").Select(geoHashesInList, "London").Query().Read()
+rows, err := geoTable.Select(geoHashesInList, "London").Query().Read()
 ```
 

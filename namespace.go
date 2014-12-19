@@ -6,14 +6,14 @@ import (
 	"github.com/gocql/gocql"
 )
 
-type nameSpace struct {
+type keySpace struct {
 	session *gocql.Session
 	name    string
 	nodeIps []string
 }
 
 // New returns a new namespace. A namespace is analogous to keyspaces in Cassandra or databases in RDMSes.
-func New(nameSp, username, password string, nodeIps []string) (NameSpace, error) {
+func New(nameSp, username, password string, nodeIps []string) (KeySpace, error) {
 	cluster := gocql.NewCluster(nodeIps...)
 	cluster.Keyspace = nameSp
 	cluster.Consistency = gocql.Quorum
@@ -25,7 +25,7 @@ func New(nameSp, username, password string, nodeIps []string) (NameSpace, error)
 	if err != nil {
 		return nil, err
 	}
-	return &nameSpace{
+	return &keySpace{
 		session: sess,
 		name:    nameSp,
 		nodeIps: nodeIps,
@@ -33,7 +33,7 @@ func New(nameSp, username, password string, nodeIps []string) (NameSpace, error)
 }
 
 // Collection returns a new Collection. A collection is analogous to column families in Cassandra or tables in RDBMSes.
-func (n *nameSpace) Collection(name string, entity interface{}) Collection {
+func (n *keySpace) Collection(name string, entity interface{}) Table {
 	return &collection{
 		nameSpace:      n,
 		collectionInfo: newCollectionInfo(n.name, name, "id", entity),
