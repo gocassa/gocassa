@@ -6,8 +6,8 @@ package cmagic
 // ie. you have to type cast to and from the original type.
 type M map[string]interface{}
 
-type NameSpace interface {
-	Collection(name string, entity interface{}) Collection
+type KeySpace interface {
+	Table(name string, row interface{}) Collection
 }
 
 // A Query is a subset of a collection intended to be read
@@ -35,11 +35,21 @@ type Selection interface {
 
 type Index interface {
 	Select(keys []interface{}) Selection
+	// ((driverId), jobId) Select(700).Delete()
+}
+
+type IndexDef struct {
+	Name string
+	Keys []string // []string{"Id"}
 }
 
 type Table interface {
 	Index(name string) Selection
 	SetIndex()
+	// SetIndex(IndexDef{"crud"}, PartitionKey: []string{"Id"}, CompositeKey: []string{})          -> t.Index("crud").Select(600).Delete()
+	// SetIndex(IndexDef{"byDriverId"}, PartitionKey: []{"DriverId"}, CompositeKey: []{"Id"})      -> t.Index("byDriverId").Select(500).Delete()
+	// SetIndex(IndexDef{"byCustomerId"}, PartitionKey: []{"CustomerId"}, CompositeKey: []{"Id"})
+	// SetIndex()
 }
 
 // Job ((driverId), jobId)
