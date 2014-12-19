@@ -12,7 +12,7 @@ type keySpace struct {
 	nodeIps []string
 }
 
-// New returns a new namespace. A namespace is analogous to keyspaces in Cassandra or databases in RDMSes.
+// New returns a new keySpace. A keySpace is analogous to keyspaces in Cassandra or databases in RDMSes.
 func New(nameSp, username, password string, nodeIps []string) (KeySpace, error) {
 	cluster := gocql.NewCluster(nodeIps...)
 	cluster.Keyspace = nameSp
@@ -35,7 +35,7 @@ func New(nameSp, username, password string, nodeIps []string) (KeySpace, error) 
 // Table returns a new Table. A Table is analogous to column families in Cassandra or tables in RDBMSes.
 func (n *keySpace) Table(name string, entity interface{}, keys Keys) Table {
 	return &table{
-		nameSpace:      n,
+		keySpace:      n,
 		TableInfo: newTableInfo(n.name, name, keys, entity),
 	}
 }

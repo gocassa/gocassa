@@ -8,9 +8,9 @@ import (
 	"reflect"
 )
 
-type collection struct {
+type table struct {
 	nameSpace      *nameSpace
-	collectionInfo *collectionInfo
+	TableInfo *TableInfo
 }
 
 // Contains mostly analyzed information about the entity
@@ -47,8 +47,8 @@ func newTableInfo(keyspace, name, keys Keys, entity interface{}) *tableInfo {
 	return cinf
 }
 
-func (c collection) zero() interface{} {
-	return reflect.New(reflect.TypeOf(c.collectionInfo.entity)).Interface()
+func (c Table) zero() interface{} {
+	return reflect.New(reflect.TypeOf(c.TableInfo.entity)).Interface()
 }
 
 // Since we cant have Map -> [(k, v)] we settle for Map -> ([k], [v])
@@ -73,9 +73,9 @@ func toMap(i interface{}) (map[string]interface{}, bool) {
 	return r.StructToMap(i)
 }
 
-// Will return 'entity' struct what was supplied when initializing the collection
-func (c collection) Read(id string) (interface{}, error) {
-	stmt := g.ReadById(c.nameSpace.name, c.collectionInfo.primaryKey)
+// Will return 'entity' struct what was supplied when initializing the Table
+func (c table) Read(id string) (interface{}, error) {
+	stmt := g.ReadById(c.nameSpace.name, c.TableInfo.primaryKey)
 	m := map[string]interface{}{}
 	sess := c.nameSpace.session
 	sess.Query(stmt, id).Iter().MapScan(m)
@@ -88,44 +88,44 @@ func (c collection) Read(id string) (interface{}, error) {
 	return ret, err
 }
 
-func (c collection) Create(i interface{}) error {
+func (c table) Create(i interface{}) error {
 	m, ok := toMap(i)
 	if !ok {
 		return errors.New("Can't create: value not understood")
 	}
 	fields, values := keyValues(m)
-	stmt := g.Insert(c.collectionInfo.name, fields)
+	stmt := g.Insert(c.TableInfo.name, fields)
 	sess := c.nameSpace.session
 	return sess.Query(stmt, values...).Exec()
 }
 
 // Use structs for the time being, no maps please.
-func (c collection) Update(i interface{}) error {
+func (c table) Update(i interface{}) error {
 	m, ok := toMap(i)
 	if !ok {
 		return errors.New("Update: value not understood")
 	}
-	id, ok := m[c.collectionInfo.primaryKey]
+	id, ok := m[c.TableInfo.primaryKey]
 	if !ok {
 		return errors.New("Update: primary key not found")
 	}
 	fields, values := keyValues(m)
 	for k, v := range m {
-		if k == c.collectionInfo.primaryKey {
+		if k == c.TableInfo.primaryKey {
 			continue
 		}
 		fields = append(fields, k)
 		values = append(values, v)
 	}
-	stmt := g.UpdateById(c.nameSpace.name, c.collectionInfo.primaryKey, fields)
+	stmt := g.UpdateById(c.nameSpace.name, c.TableInfo.primaryKey, fields)
 	sess := c.nameSpace.session
 	return sess.Query(stmt, append(values, id)...).Exec()
 }
 
-func (c collection) ReadOpt(id string, opt *RowOptions) (interface{}, error) {
+func (c table) ReadOpt(id string, opt *RowOptions) (interface{}, error) {
 	return nil, errors.New("ReadOpt not implemented yet")
 }
 
-func (c collection) Delete(id string) error {
-	return c.nameSpace.session.Query(g.DeleteById(c.nameSpace.name, c.collectionInfo.primaryKey), id).Exec()
+func (c table) Delete(id string) error {
+	return c.nameSpace.session.Query(g.DeleteById(c.nameSpace.name, c.TableInfo.primaryKey), id).Exec()
 }
