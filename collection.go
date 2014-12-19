@@ -14,16 +14,17 @@ type collection struct {
 }
 
 // Contains mostly analyzed information about the entity
-type collectionInfo struct {
+type tableInfo struct {
 	keyspace, name string
 	entity         interface{}
+	keys 		   Keys
 	fieldNames     map[string]struct{} // This is here only to check containment
 	fields         []string
 	fieldValues    []interface{}
 }
 
-func newCollectionInfo(keyspace, name, primaryKey string, entity interface{}) *collectionInfo {
-	cinf := &collectionInfo{
+func newTableInfo(keyspace, name, keys Keys, entity interface{}) *tableInfo {
+	cinf := &tableInfo{
 		keyspace:   keyspace,
 		name:       name,
 		entity:     entity,
