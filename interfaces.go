@@ -12,28 +12,38 @@ type NameSpace interface {
 
 // A Query is a subset of a collection intended to be read
 type Query() interface {
-
+	Read()
+	ReadOne()
+	Asc(bool) Query
+	Opt(QueryOptions) Query
+	RowOpt()
 }
 
 // A Selection is a subset of a collection, 1 or more rows
 type Selection interface {
 	// Selection modifiers
-	Query() Query
 	Between(from, to) Selection
+	GreaterThan(value) Selection
+	LesserThan(value) Selection
+	Keys([]interface) Selection
 	// Operations
 	Create(v interface{}) error
-	Update(m map[string]interface{}) error
+	Update(m map[string]interface{}) error  // Probably this is danger zone (can't be implemented efficiently) on a selectuinb with more than 1 document
 	Replace(v interface{}) 					// Replace doesn't make sense on a selection which result in more than 1 document
 	Delete(id string) error
 }
 
-type Collection interface {
+type Index interface {
 	Select(keys []interface{}) Selection
-	// Just have a set method? How would that play with CQL?
-	Create(v interface{}) error
-	
-	//MultiRead(ids []string) ([]interface{}, error)
 }
+
+type Table interface {
+	Index(name string) Selection
+	SetIndex()
+}
+
+// Job ((driverId), jobId)
+// Table
 
 type EqualityIndex interface {
 	Equals(key string, value interface{}, opts *QueryOptions) ([]interface{}, error)
