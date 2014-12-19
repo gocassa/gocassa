@@ -40,7 +40,7 @@ type GeoIndex struct {
 keys := Keys{
 	PartitionKeys: []string{"Geohash", "Realm", "UniqueId"},
 }
-geoTable := keyspace.Table("GeoIndex", GeoIndex{}, Keys)
+geoTable := keyspace.Table("GeoIndex", GeoIndex{}, keys)
 ```
 
 Then
@@ -68,6 +68,6 @@ queryString := fmt.Sprintf("SELECT geohash, realm, unique_id, lat, lon, update_t
 
 // Equals to
 geoHashesInList := []string{"absdsd3", "fddff833f", "hsbrh3g4h3", "j3hg43h4g3hg4"}
-rows, err := geoTable.Select(geoHashesInList, "London").Query().Read()
+rows, err := geoTable.Where(In("geoHash", geoHashesList...), Eq("realm", "London")).Query().Read()
 ```
 

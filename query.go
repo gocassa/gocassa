@@ -22,7 +22,7 @@ func (q *Query) generateRead() string {
 }
 
 func (q *Query) generateWhere() string {
-	if len(q.s.from) > 0 || len(q.s.to) len(q.s.t.keys.PartitionKeys) == 
+	
 }
 
 func (q *Query) generateOrderBy() string {
