@@ -19,7 +19,9 @@ func (q *query) Read() ([]interface{}, error) {
 	sess := q.f.t.keySpace.session
 	ret := []interface{}{}
 	m := map[string]interface{}{}
-	for sess.Query(stmt, vals...).Iter().MapScan(m) {
+	fmt.Println(stmt, vals)
+	iter := sess.Query(stmt, vals...).Iter()
+	for iter.MapScan(m) {
 		bytes, err := json.Marshal(m)
 		if err != nil {
 			return nil, err
@@ -52,15 +54,14 @@ func (q *query) generateRead() (string, []interface{}) {
 		str += " " + l
 		vals = append(vals, lv...)
 	}
-	fmt.Println(str, vals)
 	return str, vals
 }
 
 func (q *query) generateWhere() (string, []interface{}) {
 	strs := []string{}
 	vals := []interface{}{}
-	for _, v := range q.f.rs {
-		s, v := v.cql()
+	for _, r := range q.f.rs {
+		s, v := r.cql()
 		strs = append(strs, s)
 		vals = append(vals, v...)
 	}
