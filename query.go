@@ -2,10 +2,35 @@ package cmagic
 
 import(
 	"strings"
+	"encoding/json"
 )
 
 type query struct {
 	f filter
+}
+
+func (q *query) Limit(i int) Query {
+	return q
+}
+
+func (q *query) Read() ([]interface{}, error) {
+	stmt, vals := q.generateRead()
+	sess := q.f.t.keySpace.session
+	ret := []interface{}{}
+	m := map[string]interface{}{}
+	for sess.Query(stmt, vals...).Iter().MapScan(m) {	
+		bytes, err := json.Marshal(m)
+		if err != nil {
+			return nil, err
+		}
+		r := q.f.t.zero()
+		err = json.Unmarshal(bytes, ret)
+		if err != nil {
+			return nil, err
+		}
+		ret = append(ret, r)
+	}
+	return ret, nil
 }
 
 func (q *query) generateRead() (string, []interface{}) {

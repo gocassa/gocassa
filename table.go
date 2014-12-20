@@ -1,11 +1,11 @@
 package cmagic
 
 import (
-	"encoding/json"
 	"errors"
-	g "github.com/hailocab/cmagic/generate"
 	r "github.com/hailocab/cmagic/reflect"
 	"reflect"
+	"fmt"
+	"strings"
 )
 
 type table struct {
@@ -49,7 +49,7 @@ func (t table) zero() interface{} {
 }
 
 // Since we cant have Map -> [(k, v)] we settle for Map -> ([k], [v])
-// #tupleLessLifeSucks
+// #tuplelessLifeSucks
 func keyValues(m map[string]interface{}) ([]string, []interface{}) {
 	keys := []string{}
 	values := []interface{}{}
@@ -76,21 +76,6 @@ func (t table) Where(rs ...Relation) Filter {
 	}
 }
 
-// Will return 'entity' struct what was supplied when initializing the Table
-func (c table) read(id string) (interface{}, error) {
-	stmt := g.ReadById(c.keySpace.name, c.TableInfo.primaryKey)
-	m := map[string]interface{}{}
-	sess := c.keySpace.session
-	sess.Query(stmt, id).Iter().MapScan(m)
-	bytes, err := json.Marshal(m)
-	if err != nil {
-		return nil, err
-	}
-	ret := c.zero()
-	err = json.Unmarshal(bytes, ret)
-	return ret, err
-}
-
 // INSERT INTO Hollywood.NerdMovies (user_uuid, fan)
 //   VALUES ('cfd66ccc-d857-4e90-b1e5-df98a3d40cd6', 'johndoe')
 //
@@ -109,38 +94,7 @@ func (c table) Insert(i interface{}) error {
 		return errors.New("Can't create: value not understood")
 	}
 	fields, values := keyValues(m)
-	stmt := g.Insert(c.TableInfo.name, fields)
+	stmt := insert(c.info.name, fields)
 	sess := c.keySpace.session
 	return sess.Query(stmt, values...).Exec()
-}
-
-// Use structs for the time being, no maps please.
-func (c table) Update(i interface{}) error {
-	m, ok := toMap(i)
-	if !ok {
-		return errors.New("Update: value not understood")
-	}
-	id, ok := m[c.TableInfo.primaryKey]
-	if !ok {
-		return errors.New("Update: primary key not found")
-	}
-	fields, values := keyValues(m)
-	for k, v := range m {
-		if k == c.TableInfo.primaryKey {
-			continue
-		}
-		fields = append(fields, k)
-		values = append(values, v)
-	}
-	stmt := g.UpdateById(c.keySpace.name, c.TableInfo.primaryKey, fields)
-	sess := c.keySpace.session
-	return sess.Query(stmt, append(values, id)...).Exec()
-}
-
-func (c table) ReadOpt(id string, opt *RowOptions) (interface{}, error) {
-	return nil, errors.New("ReadOpt not implemented yet")
-}
-
-func (c table) Delete(id string) error {
-	return c.keySpace.session.Query(g.DeleteById(c.keySpace.name, c.TableInfo.primaryKey), id).Exec()
 }
