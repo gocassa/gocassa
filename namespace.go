@@ -34,8 +34,8 @@ func New(nameSp, username, password string, nodeIps []string) (KeySpace, error) 
 // Table returns a new Table. A Table is analogous to column families in Cassandra or tables in RDBMSes.
 func (n *keySpace) Table(name string, entity interface{}, keys Keys) Table {
 	return &table{
-		keySpace:      n,
-		TableInfo: newTableInfo(n.name, name, keys, entity),
+		keySpace:   n,
+		info: 		newTableInfo(n.name, name, keys, entity),
 	}
 }
 

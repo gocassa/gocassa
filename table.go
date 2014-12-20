@@ -9,8 +9,8 @@ import (
 )
 
 type table struct {
-	keySpace      *keySpace
-	TableInfo *TableInfo
+	keySpace   	*keySpace
+	info 		*tableInfo
 }
 
 // Contains mostly analyzed information about the entity
@@ -23,12 +23,12 @@ type tableInfo struct {
 	fieldValues    []interface{}
 }
 
-func newTableInfo(keyspace, name, keys Keys, entity interface{}) *tableInfo {
+func newTableInfo(keyspace, name string, keys Keys, entity interface{}) *tableInfo {
 	cinf := &tableInfo{
 		keyspace:   keyspace,
 		name:       name,
 		entity:     entity,
-		primaryKey: primaryKey,
+		keys: 		keys,
 	}
 	fields, values, ok := r.FieldsAndValues(entity)
 	if !ok {
@@ -37,9 +37,6 @@ func newTableInfo(keyspace, name, keys Keys, entity interface{}) *tableInfo {
 	}
 	cinf.fieldNames = map[string]struct{}{}
 	for _, v := range fields {
-		if v == cinf.primaryKey {
-			continue
-		}
 		cinf.fieldNames[v] = struct{}{}
 	}
 	cinf.fields = fields
@@ -47,8 +44,8 @@ func newTableInfo(keyspace, name, keys Keys, entity interface{}) *tableInfo {
 	return cinf
 }
 
-func (c Table) zero() interface{} {
-	return reflect.New(reflect.TypeOf(c.TableInfo.entity)).Interface()
+func (t table) zero() interface{} {
+	return reflect.New(reflect.TypeOf(t.info.entity)).Interface()
 }
 
 // Since we cant have Map -> [(k, v)] we settle for Map -> ([k], [v])
@@ -71,6 +68,12 @@ func toMap(i interface{}) (map[string]interface{}, bool) {
 		return v, true
 	}
 	return r.StructToMap(i)
+}
+
+func (t table) Where(rs ...Relation) Filter {
+	return filter{
+		rs: rs,
+	}
 }
 
 // Will return 'entity' struct what was supplied when initializing the Table

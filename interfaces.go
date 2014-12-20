@@ -11,10 +11,10 @@ type KeySpace interface {
 }
 
 // A Query is a subset of a Table intended to be read
-type Query() interface {
+type Query interface {
 	Read() (interface{}, error)
 	ReadOne() ([]interface{}, error)
-	// Asc(bool) Query
+	Limit() Query
 	Options(QueryOptions) Query
 	// RowOptions(RowOptions)
 }
@@ -37,7 +37,7 @@ type Keys struct {
 
 type Table interface {
 	Insert(v interface{}) error 			// Insert needs no selection, but all keys (PartitionKeys and CompositeKeys must be present in the struct)
-	Where(relation ...interface{}) Filter 	// Because we provide selections 
+	Where(relations ...Relation) Filter 	// Because we provide selections 
 }
 
 // RowOptions

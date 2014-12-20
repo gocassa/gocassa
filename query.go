@@ -1,35 +1,51 @@
 package cmagic
 
 import(
-	"fmt"
+	"strings"
 )
 
-// A Query is a subset of a Table intended to be read
-type Query() interface {
-	Read() (interface{}, error)
-	ReadOne() ([]interface{}, error)
-	Asc(bool) Query
-	Options(QueryOptions) Query
-	RowOptions(RowOptions)
-}
-
 type query struct {
-	s *selection
+	f filter
 }
 
-func (q *Query) generateRead() string {
-	fmt.Sprintf("SELECT * FROM %v WHERE %v ORDER BY %v, LIMIT %v", q.s.t.name, q.generateWhere(), q.generateOrderBy(), q.generateLimit())
+func (q *query) generateRead() (string, []interface{}) {
+	w, wv := q.generateWhere()
+	o, ov := q.generateOrderBy()
+	l, lv := q.generateLimit()
+	str := "SELECT * FROM %v"
+	vals := []interface{}{q.f.t.info.name}
+	if len(wv) > 0 {
+		str += w
+		vals = append(vals, wv...)
+	}
+	if len(ov) > 0 {
+		str += o
+		vals = append(vals, ov...)
+	}
+	if len(lv) > 0 {
+		str += l
+		vals = append(vals, lv...)
+	}
+	return str, vals
 }
 
-func (q *Query) generateWhere() string {
-	
+func (q *query) generateWhere() (string, []interface{}) {
+	strs := []string{}
+	vals := []interface{}{}
+	for _, v := range q.f.rs {
+		s, v := v.cql()
+		strs = append(strs, s)
+		vals = append(vals, v...)
+	}
+	return strings.Join(strs, " AND "), vals
 }
 
-func (q *Query) generateOrderBy() string {
-
+func (q *query) generateOrderBy() (string, []interface{}) {
+	return "", []interface{}{}
+	// " ORDER BY %v"
 }
 
-func (q *Query) generateLimit() string {
-
+func (q *query) generateLimit() (string, []interface{}) {
+	return "", []interface{}{}
+	// " LIMIT %v"
 }
-
