@@ -72,6 +72,7 @@ func toMap(i interface{}) (map[string]interface{}, bool) {
 
 func (t table) Where(rs ...Relation) Filter {
 	return filter{
+		t: t,
 		rs: rs,
 	}
 }

@@ -2,6 +2,7 @@ package cmagic
 
 import(
 	"strings"
+	"fmt"
 	"encoding/json"
 )
 
@@ -18,13 +19,13 @@ func (q *query) Read() ([]interface{}, error) {
 	sess := q.f.t.keySpace.session
 	ret := []interface{}{}
 	m := map[string]interface{}{}
-	for sess.Query(stmt, vals...).Iter().MapScan(m) {	
+	for sess.Query(stmt, vals...).Iter().MapScan(m) {
 		bytes, err := json.Marshal(m)
 		if err != nil {
 			return nil, err
 		}
 		r := q.f.t.zero()
-		err = json.Unmarshal(bytes, ret)
+		err = json.Unmarshal(bytes, r)
 		if err != nil {
 			return nil, err
 		}
@@ -37,20 +38,21 @@ func (q *query) generateRead() (string, []interface{}) {
 	w, wv := q.generateWhere()
 	o, ov := q.generateOrderBy()
 	l, lv := q.generateLimit()
-	str := "SELECT * FROM %v"
-	vals := []interface{}{q.f.t.info.name}
+	str := fmt.Sprintf("SELECT * FROM %v.%v", q.f.t.keySpace.name, q.f.t.info.name)
+	vals := []interface{}{}
 	if len(wv) > 0 {
-		str += w
+		str += " " + w
 		vals = append(vals, wv...)
 	}
 	if len(ov) > 0 {
-		str += o
+		str += " " + o
 		vals = append(vals, ov...)
 	}
 	if len(lv) > 0 {
-		str += l
+		str += " " + l
 		vals = append(vals, lv...)
 	}
+	fmt.Println(str, vals)
 	return str, vals
 }
 
@@ -62,7 +64,7 @@ func (q *query) generateWhere() (string, []interface{}) {
 		strs = append(strs, s)
 		vals = append(vals, v...)
 	}
-	return strings.Join(strs, " AND "), vals
+	return "WHERE " + strings.Join(strs, " AND "), vals
 }
 
 func (q *query) generateOrderBy() (string, []interface{}) {
