@@ -1,7 +1,7 @@
 package cmagic
 
 import(
-	"strings"
+	//"strings"
 )
 
 const (
@@ -29,7 +29,7 @@ func (r Relation) cql() (string, []interface{}) {
 		for i:=0;i<len(r.terms);i++ {
 			qs = append(qs, "?")
 		}
-		ret = r.key + " IN (" + strings.Join(qs, ", ") + ")" // This may be wrong and should be IN (?, ? ...)
+		return r.key + " IN (?)", []interface{}{r.terms}
 	case greaterThan:
 		ret = r.key + " > ?"
 	case greaterThanOrEquals:

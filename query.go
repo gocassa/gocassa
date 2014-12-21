@@ -20,9 +20,6 @@ func (q *query) Read() ([]interface{}, error) {
 	ret := []interface{}{}
 	m := map[string]interface{}{}
 	qu := sess.Query(stmt, vals...)
-	if err := qu.Exec(); err != nil {
-		return nil, err
-	}
 	iter := qu.Iter()
 	for iter.MapScan(m) {
 		bytes, err := json.Marshal(m)
@@ -36,7 +33,7 @@ func (q *query) Read() ([]interface{}, error) {
 		}
 		ret = append(ret, r)
 	}
-	return ret, nil
+	return ret, iter.Close()
 }
 
 func (q *query) generateRead() (string, []interface{}) {
