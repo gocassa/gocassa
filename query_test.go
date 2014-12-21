@@ -23,7 +23,7 @@ func init() {
 // cqlsh> CREATE TABLE test.customer (id text PRIMARY KEY, name text);
 func TestEq(t *testing.T) {
 	cs := ns.Table("customer", Customer{}, Keys{})
-	err := cs.Insert(Customer{
+	err := cs.Set(Customer{
 		Id: "50",
 		Name: "Joe",
 	})
@@ -44,14 +44,14 @@ func TestEq(t *testing.T) {
 
 func TestIn(t *testing.T) {
 	cs := ns.Table("customer", Customer{}, Keys{})
-	err := cs.Insert(Customer{
+	err := cs.Set(Customer{
 		Id: "100",
 		Name: "Joe",
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = cs.Insert(Customer{
+	err = cs.Set(Customer{
 		Id: "200",
 		Name: "Jane",
 	})
@@ -70,7 +70,7 @@ func TestIn(t *testing.T) {
 // cqlsh> CREATE TABLE test.customer1 (id text, name text, PRIMARY KEY((id, name)));
 func TestAnd(t *testing.T) {
 	cs := ns.Table("customer1", Customer{}, Keys{})
-	err := cs.Insert(Customer{
+	err := cs.Set(Customer{
 		Id: "100",
 		Name: "Joe",
 	})

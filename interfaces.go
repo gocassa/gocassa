@@ -15,7 +15,7 @@ type Query interface {
 	Read() ([]interface{}, error)
 	//ReadOne() (interface{}, error)
 	Limit(int) Query
-	//Options(QueryOptions) Query
+	// Options(QueryOptions) Query
 	// RowOptions(RowOptions)
 }
 
@@ -26,7 +26,6 @@ type Filter interface {
 	Query() Query
 	// Operations
 	Update(m map[string]interface{}) error  // Probably this is danger zone (can't be implemented efficiently) on a selectuinb with more than 1 document
-	Replace(v interface{}) error			// Replace doesn't make sense on a selection which result in more than 1 document
 	Delete() error
 }
 
@@ -36,7 +35,8 @@ type Keys struct {
 }
 
 type Table interface {
-	Insert(v interface{}) error 			// Insert needs no selection, but all keys (PartitionKeys and CompositeKeys must be present in the struct)
+	// Set requires 
+	Set(v interface{}) error 				
 	Where(relations ...Relation) Filter 	// Because we provide selections 
 }
 

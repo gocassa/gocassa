@@ -1,7 +1,6 @@
 package cmagic
 
 import(
-	"strings"
 	"fmt"
 	"encoding/json"
 )
@@ -37,7 +36,7 @@ func (q *query) Read() ([]interface{}, error) {
 }
 
 func (q *query) generateRead() (string, []interface{}) {
-	w, wv := q.generateWhere()
+	w, wv := q.f.generateWhere()
 	o, ov := q.generateOrderBy()
 	l, lv := q.generateLimit()
 	str := fmt.Sprintf("SELECT * FROM %v.%v", q.f.t.keySpace.name, q.f.t.info.name)
@@ -55,17 +54,6 @@ func (q *query) generateRead() (string, []interface{}) {
 		vals = append(vals, lv...)
 	}
 	return str, vals
-}
-
-func (q *query) generateWhere() (string, []interface{}) {
-	strs := []string{}
-	vals := []interface{}{}
-	for _, r := range q.f.rs {
-		s, v := r.cql()
-		strs = append(strs, s)
-		vals = append(vals, v...)
-	}
-	return "WHERE " + strings.Join(strs, " AND "), vals
 }
 
 func (q *query) generateOrderBy() (string, []interface{}) {

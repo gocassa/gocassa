@@ -25,10 +25,6 @@ func (r Relation) cql() (string, []interface{}) {
 	case equality:
 		ret = r.key + " = ?"
 	case in:
-		qs := []string{}
-		for i:=0;i<len(r.terms);i++ {
-			qs = append(qs, "?")
-		}
 		return r.key + " IN (?)", []interface{}{r.terms}
 	case greaterThan:
 		ret = r.key + " > ?"
@@ -54,6 +50,7 @@ func Eq(key string, term interface{}) Relation {
 	}
 }
 
+// In is broken at the moment. Please don't use
 func In(key string, terms ...interface{}) Relation {
 	return Relation{
 		op: in,

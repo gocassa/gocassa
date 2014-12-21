@@ -1,8 +1,23 @@
 package cmagic
 
+import(
+	"strings"
+)
+
 type filter struct {
 	t table
 	rs []Relation
+}
+
+func (f *filter) generateWhere() (string, []interface{}) {
+	strs := []string{}
+	vals := []interface{}{}
+	for _, r := range f.rs {
+		s, v := r.cql()
+		strs = append(strs, s)
+		vals = append(vals, v...)
+	}
+	return "WHERE " + strings.Join(strs, " AND "), vals
 }
 
 func (f filter) Replace(i interface{}) error {

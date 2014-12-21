@@ -89,7 +89,7 @@ func insert(cfName string, fieldNames []string) string {
 	return fmt.Sprintf("INSERT INTO %v ("+strings.Join(fieldNames, ", ")+") VALUES ("+strings.Join(placeHolders, ", ")+")", cfName)
 }
 
-func (c table) Insert(i interface{}) error {
+func (c table) Set(i interface{}) error {
 	m, ok := toMap(i)
 	if !ok {
 		return errors.New("Can't create: value not understood")
