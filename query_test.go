@@ -2,6 +2,7 @@ package cmagic
 
 import (
 	"testing"
+	"fmt"
 )
 
 type Customer struct {
@@ -42,6 +43,34 @@ func TestEq(t *testing.T) {
 	}
 }
 
+func TestMultipleRowResults(t *testing.T) {
+	name := "customer_multipletest"
+	ns.(*keySpace).Drop(name)
+	cs := ns.Table(name, Customer{}, Keys{
+		PartitionKeys: []string{"Name"},
+		CompositeKeys: []string{"Id"},
+	})
+	err := cs.(*table).Create()
+	if err != nil {
+		t.Fatal(err)
+	}
+	cs.Set(Customer{
+		Id: "12",
+		Name: "John",
+	})
+	cs.Set(Customer{
+		Id: "13",
+		Name: "John",
+	})
+	res, err := cs.Where(Eq("Name", "John")).Query().Read()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(res) != 2 {
+		t.Fatal(len(res), res)
+	}
+}
+
 func TestIn(t *testing.T) {
 	cs := ns.Table("customer", Customer{}, Keys{})
 	err := cs.Set(Customer{
@@ -60,6 +89,9 @@ func TestIn(t *testing.T) {
 	}
 	res, err := cs.Where(In("Id", "100", "200")).Query().Read()
 	if len(res) != 2 {
+		for _, v := range res {
+			fmt.Println(*(v.(*Customer)))
+		}
 		t.Fatal("Not found", len(res))
 	}
 	if res[0].(*Customer).Id != "100" || res[1].(*Customer).Id != "200" {

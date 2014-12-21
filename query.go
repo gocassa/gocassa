@@ -31,6 +31,7 @@ func (q *query) Read() ([]interface{}, error) {
 			return nil, err
 		}
 		ret = append(ret, r)
+		m = map[string]interface{}{}
 	}
 	return ret, iter.Close()
 }
@@ -41,15 +42,15 @@ func (q *query) generateRead() (string, []interface{}) {
 	l, lv := q.generateLimit()
 	str := fmt.Sprintf("SELECT * FROM %v.%v", q.f.t.keySpace.name, q.f.t.info.name)
 	vals := []interface{}{}
-	if len(wv) > 0 {
+	if len(w) > 0 {
 		str += " " + w
 		vals = append(vals, wv...)
 	}
-	if len(ov) > 0 {
+	if len(o) > 0 {
 		str += " " + o
 		vals = append(vals, ov...)
 	}
-	if len(lv) > 0 {
+	if len(l) > 0 {
 		str += " " + l
 		vals = append(vals, lv...)
 	}
