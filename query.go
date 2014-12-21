@@ -19,8 +19,11 @@ func (q *query) Read() ([]interface{}, error) {
 	sess := q.f.t.keySpace.session
 	ret := []interface{}{}
 	m := map[string]interface{}{}
-	fmt.Println(stmt, vals)
-	iter := sess.Query(stmt, vals...).Iter()
+	qu := sess.Query(stmt, vals...)
+	if err := qu.Exec(); err != nil {
+		return nil, err
+	}
+	iter := qu.Iter()
 	for iter.MapScan(m) {
 		bytes, err := json.Marshal(m)
 		if err != nil {

@@ -85,3 +85,11 @@ func TestAnd(t *testing.T) {
 		t.Fatal("Not found ", len(res))
 	}
 }
+
+func TestQueryReturnError(t *testing.T) {
+	cs := ns.Table("customer2", Customer{}, Keys{})
+	_, err := cs.Where(Eq("Id", "100"), Eq("Name", "Joe")).Query().Read()
+	if err == nil {
+		t.Fatal("Table customer2 does not exist - should return error")
+	}
+}
