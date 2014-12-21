@@ -67,6 +67,11 @@ func (n keySpace) Exists(cf string) (bool, error) {
 	return false, nil
 }
 
+func (n keySpace) Drop(cf string) error {
+	stmt := fmt.Sprintf("DROP TABLE IF EXISTS %v.%v", n.name, cf);
+	return n.session.Query(stmt).Exec()
+}
+
 // Translate errors returned by cassandra
 // Most of these should be checked after the appropriate commands only
 // or otherwise may give false positive results.

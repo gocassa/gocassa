@@ -3,6 +3,7 @@ package cmagic
 import (
 	"errors"
 	r "github.com/hailocab/cmagic/reflect"
+	g "github.com/hailocab/cmagic/generate"
 	"reflect"
 	"fmt"
 	"strings"
@@ -98,4 +99,12 @@ func (c table) Set(i interface{}) error {
 	stmt := insert(c.info.name, fields)
 	sess := c.keySpace.session
 	return sess.Query(stmt, values...).Exec()
+}
+
+func (t table) Create() error {
+	stmt, err := g.CreateTable(t.keySpace.name, t.info.name, t.info.keys.PartitionKeys, t.info.keys.CompositeKeys, t.info.fields, t.info.fieldValues)
+	if err != nil {
+		return err
+	}
+	return t.keySpace.session.Query(stmt).Exec()
 }

@@ -25,10 +25,10 @@ import (
 //   PRIMARY KEY (empID, deptID)
 // );
 //
-func CreateTable(keySpace, cf, partitionKeys, colKeys []string, fields []string, values []interface{}) (string, error) {
-	firstLine := fmt.Sprintf("CREATE TABLE %v.%v (", keySpace, cfName)
+func CreateTable(keySpace, cf string, partitionKeys, colKeys []string, fields []string, values []interface{}) (string, error) {
+	firstLine := fmt.Sprintf("CREATE TABLE %v.%v (", keySpace, cf)
 	fieldLines := []string{}
-	for i, v := range fields {
+	for i, _ := range fields {
 		ct := cassaType(values[i])
 		if ct == gocql.TypeCustom {
 			return "", errors.New(fmt.Sprintf("Unsupported type %T", values[i]))
