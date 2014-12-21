@@ -25,16 +25,8 @@ import (
 //   PRIMARY KEY (empID, deptID)
 // );
 //
-//
-// To be done: main difficulty here is there is no mapping between go types and cassa types in gocql, it does a cassa
-// inflight to get the table meat (AFAIK)
-func CreateTable(cfName, primaryKey string, fields []string, values []interface{}) (string, error) {
-	// for _, v := range primaryKey {
-	// 	if _, ok := m[v]; !ok {
-	// 		return "", errors.New("missing primary key " + v)
-	// 	}
-	// }
-	firstLine := fmt.Sprintf("CREATE TABLE %v (", cfName)
+func CreateTable(keySpace, cf, partitionKeys, colKeys []string, fields []string, values []interface{}) (string, error) {
+	firstLine := fmt.Sprintf("CREATE TABLE %v.%v (", keySpace, cfName)
 	fieldLines := []string{}
 	for i, v := range fields {
 		ct := cassaType(values[i])
@@ -46,13 +38,15 @@ func CreateTable(cfName, primaryKey string, fields []string, values []interface{
 			return "", nil
 		}
 		l := "    " + fields[i] + " " + typ
-		if v == primaryKey {
-			l += " PRIMARY KEY"
-		}
 		fieldLines = append(fieldLines, l)
 	}
+	fieldLines = append(fieldLines, fmt.Sprintf("PRIMARY KEY ((%v) %v)", j(partitionKeys), j(colKeys)))
 	stmt := strings.Join([]string{firstLine, strings.Join(fieldLines, ",\n"), ");"}, "\n")
 	return stmt, nil
+}
+
+func j(s []string) string {
+	return strings.Join(s, ", ")
 }
 
 func CreateKeyspace(keyspaceName string) string {

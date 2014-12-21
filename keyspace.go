@@ -3,6 +3,7 @@ package cmagic
 import (
 	"strings"
 	"github.com/gocql/gocql"
+	"fmt"
 )
 
 type keySpace struct {
@@ -33,10 +34,37 @@ func New(nameSp, username, password string, nodeIps []string) (KeySpace, error) 
 
 // Table returns a new Table. A Table is analogous to column families in Cassandra or tables in RDBMSes.
 func (n *keySpace) Table(name string, entity interface{}, keys Keys) Table {
+	ti := newTableInfo(n.name, name, keys, entity)
 	return &table{
 		keySpace:   n,
-		info: 		newTableInfo(n.name, name, keys, entity),
+		info: 		ti,
 	}
+}
+
+// Returns table names in a keyspace
+func (n *keySpace) Tables() ([]string, error) {
+	stmt := fmt.Sprintf("SELECT columnfamily_name FROM system.schema_columnfamilies WHERE keyspace_name='%v'", n.name);
+	iter := n.session.Query(stmt).Iter()
+	ret := []string{}
+	m := map[string]interface{}{}
+	for iter.MapScan(m) {
+		ret = append(ret, m["columnfamily_name"].(string))
+		m = map[string]interface{}{} // This is needed... @cruft
+	}
+	return ret, iter.Close()
+}
+
+func (n keySpace) Exists(cf string) (bool, error) {
+	ts, err := n.Tables()
+	if err != nil {
+		return false, err
+	}
+	for _, v := range ts {
+		if v == cf {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 // Translate errors returned by cassandra

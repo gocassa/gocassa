@@ -37,7 +37,7 @@ type Keys struct {
 type Table interface {
 	// Set requires 
 	Set(v interface{}) error 				
-	Where(relations ...Relation) Filter 	// Because we provide selections 
+	Where(relations ...Relation) Filter 	// Because we provide selections
 }
 
 // RowOptions
