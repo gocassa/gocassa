@@ -110,5 +110,29 @@ func (t T) Create() error {
 }
 
 func (t T) CreateStatement() (string, error) {
-	return g.CreateTable(t.keySpace.name, t.info.name, t.info.keys.PartitionKeys, t.info.keys.CompositeKeys, t.info.fields, t.info.fieldValues)
+	return g.CreateTable(t.keySpace.name, t.info.name, t.info.keys.PartitionKeys, t.info.keys.ClusteringColumns, t.info.fields, t.info.fieldValues)
 }
+
+//const (
+//	asc	 = iota
+//	desc
+//)
+//
+//type Ordering struct {
+//	fieldName string
+//	order int
+//}
+//
+//func ASC(fieldName string) Ordering {
+//	return Ordering{
+//		fieldName: fieldName,
+//		order: asc,
+//	}
+//}
+//
+//func DESC(fieldName string) Ordering {
+//	return Ordering{
+//		fieldName: fieldName,
+//		order: asc,
+//	}
+//}

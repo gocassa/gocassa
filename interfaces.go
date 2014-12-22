@@ -13,10 +13,7 @@ type KeySpace interface {
 // A Query is a subset of a Table intended to be read
 type Query interface {
 	Read() ([]interface{}, error)
-	//ReadOne() (interface{}, error)
 	Limit(int) Query
-	// Options(QueryOptions) Query
-	// RowOptions(RowOptions)
 }
 
 // A Filter is a subset of a Table, filtered by Relations.
@@ -31,63 +28,11 @@ type Filter interface {
 
 type Keys struct {
 	PartitionKeys []string
-	CompositeKeys []string
+	ClusteringColumns []string
 }
 
 type Table interface {
 	// Set requires 
 	Set(v interface{}) error 				
 	Where(relations ...Relation) Filter 	// Because we provide selections
-}
-
-// RowOptions
-// See comment aboove 'ReadOpt' method
-type RowOptions struct {
-	ColumnNames []string
-	ColumnStart *string
-	ColumnEnd   *string
-}
-
-func NewRowOptions() *RowOptions {
-	return &RowOptions{
-		ColumnNames: []string{},
-	}
-}
-
-// Set column names to return
-func (r *RowOptions) ColNames(ns []string) *RowOptions {
-	r.ColumnNames = ns
-	return r
-}
-
-// Set start of the column names to return
-func (r *RowOptions) ColStart(start string) *RowOptions {
-	r.ColumnStart = &start
-	return r
-}
-
-// Set end of the column names to return
-func (r *RowOptions) ColEnd(end string) *RowOptions {
-	r.ColumnEnd = &end
-	return r
-}
-
-type QueryOptions struct {
-	StartRowId *string
-	EndRowId   *string
-	RowLimit   *int
-}
-
-func NewQueryOptions() *QueryOptions {
-	return &QueryOptions{}
-}
-
-func (q *QueryOptions) Start(rowId string) *QueryOptions {
-	q.StartRowId = &rowId
-	return q
-}
-
-func (q *QueryOptions) End(rowId string) *QueryOptions {
-	q.EndRowId = &rowId
-	return q
 }
