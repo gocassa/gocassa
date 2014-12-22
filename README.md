@@ -58,10 +58,10 @@ geoTable.Insert(g)
 Querying:
 
 ```go
-queryString := fmt.Sprintf("SELECT geohash, realm, unique_id, lat, lon, update_time FROM %v WHERE geohash IN (%v) AND realm = '%v';", table, geoHashesInList, realm)
+queryString := fmt.Sprintf("SELECT geohash, realm, unique_id, lat, lon, update_time FROM %v WHERE geohash IN (%v) AND realm = '%v';", table, geoHashesList, realm)
 
 // Equals to
-geoHashesInList := []string{"absdsd3", "fddff833f", "hsbrh3g4h3", "j3hg43h4g3hg4"}
+geoHashesList := []string{"absdsd3", "fddff833f", "hsbrh3g4h3", "j3hg43h4g3hg4"}
 rows, err := geoTable.Where(In("geoHash", geoHashesList...), Eq("realm", "London")).Query().Read()
 ```
 

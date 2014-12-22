@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-type table struct {
+type T struct {
 	keySpace   	*keySpace
 	info 		*tableInfo
 }
@@ -45,7 +45,7 @@ func newTableInfo(keyspace, name string, keys Keys, entity interface{}) *tableIn
 	return cinf
 }
 
-func (t table) zero() interface{} {
+func (t T) zero() interface{} {
 	return reflect.New(reflect.TypeOf(t.info.entity)).Interface()
 }
 
@@ -71,7 +71,7 @@ func toMap(i interface{}) (map[string]interface{}, bool) {
 	return r.StructToMap(i)
 }
 
-func (t table) Where(rs ...Relation) Filter {
+func (t T) Where(rs ...Relation) Filter {
 	return filter{
 		t: t,
 		rs: rs,
@@ -90,7 +90,7 @@ func insert(cfName string, fieldNames []string) string {
 	return fmt.Sprintf("INSERT INTO %v ("+strings.Join(fieldNames, ", ")+") VALUES ("+strings.Join(placeHolders, ", ")+")", cfName)
 }
 
-func (c table) Set(i interface{}) error {
+func (c T) Set(i interface{}) error {
 	m, ok := toMap(i)
 	if !ok {
 		return errors.New("Can't create: value not understood")
@@ -101,10 +101,14 @@ func (c table) Set(i interface{}) error {
 	return sess.Query(stmt, values...).Exec()
 }
 
-func (t table) Create() error {
-	stmt, err := g.CreateTable(t.keySpace.name, t.info.name, t.info.keys.PartitionKeys, t.info.keys.CompositeKeys, t.info.fields, t.info.fieldValues)
+func (t T) Create() error {
+	stmt, err := t.CreateStatement()
 	if err != nil {
 		return err
 	}
 	return t.keySpace.session.Query(stmt).Exec()
+}
+
+func (t T) CreateStatement() (string, error) {
+	return g.CreateTable(t.keySpace.name, t.info.name, t.info.keys.PartitionKeys, t.info.keys.CompositeKeys, t.info.fields, t.info.fieldValues)
 }

@@ -5,7 +5,7 @@ import(
 )
 
 type filter struct {
-	t table
+	t T
 	rs []Relation
 }
 
