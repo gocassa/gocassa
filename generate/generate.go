@@ -25,7 +25,7 @@ import (
 //   PRIMARY KEY (empID, deptID)
 // );
 //
-func CreateTable(keySpace, cf string, partitionKeys, colKeys []string, fields []string, values []interface{}, ordName ) (string, error) {
+func CreateTable(keySpace, cf string, partitionKeys, colKeys []string, fields []string, values []interface{}) (string, error) {
 	firstLine := fmt.Sprintf("CREATE TABLE %v.%v (", keySpace, cf)
 	fieldLines := []string{}
 	for i, _ := range fields {

@@ -48,9 +48,9 @@ func TestMultipleRowResults(t *testing.T) {
 	ns.(*keySpace).Drop(name)
 	cs := ns.Table(name, Customer{}, Keys{
 		PartitionKeys: []string{"Name"},
-		CompositeKeys: []string{"Id"},
+		ClusteringColumns: []string{"Id"},
 	})
-	err := cs.(*table).Create()
+	err := cs.(*T).Create()
 	if err != nil {
 		t.Fatal(err)
 	}

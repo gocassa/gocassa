@@ -32,7 +32,7 @@ func TestCreateTable(t *testing.T) {
 	cs := ns.Table(name, Customer{}, Keys{
 		PartitionKeys: []string{"Id", "Name"},
 	})
-	err := cs.(*table).Create()
+	err := cs.(*T).Create()
 	if err != nil {
 		t.Fatal(err)
 	}
