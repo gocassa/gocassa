@@ -1,12 +1,12 @@
 package cmagic
 
 import (
-	"testing"
 	"fmt"
+	"testing"
 )
 
 type Customer struct {
-	Id string
+	Id   string
 	Name string
 }
 
@@ -25,7 +25,7 @@ func init() {
 func TestEq(t *testing.T) {
 	cs := ns.Table("customer", Customer{}, Keys{})
 	err := cs.Set(Customer{
-		Id: "50",
+		Id:   "50",
 		Name: "Joe",
 	})
 	if err != nil {
@@ -47,7 +47,7 @@ func TestMultipleRowResults(t *testing.T) {
 	name := "customer_multipletest"
 	ns.(*K).Drop(name)
 	cs := ns.Table(name, Customer{}, Keys{
-		PartitionKeys: []string{"Name"},
+		PartitionKeys:     []string{"Name"},
 		ClusteringColumns: []string{"Id"},
 	})
 	err := cs.(*T).Create()
@@ -55,11 +55,11 @@ func TestMultipleRowResults(t *testing.T) {
 		t.Fatal(err)
 	}
 	cs.Set(Customer{
-		Id: "12",
+		Id:   "12",
 		Name: "John",
 	})
 	cs.Set(Customer{
-		Id: "13",
+		Id:   "13",
 		Name: "John",
 	})
 	res, err := cs.Where(Eq("Name", "John")).Query().Read()
@@ -74,14 +74,14 @@ func TestMultipleRowResults(t *testing.T) {
 func TestIn(t *testing.T) {
 	cs := ns.Table("customer", Customer{}, Keys{})
 	err := cs.Set(Customer{
-		Id: "100",
+		Id:   "100",
 		Name: "Joe",
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 	err = cs.Set(Customer{
-		Id: "200",
+		Id:   "200",
 		Name: "Jane",
 	})
 	if err != nil {
@@ -103,7 +103,7 @@ func TestIn(t *testing.T) {
 func TestAnd(t *testing.T) {
 	cs := ns.Table("customer1", Customer{}, Keys{})
 	err := cs.Set(Customer{
-		Id: "100",
+		Id:   "100",
 		Name: "Joe",
 	})
 	if err != nil {

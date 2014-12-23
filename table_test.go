@@ -1,6 +1,6 @@
 package cmagic
 
-import(
+import (
 	"fmt"
 	"math/rand"
 	"testing"
@@ -37,7 +37,7 @@ func TestCreateTable(t *testing.T) {
 		t.Fatal(err)
 	}
 	err = cs.Set(Customer{
-		Id: "1001",
+		Id:   "1001",
 		Name: "Joe",
 	})
 	if err != nil {
@@ -57,9 +57,9 @@ func TestCreateTable(t *testing.T) {
 }
 
 type Customer1 struct {
-	Id string 
-	MaxSpeed int 
-	Brand string 
+	Id       string
+	MaxSpeed int
+	Brand    string
 }
 
 func TestCreateTable2(t *testing.T) {

@@ -2,23 +2,23 @@ package cmagic
 
 import (
 	"errors"
-	r "github.com/hailocab/cmagic/reflect"
-	g "github.com/hailocab/cmagic/generate"
-	"reflect"
 	"fmt"
+	g "github.com/hailocab/cmagic/generate"
+	r "github.com/hailocab/cmagic/reflect"
+	"reflect"
 	"strings"
 )
 
 type T struct {
-	keySpace   	*K
-	info 		*tableInfo
+	keySpace *K
+	info     *tableInfo
 }
 
 // Contains mostly analyzed information about the entity
 type tableInfo struct {
 	keyspace, name string
 	entity         interface{}
-	keys 		   Keys
+	keys           Keys
 	fieldNames     map[string]struct{} // This is here only to check containment
 	fields         []string
 	fieldValues    []interface{}
@@ -26,10 +26,10 @@ type tableInfo struct {
 
 func newTableInfo(keyspace, name string, keys Keys, entity interface{}) *tableInfo {
 	cinf := &tableInfo{
-		keyspace:   keyspace,
-		name:       name,
-		entity:     entity,
-		keys: 		keys,
+		keyspace: keyspace,
+		name:     name,
+		entity:   entity,
+		keys:     keys,
 	}
 	fields, values, ok := r.FieldsAndValues(entity)
 	if !ok {
@@ -73,7 +73,7 @@ func toMap(i interface{}) (map[string]interface{}, bool) {
 
 func (t T) Where(rs ...Relation) Filter {
 	return filter{
-		t: t,
+		t:  t,
 		rs: rs,
 	}
 }

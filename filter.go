@@ -1,11 +1,11 @@
 package cmagic
 
-import(
+import (
 	"strings"
 )
 
 type filter struct {
-	t T
+	t  T
 	rs []Relation
 }
 

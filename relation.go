@@ -1,12 +1,12 @@
 package cmagic
 
-import(
-	"strings"
+import (
 	"fmt"
+	"strings"
 )
 
 const (
-	equality	 = iota
+	equality = iota
 	in
 	greaterThan
 	greaterThanOrEquals
@@ -15,7 +15,7 @@ const (
 )
 
 type Relation struct {
-	op 	  int
+	op    int
 	key   string
 	terms []interface{}
 }
@@ -29,10 +29,10 @@ func (r Relation) cql() (string, []interface{}) {
 		//return r.key + " IN (?)", []interface{}{r.terms}
 		// Ideally the above code should work.
 		qs := []string{}
-		for i:=0;i<len(r.terms);i++ {
+		for i := 0; i < len(r.terms); i++ {
 			qs = append(qs, "?")
 		}
-		return fmt.Sprintf(r.key + " IN (%v)", strings.Join(qs, ", ")), r.terms
+		return fmt.Sprintf(r.key+" IN (%v)", strings.Join(qs, ", ")), r.terms
 	case greaterThan:
 		ret = r.key + " > ?"
 	case greaterThanOrEquals:
@@ -51,8 +51,8 @@ func toI(i interface{}) []interface{} {
 
 func Eq(key string, term interface{}) Relation {
 	return Relation{
-		op: equality,
-		key: key,
+		op:    equality,
+		key:   key,
 		terms: toI(term),
 	}
 }
@@ -60,40 +60,40 @@ func Eq(key string, term interface{}) Relation {
 // In is broken at the moment. Please don't use
 func In(key string, terms ...interface{}) Relation {
 	return Relation{
-		op: in,
-		key: key,
+		op:    in,
+		key:   key,
 		terms: terms,
 	}
 }
 
 func GT(key string, term interface{}) Relation {
 	return Relation{
-		op: greaterThan,
-		key: key,
+		op:    greaterThan,
+		key:   key,
 		terms: toI(term),
 	}
 }
 
 func GTE(key string, term interface{}) Relation {
 	return Relation{
-		op: greaterThanOrEquals,
-		key: key,
+		op:    greaterThanOrEquals,
+		key:   key,
 		terms: toI(term),
 	}
 }
 
 func LT(key string, term interface{}) Relation {
 	return Relation{
-		op: lesserThan,
-		key: key,
+		op:    lesserThan,
+		key:   key,
 		terms: toI(term),
 	}
 }
 
 func LTE(key string, term interface{}) Relation {
 	return Relation{
-		op: lesserThanOrEquals,
-		key: key,
+		op:    lesserThanOrEquals,
+		key:   key,
 		terms: toI(term),
 	}
 }

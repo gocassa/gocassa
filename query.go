@@ -1,8 +1,8 @@
 package cmagic
 
-import(
-	"fmt"
+import (
 	"encoding/json"
+	"fmt"
 )
 
 type query struct {

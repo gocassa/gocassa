@@ -1,9 +1,9 @@
 package cmagic
 
 import (
-	"strings"
-	"github.com/gocql/gocql"
 	"fmt"
+	"github.com/gocql/gocql"
+	"strings"
 )
 
 type K struct {
@@ -36,14 +36,14 @@ func New(nameSp, username, password string, nodeIps []string) (KeySpace, error) 
 func (k *K) Table(name string, entity interface{}, keys Keys) Table {
 	ti := newTableInfo(k.name, name, keys, entity)
 	return &T{
-		keySpace:   k,
-		info: 		ti,
+		keySpace: k,
+		info:     ti,
 	}
 }
 
 // Returns table names in a keyspace
 func (n *K) Tables() ([]string, error) {
-	stmt := fmt.Sprintf("SELECT columnfamily_name FROM system.schema_columnfamilies WHERE keyspace_name='%v'", n.name);
+	stmt := fmt.Sprintf("SELECT columnfamily_name FROM system.schema_columnfamilies WHERE keyspace_name='%v'", n.name)
 	iter := n.session.Query(stmt).Iter()
 	ret := []string{}
 	m := map[string]interface{}{}
@@ -68,7 +68,7 @@ func (k K) Exists(cf string) (bool, error) {
 }
 
 func (k K) Drop(cf string) error {
-	stmt := fmt.Sprintf("DROP TABLE IF EXISTS %v.%v", k.name, cf);
+	stmt := fmt.Sprintf("DROP TABLE IF EXISTS %v.%v", k.name, cf)
 	return k.session.Query(stmt).Exec()
 }
 
