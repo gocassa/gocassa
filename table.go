@@ -10,7 +10,7 @@ import (
 )
 
 type T struct {
-	keySpace   	*keySpace
+	keySpace   	*K
 	info 		*tableInfo
 }
 

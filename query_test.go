@@ -45,7 +45,7 @@ func TestEq(t *testing.T) {
 
 func TestMultipleRowResults(t *testing.T) {
 	name := "customer_multipletest"
-	ns.(*keySpace).Drop(name)
+	ns.(*K).Drop(name)
 	cs := ns.Table(name, Customer{}, Keys{
 		PartitionKeys: []string{"Name"},
 		ClusteringColumns: []string{"Id"},

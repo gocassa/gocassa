@@ -6,7 +6,7 @@ import (
 	"fmt"
 )
 
-type keySpace struct {
+type K struct {
 	session *gocql.Session
 	name    string
 	nodeIps []string
@@ -25,7 +25,7 @@ func New(nameSp, username, password string, nodeIps []string) (KeySpace, error) 
 	if err != nil {
 		return nil, err
 	}
-	return &keySpace{
+	return &K{
 		session: sess,
 		name:    nameSp,
 		nodeIps: nodeIps,
@@ -33,16 +33,16 @@ func New(nameSp, username, password string, nodeIps []string) (KeySpace, error) 
 }
 
 // Table returns a new Table. A Table is analogous to column families in Cassandra or tables in RDBMSes.
-func (n *keySpace) Table(name string, entity interface{}, keys Keys) Table {
-	ti := newTableInfo(n.name, name, keys, entity)
+func (k *K) Table(name string, entity interface{}, keys Keys) Table {
+	ti := newTableInfo(k.name, name, keys, entity)
 	return &T{
-		keySpace:   n,
+		keySpace:   k,
 		info: 		ti,
 	}
 }
 
 // Returns table names in a keyspace
-func (n *keySpace) Tables() ([]string, error) {
+func (n *K) Tables() ([]string, error) {
 	stmt := fmt.Sprintf("SELECT columnfamily_name FROM system.schema_columnfamilies WHERE keyspace_name='%v'", n.name);
 	iter := n.session.Query(stmt).Iter()
 	ret := []string{}
@@ -54,8 +54,8 @@ func (n *keySpace) Tables() ([]string, error) {
 	return ret, iter.Close()
 }
 
-func (n keySpace) Exists(cf string) (bool, error) {
-	ts, err := n.Tables()
+func (k K) Exists(cf string) (bool, error) {
+	ts, err := k.Tables()
 	if err != nil {
 		return false, err
 	}
@@ -67,9 +67,9 @@ func (n keySpace) Exists(cf string) (bool, error) {
 	return false, nil
 }
 
-func (n keySpace) Drop(cf string) error {
-	stmt := fmt.Sprintf("DROP TABLE IF EXISTS %v.%v", n.name, cf);
-	return n.session.Query(stmt).Exec()
+func (k K) Drop(cf string) error {
+	stmt := fmt.Sprintf("DROP TABLE IF EXISTS %v.%v", k.name, cf);
+	return k.session.Query(stmt).Exec()
 }
 
 // Translate errors returned by cassandra

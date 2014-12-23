@@ -9,7 +9,7 @@ import(
 
 // cqlsh> CREATE TABLE test.customer1 (id text, name text, PRIMARY KEY((id, name)));
 func TestTables(t *testing.T) {
-	res, err := ns.(*keySpace).Tables()
+	res, err := ns.(*K).Tables()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -21,8 +21,8 @@ func TestTables(t *testing.T) {
 func TestCreateTable(t *testing.T) {
 	rand.Seed(time.Now().Unix())
 	name := fmt.Sprintf("customer_%v", rand.Int()%100)
-	if ex, err := ns.(*keySpace).Exists(name); ex && err == nil {
-		err = ns.(*keySpace).Drop(name)
+	if ex, err := ns.(*K).Exists(name); ex && err == nil {
+		err = ns.(*K).Drop(name)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -50,7 +50,7 @@ func TestCreateTable(t *testing.T) {
 	if len(res) != 1 {
 		t.Fatal("Not found ", len(res))
 	}
-	err = ns.(*keySpace).Drop(name)
+	err = ns.(*K).Drop(name)
 	if err != nil {
 		t.Fatal(err)
 	}

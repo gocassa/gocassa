@@ -15,7 +15,7 @@ type Query interface {
 	Read() ([]interface{}, error)
 	Limit(int) Query
 	// For pagination
-	Start(token string) Query
+	// Start(token string) Query
 }
 
 // A Filter is a subset of a Table, filtered by Relations.
