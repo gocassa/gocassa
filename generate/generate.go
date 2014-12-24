@@ -58,13 +58,13 @@ func CreateKeyspace(keyspaceName string) string {
 	return fmt.Sprintf("CREATE KEYSPACE \"%v\" WITH REPLICATION = {'class' : 'NetworkTopologyStrategy', 'eu-west-1' : 3}", keyspaceName)
 }
 
-// UPDATE Movies SET col1 = val1, col2 = val2 WHERE movieID = key1;
-func UpdateById(cfName string, pkName string, fieldNames []string) string {
+// UPDATE keyspace.Movies SET col1 = val1, col2 = val2
+func Update(cfName string, pkName string, fieldNames []string) string {
 	cols := []string{}
 	for _, v := range fieldNames {
 		cols = append(cols, v+" = ?")
 	}
-	return fmt.Sprintf("UPDATE %v SET "+strings.Join(cols, ", ")+" WHERE %v = ?;", cfName, pkName)
+	return fmt.Sprintf("UPDATE %v SET "+strings.Join(cols, ", "), cfName)
 }
 
 func ReadById(cfName string, pk string) string {

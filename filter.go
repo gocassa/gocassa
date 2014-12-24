@@ -2,6 +2,7 @@ package cmagic
 
 import (
 	"strings"
+	g "github.com/hailocab/cmagic/generate"
 )
 
 type filter struct {
@@ -25,26 +26,15 @@ func (f filter) Replace(i interface{}) error {
 }
 
 func (f filter) Update(m map[string]interface{}) error {
-	//m, ok := toMap(i)
-	//if !ok {
-	//	return errors.New("Update: value not understood")
-	//}
-	//id, ok := m[c.info.primaryKey]
-	//if !ok {
-	//	return errors.New("Update: primary key not found")
-	//}
-	//fields, values := keyValues(m)
-	//for k, v := range m {
-	//	if k == c.info.primaryKey {
-	//		continue
-	//	}
-	//	fields = append(fields, k)
-	//	values = append(values, v)
-	//}
-	//stmt := g.UpdateById(c.keySpace.name, c.info.primaryKey, fields)
-	//sess := c.keySpace.session
-	//return sess.Query(stmt, append(values, id)...).Exec()
-	return nil
+	fields, values := keyValues(m)
+	for k, v := range m {
+		fields = append(fields, k)
+		values = append(values, v)
+	}
+	str, wvals := f.generateWhere()
+	stmt := g.Update(f.t.keySpace.name, f.t.info.name, fields)
+	sess := f.t.keySpace.session
+	return sess.Query(stmt +" "+ str, append(values, wvals...)...).Exec()
 }
 
 func (f filter) Delete() error {
