@@ -3,6 +3,7 @@ package cmagic
 import (
 	"fmt"
 	"testing"
+	"reflect"
 )
 
 type Customer struct {
@@ -123,5 +124,52 @@ func TestQueryReturnError(t *testing.T) {
 	_, err := cs.Where(Eq("Id", "100"), Eq("Name", "Joe")).Query().Read()
 	if err == nil {
 		t.Fatal("Table customer2 does not exist - should return error")
+	}
+}
+
+type Customer3 struct {
+	Id string 
+	Field1 string 
+	Field2 int 
+	Field3 int32
+	Field4 int64
+	Field5 float32
+	Field6 float64
+	Field7 bool
+}
+
+func TestTypesMarshal(t *testing.T) {
+	c := Customer3{
+		Id: "1",
+		Field1: "A",
+		Field2: 1,
+		Field3: 2,
+		Field4: 3,
+		Field5: 4.0,
+		Field6: 5.0,
+		Field7: true,
+	}
+	tbl := ns.Table("customer3", Customer3{}, Keys{PartitionKeys: []string{"Id"}})
+	err := tbl.(*T).Create()
+	if ex, err := ns.(*K).Exists("customer3"); err != nil {
+		t.Fatal(err)
+	} else if !ex {
+		err := tbl.(*T).Create()
+		if err != nil {
+			t.Fatal("Create table failed :", err)
+		}
+	}
+	if err = tbl.Set(c); err != nil {
+		t.Fatal(err)
+	}
+	res, err := tbl.Where(Eq("Id", "1")).Query().Read()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(res) != 1 {
+		t.Fatal()
+	}
+	if !reflect.DeepEqual(c, *res[0].(*Customer3)) {
+		t.Fatal(c, *res[0].(*Customer3))
 	}
 }
