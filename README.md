@@ -32,7 +32,7 @@ type GeoIndex struct {
 	Long float64
 }
 keys := Keys{
-	PartitionKeys: []string{"Geohash", "Realm", "UniqueId"},
+	PartitionKeys: []string{"Geohash", "UniqueId"},
 }
 geoTable := keyspace.Table("GeoIndex", GeoIndex{}, keys)
 ```
@@ -62,6 +62,40 @@ queryString := fmt.Sprintf("SELECT geohash, realm, unique_id, lat, lon, update_t
 
 // Equals to
 geoHashesList := []string{"absdsd3", "fddff833f", "hsbrh3g4h3", "j3hg43h4g3hg4"}
-rows, err := geoTable.Where(In("geoHash", geoHashesList...), Eq("realm", "London")).Query().Read()
+rows, err := geoTable.Where(In("geoHash", geoHashesList...)).Query().Read()
 ```
 
+### Recipes are in progress for this library:
+
+The idea behind Recipes is that we identify certain query patterns and instead of letting people define their own PartitionKeys and Clustering Columns and then being able to construct any kind of query,
+we:
+- name certain PartitionKey-ClusteringColumn patterns: (("Id")) becomes Entity, ((SomeField), Id) becomes OneToMany
+- creating different table objects for the different recipes
+- restrict the queries the can make on such table object thus not allowing invalid queries to be made on a table
+
+This will hopefully decrease the cognitive load when working with the most common usecases and increase the level of type safety somewhat to prevent runtime errors.
+
+Something like this vague sketch here:
+
+```
+// New entity recipe
+func NewEntity(interface{}) Entity {
+	//...
+}
+
+type Entity interface {
+	//Crud stuff:
+	Read(id string) (interface{}, error)
+	Set(i interface{}) error
+	Delete(id string) error
+}
+
+// fieldName is the field to do the query based on
+func NewOneToMany(fieldName string, interface{}) OneToMany {
+}
+
+type OneToMany interface {
+	//CRUD stuff (still in progress since it can not be the same as)
+	List(fieldEqualsTo interface{}, p PagingOptions) ([]interface, error)
+}
+```
