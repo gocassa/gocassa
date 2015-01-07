@@ -1,17 +1,41 @@
 package cmagic
 
-// This stuff is in flux.
-
-// This is just an alias - unfortunately aliases in Go do not really work well -
-// ie. you have to type cast to and from the original type.
-type M map[string]interface{}
-
 type KeySpace interface {
-	CustomTable(tableName string, row interface{}, keys Keys) Table
-	EntityTable(tableName string)
-	OneToManyTable(tableName, fieldToIndexBy, uniqueKey string) OneToManyTable
-	TimeSeriesTable()
+	OneToOneTable(tableName, id string, row interface{}) OneToOneTable
+	OneToManyTable(tableName, fieldToIndexBy, uniqueKey string, row interface{}) OneToManyTable
+	// TimeSeriesTable()
+	// Rename this to CQLTable or something
+	Table(tableName string, row interface{}, keys Keys) Table
 }
+
+//
+// OneToOne recipe
+//
+
+type OneToOneTable interface {
+	Set(v interface{}) error
+	Update(id string, m map[string]interface{}) error
+	Delete(id string) error
+}
+
+//
+// OneToMany recipe
+//
+
+type OneToManyTable interface {
+	Set(v interface{}) error
+	Update(v, id interface{}, m map[string]interface{}) error
+	Query(v, startId interface{}, limit int) ([]interface{}, error)
+	Read(v, id interface{}) (interface{}, error)
+}
+
+//
+// TimeSeries recipe
+//
+
+//
+// Raw CQL
+//
 
 // A Query is a subset of a Table intended to be read
 type Query interface {
@@ -31,26 +55,12 @@ type Filter interface {
 	Delete() error
 }
 
-type Entity interface {
-	
-}
-
-type OneToManyTable interface {
-	Replace()
-	List(v interface{})
-	Update(v, v1, map[string]string{}) error
-}
-
-type TimeSeriesTable interface {
-
-}
-
 type Keys struct {
 	PartitionKeys     []string
 	ClusteringColumns []string
 }
 
-type CustomTable interface {
+type Table interface {
 	// Set Inserts, or Replaces your row with the supplied struct. Be aware that what is not in your struct, will be deleted.
 	// To only overwrite some of the fields, use Query.Update
 	Set(v interface{}) error

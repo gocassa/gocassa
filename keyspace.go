@@ -41,6 +41,19 @@ func (k *K) Table(name string, entity interface{}, keys Keys) Table {
 	}
 }
 
+func (k *K) OneToOneTable(name, id string, row interface{}) OneToOneTable {
+	return &oneToOne{
+		t: k.Table(name, row, Keys{
+			PartitionKeys: []string{id},
+		}),
+		idField: id,
+	}
+}
+
+func (k *K) OneToManyTable(name, fieldToIndexBy, id string, row interface{}) OneToManyTable {
+	return nil
+}
+
 // Returns table names in a keyspace
 func (n *K) Tables() ([]string, error) {
 	stmt := fmt.Sprintf("SELECT columnfamily_name FROM system.schema_columnfamilies WHERE keyspace_name='%v'", n.name)

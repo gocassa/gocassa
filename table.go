@@ -63,8 +63,8 @@ func keyValues(m map[string]interface{}) ([]string, []interface{}) {
 
 func toMap(i interface{}) (map[string]interface{}, bool) {
 	switch v := i.(type) {
-	case M:
-		return map[string]interface{}(v), true
+	//case M:
+	//	return map[string]interface{}(v), true
 	case map[string]interface{}:
 		return v, true
 	}
