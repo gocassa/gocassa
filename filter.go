@@ -2,7 +2,7 @@ package cmagic
 
 import (
 	"strings"
-	g "github.com/hailocab/cmagic/generate"
+	"fmt"
 )
 
 type filter struct {
@@ -25,6 +25,15 @@ func (f filter) Replace(i interface{}) error {
 	return nil
 }
 
+// UPDATE keyspace.Movies SET col1 = val1, col2 = val2
+func updateStatement(cfName string, pkName string, fieldNames []string) string {
+	cols := []string{}
+	for _, v := range fieldNames {
+		cols = append(cols, v+" = ?")
+	}
+	return fmt.Sprintf("UPDATE %v SET "+strings.Join(cols, ", "), cfName)
+}
+
 func (f filter) Update(m map[string]interface{}) error {
 	fields, values := keyValues(m)
 	for k, v := range m {
@@ -32,7 +41,7 @@ func (f filter) Update(m map[string]interface{}) error {
 		values = append(values, v)
 	}
 	str, wvals := f.generateWhere()
-	stmt := g.Update(f.t.keySpace.name, f.t.info.name, fields)
+	stmt := updateStatement(f.t.keySpace.name, f.t.info.name, fields)
 	sess := f.t.keySpace.session
 	return sess.Query(stmt +" "+ str, append(values, wvals...)...).Exec()
 }

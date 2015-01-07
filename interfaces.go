@@ -14,18 +14,21 @@ type KeySpace interface {
 
 type OneToOneTable interface {
 	Set(v interface{}) error
-	Update(id string, m map[string]interface{}) error
-	Delete(id string) error
+	Update(id interface{}, m map[string]interface{}) error
+	Delete(id interface{}) error
+	Read(id interface{}) (interface{}, error)
 }
 
 //
 // OneToMany recipe
 //
 
+// Maybe have UpdateAll and DeleteAll?
 type OneToManyTable interface {
 	Set(v interface{}) error
 	Update(v, id interface{}, m map[string]interface{}) error
-	Query(v, startId interface{}, limit int) ([]interface{}, error)
+	Delete(v, id interface{}) error
+	List(v, startId interface{}, limit int) ([]interface{}, error)
 	Read(v, id interface{}) (interface{}, error)
 }
 

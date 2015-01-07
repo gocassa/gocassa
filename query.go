@@ -7,9 +7,11 @@ import (
 
 type query struct {
 	f filter
+	limit int
 }
 
 func (q *query) Limit(i int) Query {
+	q.limit = i
 	return q
 }
 
@@ -63,6 +65,5 @@ func (q *query) generateOrderBy() (string, []interface{}) {
 }
 
 func (q *query) generateLimit() (string, []interface{}) {
-	return "", []interface{}{}
-	// " LIMIT %v"
+	return " LIMIT %v", []interface{}{q.limit}
 }
