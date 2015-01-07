@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gocql/gocql"
 	"strings"
+	"time"
 )
 
 type K struct {
@@ -51,6 +52,10 @@ func (k *K) OneToOneTable(name, id string, row interface{}) OneToOneTable {
 }
 
 func (k *K) OneToManyTable(name, fieldToIndexBy, id string, row interface{}) OneToManyTable {
+	return nil
+}
+
+func (k *K) TimeSeries(name, idField, timeField string, bucketSize time.Time, row interface{}) TimeSeries {
 	return nil
 }
 
