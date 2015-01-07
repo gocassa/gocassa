@@ -17,7 +17,7 @@ type K struct {
 func New(nameSp, username, password string, nodeIps []string) (KeySpace, error) {
 	cluster := gocql.NewCluster(nodeIps...)
 	cluster.Keyspace = nameSp
-	cluster.Consistency = gocql.Quorum
+	cluster.Consistency = gocql.One
 	cluster.Authenticator = gocql.PasswordAuthenticator{
 		Username: username,
 		Password: password,
