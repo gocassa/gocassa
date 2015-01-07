@@ -20,7 +20,7 @@ func TestOneToOneTable(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if reflect.DeepEqual(*(c.(*Customer)), joe) {
-		t.Fatal(joe)
+	if !reflect.DeepEqual(*(c.(*Customer)), joe) {
+		t.Fatal(*(c.(*Customer)), joe)
 	}
 }
