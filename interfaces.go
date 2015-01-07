@@ -1,10 +1,13 @@
 package cmagic
 
+import(
+	"time"
+)
+
 type KeySpace interface {
 	OneToOneTable(tableName, id string, row interface{}) OneToOneTable
 	OneToManyTable(tableName, fieldToIndexBy, uniqueKey string, row interface{}) OneToManyTable
-	// TimeSeriesTable()
-	// Rename this to CQLTable or something
+	TimeSeries(tableName, idField, timeField string, bucketSize time.Time, row interface{}) TimeSeries
 	Table(tableName string, row interface{}, keys Keys) Table
 }
 
@@ -17,6 +20,7 @@ type OneToOneTable interface {
 	Update(id interface{}, m map[string]interface{}) error
 	Delete(id interface{}) error
 	Read(id interface{}) (interface{}, error)
+	// MultiRead
 }
 
 //
@@ -28,13 +32,23 @@ type OneToManyTable interface {
 	Set(v interface{}) error
 	Update(v, id interface{}, m map[string]interface{}) error
 	Delete(v, id interface{}) error
-	List(v, startId interface{}, limit int) ([]interface{}, error)
+	List(v, startId, limit int) ([]interface{}, error)
 	Read(v, id interface{}) (interface{}, error)
+	// MultiRead LATER
 }
 
 //
 // TimeSeries recipe
 //
+
+// TimeSeries entries are immutables @todo think about it
+type TimeSeries interface {
+	// timeField and idField must be present
+	Set(v interface{}) error
+	Update(id interface{}, t time.Time, map[string]interface{})
+	List(start, end time.Time) ([]interface{}, error)
+	Read(id interface{}, t time.Time) (interface{}, error)
+}
 
 //
 // Raw CQL
