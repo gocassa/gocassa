@@ -65,5 +65,8 @@ func (q *query) generateOrderBy() (string, []interface{}) {
 }
 
 func (q *query) generateLimit() (string, []interface{}) {
-	return " LIMIT %v", []interface{}{q.limit}
+	if q.limit < 1 {
+		return "", []interface{}{}
+	}
+	return "LIMIT ?", []interface{}{q.limit}
 }

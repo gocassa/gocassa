@@ -7,6 +7,22 @@ import (
 	"time"
 )
 
+func createIf(ns KeySpace, cs Table, t *testing.T) {
+	name := cs.(*T).info.name
+	if ex, err := ns.(*K).Exists(name); ex && err == nil {
+		err = ns.(*K).Drop(name)
+		if err != nil {
+			t.Fatal(err)
+		}
+	} else if err != nil {
+		t.Fatal(err)
+	}
+	err := cs.(*T).Create()
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 // cqlsh> CREATE TABLE test.customer1 (id text, name text, PRIMARY KEY((id, name)));
 func TestTables(t *testing.T) {
 	res, err := ns.(*K).Tables()
@@ -21,22 +37,11 @@ func TestTables(t *testing.T) {
 func TestCreateTable(t *testing.T) {
 	rand.Seed(time.Now().Unix())
 	name := fmt.Sprintf("customer_%v", rand.Int()%100)
-	if ex, err := ns.(*K).Exists(name); ex && err == nil {
-		err = ns.(*K).Drop(name)
-		if err != nil {
-			t.Fatal(err)
-		}
-	} else if err != nil {
-		t.Fatal(err)
-	}
 	cs := ns.Table(name, Customer{}, Keys{
 		PartitionKeys: []string{"Id", "Name"},
 	})
-	err := cs.(*T).Create()
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = cs.Set(Customer{
+	createIf(ns, cs, t)
+	err := cs.Set(Customer{
 		Id:   "1001",
 		Name: "Joe",
 	})
