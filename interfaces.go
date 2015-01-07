@@ -7,7 +7,10 @@ package cmagic
 type M map[string]interface{}
 
 type KeySpace interface {
-	Table(name string, row interface{}, keys Keys) Table
+	CustomTable(tableName string, row interface{}, keys Keys) Table
+	EntityTable(tableName string)
+	OneToManyTable(tableName, fieldToIndexBy, uniqueKey string) OneToManyTable
+	TimeSeriesTable()
 }
 
 // A Query is a subset of a Table intended to be read
@@ -28,12 +31,26 @@ type Filter interface {
 	Delete() error
 }
 
+type Entity interface {
+	
+}
+
+type OneToManyTable interface {
+	Replace()
+	List(v interface{})
+	Update(v, v1, map[string]string{}) error
+}
+
+type TimeSeriesTable interface {
+
+}
+
 type Keys struct {
 	PartitionKeys     []string
 	ClusteringColumns []string
 }
 
-type Table interface {
+type CustomTable interface {
 	// Set Inserts, or Replaces your row with the supplied struct. Be aware that what is not in your struct, will be deleted.
 	// To only overwrite some of the fields, use Query.Update
 	Set(v interface{}) error
