@@ -24,17 +24,18 @@ type tableInfo struct {
 	fieldValues    []interface{}
 }
 
-func newTableInfo(keyspace, name string, keys Keys, entity interface{}) *tableInfo {
+func newTableInfo(keyspace, name string, keys Keys, entity interface{}, fieldSource map[string]interface{}) *tableInfo {
 	cinf := &tableInfo{
 		keyspace: keyspace,
 		name:     name,
 		entity:   entity,
 		keys:     keys,
 	}
-	fields, values, ok := r.FieldsAndValues(entity)
-	if !ok {
-		// panicking here since this is a programmer error
-		panic("Supplied entity is not a struct")
+	fields := []string{}
+	values := []interface{}{}
+	for k, v := range fieldSource {
+		fields = append(fields, k)
+		values = append(values, v)
 	}
 	cinf.fieldNames = map[string]struct{}{}
 	for _, v := range fields {

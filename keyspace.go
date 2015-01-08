@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gocql/gocql"
 	"strings"
+	r "github.com/hailocab/cmagic/reflect"
 	"time"
 )
 
@@ -35,7 +36,11 @@ func New(nameSp, username, password string, nodeIps []string) (KeySpace, error) 
 
 // Table returns a new Table. A Table is analogous to column families in Cassandra or tables in RDBMSes.
 func (k *K) Table(name string, entity interface{}, keys Keys) Table {
-	ti := newTableInfo(k.name, name, keys, entity)
+	m, ok := r.StructToMap(entity)
+	if !ok {
+		panic("Entity is not a struct")
+	}
+	ti := newTableInfo(k.name, name, keys, entity, m)
 	return &T{
 		keySpace: k,
 		info:     ti,
