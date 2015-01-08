@@ -59,7 +59,8 @@ func (k *K) OneToOneTable(name, id string, row interface{}) OneToOneTable {
 func (k *K) OneToManyTable(name, fieldToIndexBy, id string, row interface{}) OneToManyTable {
 	return &oneToMany{
 		t: k.Table(name, row, Keys{
-			PartitionKeys: []string{id},
+			PartitionKeys: []string{fieldToIndexBy},
+			ClusteringColumns: []string{id},
 		}),
 		idField: id,
 		fieldToIndexBy: fieldToIndexBy,
@@ -67,7 +68,14 @@ func (k *K) OneToManyTable(name, fieldToIndexBy, id string, row interface{}) One
 }
 
 func (k *K) TimeSeriesTable(name, timeUUIDField string, bucketSize time.Time, row interface{}) TimeSeriesTable {
-	return nil
+	return &oneToMany{
+		t: k.Table(name, row, Keys{
+			PartitionKeys: []string{"_bucket"},
+			ClusteringColumns: []string{timeUUIDField},
+		}),
+		idField: id,
+		fieldToIndexBy: fieldToIndexBy,
+	}
 }
 
 // Returns table names in a keyspace
