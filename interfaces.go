@@ -45,7 +45,7 @@ type OneToManyTable interface {
 type TimeSeriesTable interface {
 	// timeField and idField must be present
 	Set(v interface{}) error
-	Update(id TimeUUID,  m map[string]interface{})
+	Update(id TimeUUID,  m map[string]interface{}) error
 	List(start, end time.Time) ([]interface{}, error)
 	Read(id TimeUUID) (interface{}, error)
 }

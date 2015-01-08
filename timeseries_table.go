@@ -21,25 +21,35 @@ func NewTimeUUID() TimeUUID {
 	}
 }
 
-type timeSeries struct {
+type timeSeriesTable struct {
 	t Table
-	idField string
+	uuidField string
+	bucketSize time.Time
 }
 
-func (o *timeSeries) Set(v interface{}) error {
-	return o.t.Set(v)
+func (o *timeSeriesTable) Set(v interface{}) error {
+	m, ok := toMap(v)
+	if !ok {
+		return errors.New("Can't set: not able to convert")
+	}
+	tim, ok := m[o.uuidField].(TimeUUID)
+	if !ok {
+		return errors.New("timeuuidField is not actually timeuuidField")
+	}
+	m["_bucket"] = tim.v.Time().UnixNano()/o.bucketSize.UnixNano()
+	return o.t.Set(m)
 }
 
-func (o *timeSeries) Update(id interface{}, m map[string]interface{}) error {
-	return o.t.Where(Eq(o.idField, id)).Update(m)
+func (o *timeSeriesTable) Update(id TimeUUID, m map[string]interface{}) error {
+	return o.t.Where(Eq(o.uuidField, id)).Update(m)
 }
 
-func (o *timeSeries) Delete(id interface{}) error {
-	return o.t.Where(Eq(o.idField, id)).Delete()
+func (o *timeSeriesTable) Delete(id TimeUUID) error {
+	return o.t.Where(Eq(o.uuidField, id)).Delete()
 }
 
-func (o *timeSeries) Read(id interface{}) (interface{}, error) {
-	res, err := o.t.Where(Eq(o.idField, id)).Query().Read()
+func (o *timeSeriesTable) Read(id TimeUUID) (interface{}, error) {
+	res, err := o.t.Where(Eq(o.uuidField, id)).Query().Read()
 	if err != nil {
 		return nil, err
 	}
@@ -47,4 +57,8 @@ func (o *timeSeries) Read(id interface{}) (interface{}, error) {
 		return nil, errors.New(fmt.Sprintf("Row with id %v not found", id))
 	}
 	return res[0], nil
+}
+
+func (o *timeSeriesTable) List(startTime time.Time, endTime time.Time) ([]interface{}, error) {
+	return nil, nil
 }
