@@ -15,6 +15,10 @@ func (t TimeUUID) Time() time.Time {
 	return t.v.Time()
 }
 
+func (t TimeUUID) String() string {
+	return ""
+}
+
 func NewTimeUUID() TimeUUID {
 	return TimeUUID{
 		v: gocql.TimeUUID(),
@@ -60,5 +64,11 @@ func (o *timeSeriesTable) Read(id TimeUUID) (interface{}, error) {
 }
 
 func (o *timeSeriesTable) List(startTime time.Time, endTime time.Time) ([]interface{}, error) {
+	diff := endTime.UnixNano()
+	buckets := []int64{}
+	for i:=startTime.UnixNano();i<endTime.UnixNano();i+=o.bucketSize.UnixNano() {
+		buckets = append(buckets, i/o.bucketSize.UnixNano())
+	}
+	fmt.Println(diff)
 	return nil, nil
 }
