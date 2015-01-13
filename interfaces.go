@@ -41,7 +41,8 @@ type OneToManyTable interface {
 // TimeSeries recipe
 //
 
-// TimeSeries entries are immutables @todo think about it
+// TimeSeries currently require both timestamp and UUID
+// to identify a row, similarly to the OneToManyT recipe
 type TimeSeriesTable interface {
 	// timeField and idField must be present
 	Set(v interface{}) error
