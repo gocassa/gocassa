@@ -27,7 +27,8 @@ func NewTimeUUID() TimeUUID {
 
 type timeSeriesTable struct {
 	t Table
-	uuidField string
+	timeField string
+	idField string
 	bucketSize time.Time
 }
 
@@ -36,7 +37,7 @@ func (o *timeSeriesTable) Set(v interface{}) error {
 	if !ok {
 		return errors.New("Can't set: not able to convert")
 	}
-	tim, ok := m[o.uuidField].(TimeUUID)
+	tim, ok := m[o.timeField].(TimeUUID)
 	if !ok {
 		return errors.New("timeuuidField is not actually timeuuidField")
 	}
@@ -44,16 +45,23 @@ func (o *timeSeriesTable) Set(v interface{}) error {
 	return o.t.Set(m)
 }
 
-func (o *timeSeriesTable) Update(id TimeUUID, m map[string]interface{}) error {
-	return o.t.Where(Eq(o.uuidField, id)).Update(m)
+func (o *timeSeriesTable) bucket(t time.Time) int64 {
+	return t.UnixNano()/o.bucketSize.UnixNano()
 }
 
-func (o *timeSeriesTable) Delete(id TimeUUID) error {
-	return o.t.Where(Eq(o.uuidField, id)).Delete()
+func (o *timeSeriesTable) Update(timeStamp time.Time, id interface{}, m map[string]interface{}) error {
+	bucket := o.bucket(timeStamp)
+	return o.t.Where(Eq("_bucket", bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Update(m)
 }
 
-func (o *timeSeriesTable) Read(id TimeUUID) (interface{}, error) {
-	res, err := o.t.Where(Eq(o.uuidField, id)).Query().Read()
+func (o *timeSeriesTable) Delete(timeStamp time.Time, id interface{}) error {
+	bucket := o.bucket(timeStamp)
+	return o.t.Where(Eq("_bucket", bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Delete()
+}
+
+func (o *timeSeriesTable) Read(timeStamp time.Time, id interface{}) (interface{}, error) {
+	bucket := o.bucket(timeStamp)
+	res, err := o.t.Where(Eq("_bucket", bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Query().Read()
 	if err != nil {
 		return nil, err
 	}
@@ -64,11 +72,9 @@ func (o *timeSeriesTable) Read(id TimeUUID) (interface{}, error) {
 }
 
 func (o *timeSeriesTable) List(startTime time.Time, endTime time.Time) ([]interface{}, error) {
-	diff := endTime.UnixNano()
-	buckets := []int64{}
+	buckets := []interface{}{}
 	for i:=startTime.UnixNano();i<endTime.UnixNano();i+=o.bucketSize.UnixNano() {
 		buckets = append(buckets, i/o.bucketSize.UnixNano())
 	}
-	fmt.Println(diff)
-	return nil, nil
+	return o.t.Where(In("_bucket", buckets...), GTE(o.timeField, startTime), LTE(o.timeField, endTime)).Query().Read()
 }

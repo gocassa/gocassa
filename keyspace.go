@@ -67,13 +67,14 @@ func (k *K) OneToManyTable(name, fieldToIndexBy, id string, row interface{}) One
 	}
 }
 
-func (k *K) TimeSeriesTable(name, timeUUIDField string, bucketSize time.Time, row interface{}) TimeSeriesTable {
+func (k *K) TimeSeriesTable(name, timeField, idField string, bucketSize time.Time, row interface{}) TimeSeriesTable {
 	return &timeSeriesTable{
 		t: k.Table(name, row, Keys{
 			PartitionKeys: []string{"_bucket"},
-			ClusteringColumns: []string{timeUUIDField},
+			ClusteringColumns: []string{timeField, idField},
 		}),
-		uuidField: timeUUIDField,
+		timeField: timeField,
+		idField: idField,
 	}
 }
 

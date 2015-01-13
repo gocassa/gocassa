@@ -7,7 +7,7 @@ import(
 type KeySpace interface {
 	OneToOneTable(tableName, id string, row interface{}) OneToOneTable
 	OneToManyTable(tableName, fieldToIndexBy, uniqueKey string, row interface{}) OneToManyTable
-	TimeSeriesTable(tableName, timeUUIDField string, bucketSize time.Time, row interface{}) TimeSeriesTable
+	TimeSeriesTable(tableName, timeField, idField string, bucketSize time.Time, row interface{}) TimeSeriesTable
 	Table(tableName string, row interface{}, keys Keys) Table
 }
 
@@ -46,9 +46,10 @@ type OneToManyTable interface {
 type TimeSeriesTable interface {
 	// timeField and idField must be present
 	Set(v interface{}) error
-	Update(id TimeUUID,  m map[string]interface{}) error
+	Update(timeStamp time.Time, id interface{},  m map[string]interface{}) error
 	List(start, end time.Time) ([]interface{}, error)
-	Read(id TimeUUID) (interface{}, error)
+	Read(timeStamp time.Time, id interface{}) (interface{}, error)
+	Delete(timeStamp time.Time, id interface{}) error
 }
 
 //
