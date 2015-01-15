@@ -28,7 +28,7 @@ import (
 func CreateTable(keySpace, cf string, partitionKeys, colKeys []string, fields []string, values []interface{}) (string, error) {
 	firstLine := fmt.Sprintf("CREATE TABLE %v.%v (", keySpace, cf)
 	fieldLines := []string{}
-	for i, _ := range fields {
+	for i := range fields {
 		ct := cassaType(values[i])
 		if ct == gocql.TypeCustom {
 			return "", errors.New(fmt.Sprintf("Unsupported type %T", values[i]))

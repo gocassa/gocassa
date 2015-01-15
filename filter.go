@@ -1,8 +1,8 @@
 package cmagic
 
 import (
-	"strings"
 	"fmt"
+	"strings"
 )
 
 type filter struct {
@@ -43,7 +43,7 @@ func (f filter) Update(m map[string]interface{}) error {
 	str, wvals := f.generateWhere()
 	stmt := updateStatement(f.t.keySpace.name, f.t.info.name, fields)
 	sess := f.t.keySpace.session
-	return sess.Query(stmt +" "+ str, append(values, wvals...)...).Exec()
+	return sess.Query(stmt+" "+str, append(values, wvals...)...).Exec()
 }
 
 func (f filter) Delete() error {
