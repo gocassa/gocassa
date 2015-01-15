@@ -37,11 +37,14 @@ func TestTables(t *testing.T) {
 func TestCreateTable(t *testing.T) {
 	rand.Seed(time.Now().Unix())
 	name := fmt.Sprintf("customer_%v", rand.Int()%100)
-	cs := ns.Table(name, Customer{}, Keys{
+	cs, err := ns.Table(name, Customer{}, Keys{
 		PartitionKeys: []string{"Id", "Name"},
 	})
+	if err != nil {
+		t.Fatal(err)
+	}
 	createIf(ns, cs, t)
-	err := cs.Set(Customer{
+	err = cs.Set(Customer{
 		Id:   "1001",
 		Name: "Joe",
 	})

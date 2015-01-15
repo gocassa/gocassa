@@ -2,18 +2,19 @@
 package reflect
 
 import (
-	// "fmt"
+	"errors"
 	r "reflect"
-	//"strings"
 )
 
+var ErrorNotStruct = errors.New("")
+
 // Converts a struct to a map.
-func StructToMap(val interface{}) (map[string]interface{}, bool) {
+func StructToMap(val interface{}) (map[string]interface{}, error) {
 	// indirect so function works with both structs and pointers to them
 	structVal := r.Indirect(r.ValueOf(val))
 	kind := structVal.Kind()
 	if kind != r.Struct {
-		return nil, false
+		return nil, ErrorNotStruct
 	}
 	typ := structVal.Type()
 	mapVal := make(map[string]interface{})
@@ -21,7 +22,7 @@ func StructToMap(val interface{}) (map[string]interface{}, bool) {
 		field := structVal.Field(i)
 		mapVal[typ.Field(i).Name] = field.Interface()
 	}
-	return mapVal, true
+	return mapVal, nil
 }
 
 // v should be a pointer to a struct.
@@ -37,12 +38,12 @@ func MapToStruct(m map[string]interface{}, struc interface{}) error {
 }
 
 // Nice copypaste bro _,^
-func FieldsAndValues(val interface{}) ([]string, []interface{}, bool) {
+func FieldsAndValues(val interface{}) ([]string, []interface{}, error) {
 	// indirect so function works with both structs and pointers to them
 	structVal := r.Indirect(r.ValueOf(val))
 	kind := structVal.Kind()
 	if kind != r.Struct {
-		return nil, nil, false
+		return nil, nil, ErrorNotStruct
 	}
 	typ := structVal.Type()
 	fields := []string{}
@@ -52,5 +53,5 @@ func FieldsAndValues(val interface{}) ([]string, []interface{}, bool) {
 		fields = append(fields, typ.Field(i).Name)
 		values = append(values, field.Interface())
 	}
-	return fields, values, true
+	return fields, values, nil
 }

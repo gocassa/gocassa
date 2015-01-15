@@ -6,13 +6,16 @@ import (
 )
 
 func TestOneToOneTable(t *testing.T) {
-	tbl := ns.OneToOneTable("customer91", "Id", Customer{})
+	tbl, err := ns.OneToOneTable("customer91", "Id", Customer{})
+	if err != nil {
+		t.Fatal(err)
+	}
 	createIf(ns, tbl.(*oneToOne).t, t)
 	joe := Customer{
-		Id: "33",
+		Id:   "33",
 		Name: "Joe",
 	}
-	err := tbl.Set(joe)
+	err = tbl.Set(joe)
 	if err != nil {
 		t.Fatal(err)
 	}

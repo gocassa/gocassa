@@ -17,21 +17,21 @@ type T struct {
 // Contains mostly analyzed information about the entity
 type tableInfo struct {
 	keyspace, name string
-	marshalSource 	interface{}
-	fieldSource   	map[string]interface{}
-	keys           	Keys
-	fieldNames     	map[string]struct{} // This is here only to check containment
-	fields         	[]string
-	fieldValues    	[]interface{}
+	marshalSource  interface{}
+	fieldSource    map[string]interface{}
+	keys           Keys
+	fieldNames     map[string]struct{} // This is here only to check containment
+	fields         []string
+	fieldValues    []interface{}
 }
 
 func newTableInfo(keyspace, name string, keys Keys, entity interface{}, fieldSource map[string]interface{}) *tableInfo {
 	cinf := &tableInfo{
-		keyspace: 		keyspace,
-		name:     		name,
-		marshalSource:  entity,
-		keys:     		keys,
-		fieldSource: 	fieldSource,
+		keyspace:      keyspace,
+		name:          name,
+		marshalSource: entity,
+		keys:          keys,
+		fieldSource:   fieldSource,
 	}
 	fields := []string{}
 	values := []interface{}{}
@@ -64,12 +64,10 @@ func keyValues(m map[string]interface{}) ([]string, []interface{}) {
 	return keys, values
 }
 
-func toMap(i interface{}) (map[string]interface{}, bool) {
+func toMap(i interface{}) (map[string]interface{}, error) {
 	switch v := i.(type) {
-	//case M:
-	//	return map[string]interface{}(v), true
 	case map[string]interface{}:
-		return v, true
+		return v, nil
 	}
 	return r.StructToMap(i)
 }
@@ -94,8 +92,8 @@ func insert(cfName string, fieldNames []string) string {
 }
 
 func (c T) Set(i interface{}) error {
-	m, ok := toMap(i)
-	if !ok {
+	m, err := toMap(i)
+	if err != nil {
 		return errors.New("Can't create: value not understood")
 	}
 	fields, values := keyValues(m)

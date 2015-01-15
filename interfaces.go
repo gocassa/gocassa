@@ -1,14 +1,14 @@
 package cmagic
 
-import(
+import (
 	"time"
 )
 
 type KeySpace interface {
-	OneToOneTable(tableName, id string, row interface{}) OneToOneTable
-	OneToManyTable(tableName, fieldToIndexBy, uniqueKey string, row interface{}) OneToManyTable
-	TimeSeriesTable(tableName, timeField, idField string, bucketSize time.Duration, row interface{}) TimeSeriesTable
-	Table(tableName string, row interface{}, keys Keys) Table
+	OneToOneTable(tableName, id string, row interface{}) (OneToOneTable, error)
+	OneToManyTable(tableName, fieldToIndexBy, uniqueKey string, row interface{}) (OneToManyTable, error)
+	TimeSeriesTable(tableName, timeField, idField string, bucketSize time.Duration, row interface{}) (TimeSeriesTable, error)
+	Table(tableName string, row interface{}, keys Keys) (Table, error)
 }
 
 //
@@ -46,7 +46,7 @@ type OneToManyTable interface {
 type TimeSeriesTable interface {
 	// timeField and idField must be present
 	Set(v interface{}) error
-	Update(timeStamp time.Time, id interface{},  m map[string]interface{}) error
+	Update(timeStamp time.Time, id interface{}, m map[string]interface{}) error
 	List(start, end time.Time) ([]interface{}, error)
 	Read(timeStamp time.Time, id interface{}) (interface{}, error)
 	Delete(timeStamp time.Time, id interface{}) error

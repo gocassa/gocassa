@@ -1,8 +1,8 @@
-package cmagic 
+package cmagic
 
-import(
-	"fmt"
+import (
 	"errors"
+	"fmt"
 	"github.com/gocql/gocql"
 	"time"
 )
@@ -28,27 +28,27 @@ func NewTimeUUID() TimeUUID {
 }
 
 type timeSeriesTable struct {
-	t Table
-	timeField string
-	idField string
+	t          Table
+	timeField  string
+	idField    string
 	bucketSize time.Duration
 }
 
 func (o *timeSeriesTable) Set(v interface{}) error {
-	m, ok := toMap(v)
-	if !ok {
+	m, err := toMap(v)
+	if err != nil {
 		return errors.New("Can't set: not able to convert")
 	}
 	tim, ok := m[o.timeField].(time.Time)
 	if !ok {
 		return errors.New("timeField is not actually a time.Time")
 	}
-	m[bucketFieldName] = tim.UnixNano()/int64(o.bucketSize)
+	m[bucketFieldName] = tim.UnixNano() / int64(o.bucketSize)
 	return o.t.Set(m)
 }
 
 func (o *timeSeriesTable) bucket(t time.Time) int64 {
-	return t.UnixNano()/int64(o.bucketSize)
+	return t.UnixNano() / int64(o.bucketSize)
 }
 
 func (o *timeSeriesTable) Update(timeStamp time.Time, id interface{}, m map[string]interface{}) error {
@@ -75,9 +75,9 @@ func (o *timeSeriesTable) Read(timeStamp time.Time, id interface{}) (interface{}
 
 func (o *timeSeriesTable) List(startTime time.Time, endTime time.Time) ([]interface{}, error) {
 	buckets := []interface{}{}
-	for i:=startTime.UnixNano();;i+=int64(o.bucketSize) {
+	for i := startTime.UnixNano(); ; i += int64(o.bucketSize) {
 		buckets = append(buckets, i/int64(o.bucketSize))
-		if i>=endTime.UnixNano() {
+		if i >= endTime.UnixNano() {
 			break
 		}
 	}

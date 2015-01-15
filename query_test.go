@@ -2,8 +2,8 @@ package cmagic
 
 import (
 	"fmt"
-	"testing"
 	"reflect"
+	"testing"
 )
 
 type Customer struct {
@@ -24,8 +24,11 @@ func init() {
 // cqlsh> CREATE KEYSPACE test WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };
 // cqlsh> CREATE TABLE test.customer (id text PRIMARY KEY, name text);
 func TestEq(t *testing.T) {
-	cs := ns.Table("customer", Customer{}, Keys{})
-	err := cs.Set(Customer{
+	cs, err := ns.Table("customer", Customer{}, Keys{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = cs.Set(Customer{
 		Id:   "50",
 		Name: "Joe",
 	})
@@ -47,11 +50,14 @@ func TestEq(t *testing.T) {
 func TestMultipleRowResults(t *testing.T) {
 	name := "customer_multipletest"
 	ns.(*K).Drop(name)
-	cs := ns.Table(name, Customer{}, Keys{
+	cs, err := ns.Table(name, Customer{}, Keys{
 		PartitionKeys:     []string{"Name"},
 		ClusteringColumns: []string{"Id"},
 	})
-	err := cs.(*T).Create()
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = cs.(*T).Create()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -73,8 +79,11 @@ func TestMultipleRowResults(t *testing.T) {
 }
 
 func TestIn(t *testing.T) {
-	cs := ns.Table("customer", Customer{}, Keys{})
-	err := cs.Set(Customer{
+	cs, err := ns.Table("customer", Customer{}, Keys{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = cs.Set(Customer{
 		Id:   "100",
 		Name: "Joe",
 	})
@@ -102,8 +111,11 @@ func TestIn(t *testing.T) {
 
 // cqlsh> CREATE TABLE test.customer1 (id text, name text, PRIMARY KEY((id, name)));
 func TestAnd(t *testing.T) {
-	cs := ns.Table("customer1", Customer{}, Keys{})
-	err := cs.Set(Customer{
+	cs, err := ns.Table("customer1", Customer{}, Keys{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = cs.Set(Customer{
 		Id:   "100",
 		Name: "Joe",
 	})
@@ -120,17 +132,20 @@ func TestAnd(t *testing.T) {
 }
 
 func TestQueryReturnError(t *testing.T) {
-	cs := ns.Table("customer2", Customer{}, Keys{})
-	_, err := cs.Where(Eq("Id", "100"), Eq("Name", "Joe")).Query().Read()
+	cs, err := ns.Table("customer2", Customer{}, Keys{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = cs.Where(Eq("Id", "100"), Eq("Name", "Joe")).Query().Read()
 	if err == nil {
 		t.Fatal("Table customer2 does not exist - should return error")
 	}
 }
 
 type Customer3 struct {
-	Id string 
-	Field1 string 
-	Field2 int 
+	Id     string
+	Field1 string
+	Field2 int
 	Field3 int32
 	Field4 int64
 	Field5 float32
@@ -140,7 +155,7 @@ type Customer3 struct {
 
 func TestTypesMarshal(t *testing.T) {
 	c := Customer3{
-		Id: "1",
+		Id:     "1",
 		Field1: "A",
 		Field2: 1,
 		Field3: 2,
@@ -149,8 +164,11 @@ func TestTypesMarshal(t *testing.T) {
 		Field6: 5.0,
 		Field7: true,
 	}
-	tbl := ns.Table("customer3", Customer3{}, Keys{PartitionKeys: []string{"Id"}})
-	err := tbl.(*T).Create()
+	tbl, err := ns.Table("customer3", Customer3{}, Keys{PartitionKeys: []string{"Id"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = tbl.(*T).Create()
 	if ex, err := ns.(*K).Exists("customer3"); err != nil {
 		t.Fatal(err)
 	} else if !ex {
@@ -167,7 +185,7 @@ func TestTypesMarshal(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(res) != 1 {
-		t.Fatal()
+		t.Fatal("No results returned")
 	}
 	if !reflect.DeepEqual(c, *res[0].(*Customer3)) {
 		t.Fatal(c, *res[0].(*Customer3))
