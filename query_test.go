@@ -14,20 +14,21 @@ type Customer struct {
 var ns KeySpace
 
 func init() {
+	kname := "test_ihopeudonthaveakeyspacenamedlikedthis"
 	var err error
 	c, err := Connect([]string{"127.0.0.1"}, "", "")
 	if err != nil {
 		panic(err)
 	}
-	err = c.DropKeySpace("test")
+	err = c.DropKeySpace(kname)
 	if err != nil {
 		panic(err)
 	}
-	err = c.CreateKeySpace("test")
+	err = c.CreateKeySpace(kname)
 	if err != nil {
 		panic(err)
 	}
-	ns, err = ConnectToKeySpace("test", []string{"127.0.0.1"}, "", "")
+	ns, err = ConnectToKeySpace(kname, []string{"127.0.0.1"}, "", "")
 	if err != nil {
 		panic(err)
 	}
