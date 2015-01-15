@@ -7,7 +7,7 @@ import(
 type KeySpace interface {
 	OneToOneTable(tableName, id string, row interface{}) OneToOneTable
 	OneToManyTable(tableName, fieldToIndexBy, uniqueKey string, row interface{}) OneToManyTable
-	TimeSeries(tableName, idField, timeField string, bucketSize time.Time, row interface{}) TimeSeries
+	TimeSeriesTable(tableName, timeField, idField string, bucketSize time.Duration, row interface{}) TimeSeriesTable
 	Table(tableName string, row interface{}, keys Keys) Table
 }
 
@@ -32,7 +32,7 @@ type OneToManyTable interface {
 	Set(v interface{}) error
 	Update(v, id interface{}, m map[string]interface{}) error
 	Delete(v, id interface{}) error
-	List(v, startId, limit int) ([]interface{}, error)
+	List(v, startId interface{}, limit int) ([]interface{}, error)
 	Read(v, id interface{}) (interface{}, error)
 	// MultiRead LATER
 }
@@ -41,13 +41,15 @@ type OneToManyTable interface {
 // TimeSeries recipe
 //
 
-// TimeSeries entries are immutables @todo think about it
-type TimeSeries interface {
+// TimeSeries currently require both timestamp and UUID
+// to identify a row, similarly to the OneToManyT recipe
+type TimeSeriesTable interface {
 	// timeField and idField must be present
 	Set(v interface{}) error
-	Update(id interface{}, t time.Time, m map[string]interface{})
+	Update(timeStamp time.Time, id interface{},  m map[string]interface{}) error
 	List(start, end time.Time) ([]interface{}, error)
-	Read(id interface{}, t time.Time) (interface{}, error)
+	Read(timeStamp time.Time, id interface{}) (interface{}, error)
+	Delete(timeStamp time.Time, id interface{}) error
 }
 
 //

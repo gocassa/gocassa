@@ -34,6 +34,6 @@ func (o *oneToMany) Read(field, id interface{}) (interface{}, error) {
 	return res[0], nil
 }
 
-func (o *oneToMany) List(field, startId interface{}, limit int) (interface{}, error) {
+func (o *oneToMany) List(field, startId interface{}, limit int) ([]interface{}, error) {
 	return o.t.Where(Eq(o.fieldToIndexBy, field), GTE(o.idField, startId)).Query().Limit(limit).Read()
 }

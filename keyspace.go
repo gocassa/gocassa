@@ -35,7 +35,15 @@ func New(nameSp, username, password string, nodeIps []string) (KeySpace, error) 
 
 // Table returns a new Table. A Table is analogous to column families in Cassandra or tables in RDBMSes.
 func (k *K) Table(name string, entity interface{}, keys Keys) Table {
-	ti := newTableInfo(k.name, name, keys, entity)
+	m, ok := toMap(entity)
+	if !ok {
+		panic("Unrecognized row type")
+	}
+	return k.table(name, entity, m, keys)
+}
+
+func (k *K) table(name string, entity interface{}, fieldSource map[string]interface{}, keys Keys) Table {
+	ti := newTableInfo(k.name, name, keys, entity, fieldSource)
 	return &T{
 		keySpace: k,
 		info:     ti,
@@ -52,11 +60,31 @@ func (k *K) OneToOneTable(name, id string, row interface{}) OneToOneTable {
 }
 
 func (k *K) OneToManyTable(name, fieldToIndexBy, id string, row interface{}) OneToManyTable {
-	return nil
+	return &oneToMany{
+		t: k.Table(name, row, Keys{
+			PartitionKeys: []string{fieldToIndexBy},
+			ClusteringColumns: []string{id},
+		}),
+		idField: id,
+		fieldToIndexBy: fieldToIndexBy,
+	}
 }
 
-func (k *K) TimeSeries(name, idField, timeField string, bucketSize time.Time, row interface{}) TimeSeries {
-	return nil
+func (k *K) TimeSeriesTable(name, timeField, idField string, bucketSize time.Duration, row interface{}) TimeSeriesTable {
+	m, ok := toMap(row)
+	if !ok {
+		panic("Unrecognized row type")
+	}
+	m[bucketFieldName] = int64(0)
+	return &timeSeriesTable{
+		t: k.table(name, row, m, Keys{
+			PartitionKeys: []string{bucketFieldName},
+			ClusteringColumns: []string{timeField, idField},
+		}),
+		timeField: timeField,
+		idField: idField,
+		bucketSize: bucketSize,
+	}
 }
 
 // Returns table names in a keyspace
@@ -78,7 +106,7 @@ func (k K) Exists(cf string) (bool, error) {
 		return false, err
 	}
 	for _, v := range ts {
-		if v == cf {
+		if strings.ToLower(v) == strings.ToLower(cf) {
 			return true, nil
 		}
 	}

@@ -17,24 +17,27 @@ type T struct {
 // Contains mostly analyzed information about the entity
 type tableInfo struct {
 	keyspace, name string
-	entity         interface{}
-	keys           Keys
-	fieldNames     map[string]struct{} // This is here only to check containment
-	fields         []string
-	fieldValues    []interface{}
+	marshalSource 	interface{}
+	fieldSource   	map[string]interface{}
+	keys           	Keys
+	fieldNames     	map[string]struct{} // This is here only to check containment
+	fields         	[]string
+	fieldValues    	[]interface{}
 }
 
-func newTableInfo(keyspace, name string, keys Keys, entity interface{}) *tableInfo {
+func newTableInfo(keyspace, name string, keys Keys, entity interface{}, fieldSource map[string]interface{}) *tableInfo {
 	cinf := &tableInfo{
-		keyspace: keyspace,
-		name:     name,
-		entity:   entity,
-		keys:     keys,
+		keyspace: 		keyspace,
+		name:     		name,
+		marshalSource:  entity,
+		keys:     		keys,
+		fieldSource: 	fieldSource,
 	}
-	fields, values, ok := r.FieldsAndValues(entity)
-	if !ok {
-		// panicking here since this is a programmer error
-		panic("Supplied entity is not a struct")
+	fields := []string{}
+	values := []interface{}{}
+	for k, v := range fieldSource {
+		fields = append(fields, k)
+		values = append(values, v)
 	}
 	cinf.fieldNames = map[string]struct{}{}
 	for _, v := range fields {
@@ -46,7 +49,7 @@ func newTableInfo(keyspace, name string, keys Keys, entity interface{}) *tableIn
 }
 
 func (t T) zero() interface{} {
-	return reflect.New(reflect.TypeOf(t.info.entity)).Interface()
+	return reflect.New(reflect.TypeOf(t.info.marshalSource)).Interface()
 }
 
 // Since we cant have Map -> [(k, v)] we settle for Map -> ([k], [v])
