@@ -7,7 +7,7 @@ import(
 type KeySpace interface {
 	OneToOneTable(tableName, id string, row interface{}) OneToOneTable
 	OneToManyTable(tableName, fieldToIndexBy, uniqueKey string, row interface{}) OneToManyTable
-	TimeSeriesTable(tableName, timeField, idField string, bucketSize time.Time, row interface{}) TimeSeriesTable
+	TimeSeriesTable(tableName, timeField, idField string, bucketSize time.Duration, row interface{}) TimeSeriesTable
 	Table(tableName string, row interface{}, keys Keys) Table
 }
 
