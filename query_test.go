@@ -15,7 +15,7 @@ var ns KeySpace
 
 func init() {
 	var err error
-	ns, err = New("test", "", "", []string{"127.0.0.1"})
+	ns, err = New("", "", "", []string{"127.0.0.1"})
 	if err != nil {
 		panic(err)
 	}
@@ -47,7 +47,7 @@ func TestEq(t *testing.T) {
 
 func TestMultipleRowResults(t *testing.T) {
 	name := "customer_multipletest"
-	ns.(*K).Drop(name)
+	ns.(*K).DropTable(name)
 	cs := ns.Table(name, Customer{}, Keys{
 		PartitionKeys:     []string{"Name"},
 		ClusteringColumns: []string{"Id"},

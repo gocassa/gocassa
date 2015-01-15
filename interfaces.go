@@ -4,6 +4,12 @@ import(
 	"time"
 )
 
+type Connection interface {
+	CreateKeySpace(name string) error
+	DropKeySpace(name string) error
+	KeySpace() KeySpace
+}
+
 type KeySpace interface {
 	OneToOneTable(tableName, id string, row interface{}) OneToOneTable
 	OneToManyTable(tableName, fieldToIndexBy, uniqueKey string, row interface{}) OneToManyTable

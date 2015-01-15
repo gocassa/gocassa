@@ -8,36 +8,31 @@ import (
 )
 
 type K struct {
-	session *gocql.Session
-	name    string
-	nodeIps []string
-	debugMode bool
+	c 			connection
+	name    	string
+	// nodeIps 	[]string
+	debugMode 	bool
 }
 
 // New returns a new keySpace. A keySpace is analogous to keyspaces in Cassandra or databases in RDMSes.
 func New(nameSp, username, password string, nodeIps []string) (KeySpace, error) {
-	cluster := gocql.NewCluster(nodeIps...)
-	cluster.Keyspace = nameSp
-	cluster.Consistency = gocql.One
-	cluster.Authenticator = gocql.PasswordAuthenticator{
-		Username: username,
-		Password: password,
-	}
-	sess, err := cluster.CreateSession()
-	if err != nil {
-		return nil, err
-	}
-	return &K{
-		session: sess,
-		name:    nameSp,
-		nodeIps: nodeIps,
-	}, nil
+
+
 }
 
 func (k *K) DebugMode(b bool) {
 	k.debugMode = true
 }
 
+func (k *K) CreateKeySpace() error {
+	stmt := fmt.Sprintf("WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1 };", k.name)
+	return k.session.Query(stmt).Exec()
+}
+
+func (k *K) DropKeySpace() error {
+	stmt := fmt.Sprintf("DROP KEYSPACE IF EXISTS %v", k.name)
+	return k.session.Query(stmt).Exec()
+}
 
 // Table returns a new Table. A Table is analogous to column families in Cassandra or tables in RDBMSes.
 func (k *K) Table(name string, entity interface{}, keys Keys) Table {
@@ -63,6 +58,10 @@ func (k *K) OneToOneTable(name, id string, row interface{}) OneToOneTable {
 		}),
 		idField: id,
 	}
+}
+
+func (k *K) SetKeysSpaceName(name string) {
+	k.name = name
 }
 
 func (k *K) OneToManyTable(name, fieldToIndexBy, id string, row interface{}) OneToManyTable {
@@ -119,7 +118,7 @@ func (k K) Exists(cf string) (bool, error) {
 	return false, nil
 }
 
-func (k K) Drop(cf string) error {
+func (k K) DropTable(cf string) error {
 	stmt := fmt.Sprintf("DROP TABLE IF EXISTS %v.%v", k.name, cf)
 	return k.session.Query(stmt).Exec()
 }

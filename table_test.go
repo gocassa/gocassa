@@ -10,7 +10,7 @@ import (
 func createIf(ns KeySpace, cs Table, t *testing.T) {
 	name := cs.(*T).info.name
 	if ex, err := ns.(*K).Exists(name); ex && err == nil {
-		err = ns.(*K).Drop(name)
+		err = ns.(*K).DropTable(name)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -55,7 +55,7 @@ func TestCreateTable(t *testing.T) {
 	if len(res) != 1 {
 		t.Fatal("Not found ", len(res))
 	}
-	err = ns.(*K).Drop(name)
+	err = ns.(*K).DropTable(name)
 	if err != nil {
 		t.Fatal(err)
 	}
