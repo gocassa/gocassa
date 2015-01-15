@@ -19,6 +19,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+	ns.DebugMode(true)
 }
 
 // cqlsh> CREATE KEYSPACE test WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };

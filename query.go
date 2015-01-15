@@ -56,6 +56,9 @@ func (q *query) generateRead() (string, []interface{}) {
 		str += " " + l
 		vals = append(vals, lv...)
 	}
+	if q.f.t.keySpace.debugMode {
+		fmt.Println(str, vals)
+	}
 	return str, vals
 }
 

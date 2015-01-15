@@ -9,6 +9,7 @@ type KeySpace interface {
 	OneToManyTable(tableName, fieldToIndexBy, uniqueKey string, row interface{}) (OneToManyTable, error)
 	TimeSeriesTable(tableName, timeField, idField string, bucketSize time.Duration, row interface{}) (TimeSeriesTable, error)
 	Table(tableName string, row interface{}, keys Keys) (Table, error)
+	DebugMode(bool)
 }
 
 //

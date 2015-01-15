@@ -11,6 +11,7 @@ type K struct {
 	session *gocql.Session
 	name    string
 	nodeIps []string
+	debugMode bool
 }
 
 // New returns a new keySpace. A keySpace is analogous to keyspaces in Cassandra or databases in RDMSes.
@@ -32,6 +33,11 @@ func New(nameSp, username, password string, nodeIps []string) (KeySpace, error) 
 		nodeIps: nodeIps,
 	}, nil
 }
+
+func (k *K) DebugMode(b bool) {
+	k.debugMode = true
+}
+
 
 // Table returns a new Table. A Table is analogous to column families in Cassandra or tables in RDBMSes.
 func (k *K) Table(name string, entity interface{}, keys Keys) (Table, error) {
