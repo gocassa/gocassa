@@ -34,10 +34,9 @@ func init() {
 	//ns.DebugMode(true)
 }
 
-// cqlsh> CREATE KEYSPACE test WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };
-// cqlsh> CREATE TABLE test.customer (id text PRIMARY KEY, name text);
 func TestEq(t *testing.T) {
-	cs := ns.Table("customer", Customer{}, Keys{})
+	cs := ns.Table("customer", Customer{}, Keys{PartitionKeys:[]string{"Id"}})
+	createIf(ns, cs.(*T), t)
 	err := cs.Set(Customer{
 		Id:   "50",
 		Name: "Joe",
@@ -113,9 +112,9 @@ func TestIn(t *testing.T) {
 	}
 }
 
-// cqlsh> CREATE TABLE test.customer1 (id text, name text, PRIMARY KEY((id, name)));
 func TestAnd(t *testing.T) {
-	cs := ns.Table("customer1", Customer{}, Keys{})
+	cs := ns.Table("customer1", Customer{}, Keys{PartitionKeys:[]string{"Id", "Name"}})
+	createIf(ns, cs.(*T), t)
 	err := cs.Set(Customer{
 		Id:   "100",
 		Name: "Joe",
