@@ -1,14 +1,14 @@
-package cmagic 
+package cmagic
 
-import(
-	"fmt"
+import (
 	"errors"
+	"fmt"
 )
 
 type oneToMany struct {
-	t Table
-	fieldToIndexBy string 
-	idField string
+	t              Table
+	fieldToIndexBy string
+	idField        string
 }
 
 func (o *oneToMany) Set(v interface{}) error {

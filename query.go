@@ -6,7 +6,7 @@ import (
 )
 
 type query struct {
-	f filter
+	f     filter
 	limit int
 }
 

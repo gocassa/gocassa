@@ -1,12 +1,12 @@
-package cmagic 
+package cmagic
 
-import(
-	"fmt"
+import (
 	"errors"
+	"fmt"
 )
 
 type oneToOne struct {
-	t Table
+	t       Table
 	idField string
 }
 
