@@ -101,6 +101,9 @@ func (c T) Set(i interface{}) error {
 	fields, values := keyValues(m)
 	stmt := insert(c.info.name, fields)
 	sess := c.keySpace.session
+	if c.keySpace.debugMode {
+		fmt.Println(stmt, values)
+	}
 	return sess.Query(stmt, values...).Exec()
 }
 
