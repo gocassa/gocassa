@@ -17,19 +17,21 @@ type T struct {
 // Contains mostly analyzed information about the entity
 type tableInfo struct {
 	keyspace, name string
-	entity         interface{}
-	keys           Keys
-	fieldNames     map[string]struct{} // This is here only to check containment
-	fields         []string
-	fieldValues    []interface{}
+	marshalSource 	interface{}
+	fieldSource   	map[string]interface{}
+	keys           	Keys
+	fieldNames     	map[string]struct{} // This is here only to check containment
+	fields         	[]string
+	fieldValues    	[]interface{}
 }
 
 func newTableInfo(keyspace, name string, keys Keys, entity interface{}, fieldSource map[string]interface{}) *tableInfo {
 	cinf := &tableInfo{
-		keyspace: keyspace,
-		name:     name,
-		entity:   entity,
-		keys:     keys,
+		keyspace: 		keyspace,
+		name:     		name,
+		marshalSource:  entity,
+		keys:     		keys,
+		fieldSource: 	fieldSource,
 	}
 	fields := []string{}
 	values := []interface{}{}
@@ -47,7 +49,7 @@ func newTableInfo(keyspace, name string, keys Keys, entity interface{}, fieldSou
 }
 
 func (t T) zero() interface{} {
-	return reflect.New(reflect.TypeOf(t.info.entity)).Interface()
+	return reflect.New(reflect.TypeOf(t.info.marshalSource)).Interface()
 }
 
 // Since we cant have Map -> [(k, v)] we settle for Map -> ([k], [v])

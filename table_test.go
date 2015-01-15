@@ -9,9 +9,7 @@ import (
 
 func createIf(ns KeySpace, cs Table, t *testing.T) {
 	name := cs.(*T).info.name
-	fmt.Println(name)
 	if ex, err := ns.(*K).Exists(name); ex && err == nil {
-		fmt.Println(name, 1)
 		err = ns.(*K).Drop(name)
 		if err != nil {
 			t.Fatal(err)

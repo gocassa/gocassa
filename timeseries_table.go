@@ -75,8 +75,11 @@ func (o *timeSeriesTable) Read(timeStamp time.Time, id interface{}) (interface{}
 
 func (o *timeSeriesTable) List(startTime time.Time, endTime time.Time) ([]interface{}, error) {
 	buckets := []interface{}{}
-	for i:=startTime.UnixNano();i<endTime.UnixNano();i+=int64(o.bucketSize) {
+	for i:=startTime.UnixNano();;i+=int64(o.bucketSize) {
 		buckets = append(buckets, i/int64(o.bucketSize))
+		if i>=endTime.UnixNano() {
+			break
+		}
 	}
 	return o.t.Where(In(bucketFieldName, buckets...), GTE(o.timeField, startTime), LTE(o.timeField, endTime)).Query().Read()
 }

@@ -39,7 +39,11 @@ func (k *K) Table(name string, entity interface{}, keys Keys) Table {
 	if !ok {
 		panic("Unrecognized row type")
 	}
-	ti := newTableInfo(k.name, name, keys, entity, m)
+	return k.table(name, entity, m, keys)
+}
+
+func (k *K) table(name string, entity interface{}, fieldSource map[string]interface{}, keys Keys) Table {
+	ti := newTableInfo(k.name, name, keys, entity, fieldSource)
 	return &T{
 		keySpace: k,
 		info:     ti,
@@ -73,7 +77,7 @@ func (k *K) TimeSeriesTable(name, timeField, idField string, bucketSize time.Dur
 	}
 	m[bucketFieldName] = int64(0)
 	return &timeSeriesTable{
-		t: k.Table(name, m, Keys{
+		t: k.table(name, row, m, Keys{
 			PartitionKeys: []string{bucketFieldName},
 			ClusteringColumns: []string{timeField, idField},
 		}),
