@@ -90,11 +90,11 @@ func insert(cfName string, fieldNames []string) string {
 	for i := 0; i < len(fieldNames); i++ {
 		placeHolders = append(placeHolders, "?")
 	}
-	quotedFieldNames := []string{}
+	lowerFieldNames := []string{}
 	for _, v := range fieldNames {
-		quotedFieldNames = append(quotedFieldNames, "\""+v+"\"")
+		lowerFieldNames = append(lowerFieldNames, strings.ToLower(v))
 	}
-	return fmt.Sprintf("INSERT INTO %v ("+strings.Join(quotedFieldNames, ", ")+") VALUES ("+strings.Join(placeHolders, ", ")+")", cfName)
+	return fmt.Sprintf("INSERT INTO %v ("+strings.Join(lowerFieldNames, ", ")+") VALUES ("+strings.Join(placeHolders, ", ")+")", cfName)
 }
 
 func (c T) Set(i interface{}) error {

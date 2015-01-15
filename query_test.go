@@ -15,11 +15,23 @@ var ns KeySpace
 
 func init() {
 	var err error
-	ns, err = New("", "", "", []string{"127.0.0.1"})
+	c, err := Connect([]string{"127.0.0.1"}, "", "")
 	if err != nil {
 		panic(err)
 	}
-	ns.DebugMode(true)
+	err = c.DropKeySpace("test")
+	if err != nil {
+		panic(err)
+	}
+	err = c.CreateKeySpace("test")
+	if err != nil {
+		panic(err)
+	}
+	ns, err = ConnectToKeySpace("test", []string{"127.0.0.1"}, "", "")
+	if err != nil {
+		panic(err)
+	}
+	//ns.DebugMode(true)
 }
 
 // cqlsh> CREATE KEYSPACE test WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };

@@ -37,7 +37,7 @@ func CreateTable(keySpace, cf string, partitionKeys, colKeys []string, fields []
 		if err != nil {
 			return "", nil
 		}
-		l := "    " + fields[i] + " " + typ
+		l := "    " + strings.ToLower(fields[i]) + " " + typ
 		fieldLines = append(fieldLines, l)
 	}
 	str := "    PRIMARY KEY ((%v) %v)"
@@ -46,6 +46,7 @@ func CreateTable(keySpace, cf string, partitionKeys, colKeys []string, fields []
 	}
 	fieldLines = append(fieldLines, fmt.Sprintf(str, j(partitionKeys), j(colKeys)))
 	stmt := strings.Join([]string{firstLine, strings.Join(fieldLines, ",\n"), ");"}, "\n")
+	//fmt.Println(stmt)
 	return stmt, nil
 }
 

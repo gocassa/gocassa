@@ -2,6 +2,7 @@ package cmagic
 
 import(
 	"github.com/gocql/gocql"
+	"fmt"
 )
 
 type connection struct {
@@ -31,9 +32,11 @@ func Connect(nodeIps []string, username, password string) (Connection, error) {
 }
 
 func (c *connection) CreateKeySpace(name string) error {
-	return nil
+	stmt := fmt.Sprintf("CREATE KEYSPACE %v WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1 };", name)
+	return c.s.Query(stmt).Exec()
 }
 
 func (c *connection) DropKeySpace(name string) error {
-	return nil
+	stmt := fmt.Sprintf("DROP KEYSPACE IF EXISTS %v", name)
+	return c.s.Query(stmt).Exec()
 }

@@ -1,10 +1,10 @@
 package cmagic
 
 import (
-	"fmt"
 	"github.com/gocql/gocql"
 	"strings"
 	"time"
+	"fmt"
 )
 
 type K struct {
@@ -14,7 +14,7 @@ type K struct {
 	debugMode 	bool
 }
 
-func ConnectKeySpace(name string, nodeIps []string, username, password string) (KeySpace, error) {
+func ConnectToKeySpace(name string, nodeIps []string, username, password string) (KeySpace, error) {
 	// clean up this duplication
 	cluster := gocql.NewCluster(nodeIps...)
 	cluster.Keyspace = name
@@ -36,16 +36,6 @@ func ConnectKeySpace(name string, nodeIps []string, username, password string) (
 
 func (k *K) DebugMode(b bool) {
 	k.debugMode = true
-}
-
-func (k *K) CreateKeySpace() error {
-	stmt := fmt.Sprintf("WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1 };", k.name)
-	return k.session.Query(stmt).Exec()
-}
-
-func (k *K) DropKeySpace() error {
-	stmt := fmt.Sprintf("DROP KEYSPACE IF EXISTS %v", k.name)
-	return k.session.Query(stmt).Exec()
 }
 
 // Table returns a new Table. A Table is analogous to column families in Cassandra or tables in RDBMSes.
