@@ -8,16 +8,30 @@ import (
 )
 
 type K struct {
-	c 			connection
+	session *gocql.Session
 	name    	string
 	// nodeIps 	[]string
 	debugMode 	bool
 }
 
-// New returns a new keySpace. A keySpace is analogous to keyspaces in Cassandra or databases in RDMSes.
-func New(nameSp, username, password string, nodeIps []string) (KeySpace, error) {
-
-
+func ConnectKeySpace(name string, nodeIps []string, username, password string) (KeySpace, error) {
+	// clean up this duplication
+	cluster := gocql.NewCluster(nodeIps...)
+	cluster.Keyspace = name
+	cluster.Consistency = gocql.One
+	cluster.Authenticator = gocql.PasswordAuthenticator{
+		Username: username,
+		Password: password,
+	}
+	sess, err := cluster.CreateSession()
+	if err != nil {
+		return nil, err
+	}
+	return &K{
+		session: sess,
+		name:    name,
+		// nodeIps: nodeIps,
+	}, nil
 }
 
 func (k *K) DebugMode(b bool) {

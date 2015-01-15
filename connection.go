@@ -6,11 +6,13 @@ import(
 
 type connection struct {
 	s *gocql.Session
+	nodeIps []string
+	userName string
+	pass string
 }
 
-func Connect(nodeIps []string, username, password string) Connection {
+func Connect(nodeIps []string, username, password string) (Connection, error) {
 	cluster := gocql.NewCluster(nodeIps...)
-	cluster.Keyspace = nameSp
 	cluster.Consistency = gocql.One
 	cluster.Authenticator = gocql.PasswordAuthenticator{
 		Username: username,
@@ -20,23 +22,18 @@ func Connect(nodeIps []string, username, password string) Connection {
 	if err != nil {
 		return nil, err
 	}
-	return connection{
-		s: session,
-	}
+	return &connection{
+		s: sess,
+		nodeIps: nodeIps,
+		userName: username,
+		pass: password,
+	}, nil
 }
 
 func (c *connection) CreateKeySpace(name string) error {
-
+	return nil
 }
 
 func (c *connection) DropKeySpace(name string) error {
-
-}
-
-func (c *connection) KeySpace(name string) KeySpace {
-	return &K{
-		session: c.sess,
-		name:    name,
-		// nodeIps: nodeIps,
-	}, nil
+	return nil
 }

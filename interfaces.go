@@ -7,7 +7,6 @@ import(
 type Connection interface {
 	CreateKeySpace(name string) error
 	DropKeySpace(name string) error
-	KeySpace() KeySpace
 }
 
 type KeySpace interface {
