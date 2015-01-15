@@ -43,6 +43,9 @@ func (f filter) Update(m map[string]interface{}) error {
 	str, wvals := f.generateWhere()
 	stmt := updateStatement(f.t.keySpace.name, f.t.info.name, fields)
 	sess := f.t.keySpace.session
+	if f.t.keySpace.debugMode {
+		fmt.Println(stmt, wvals)
+	}
 	return sess.Query(stmt +" "+ str, append(values, wvals...)...).Exec()
 }
 
