@@ -7,7 +7,7 @@ import(
 	"time"
 )
 
-const bucketFieldName = "_bucket"
+const bucketFieldName = "bucket"
 
 type TimeUUID struct {
 	v gocql.UUID
@@ -39,11 +39,11 @@ func (o *timeSeriesTable) Set(v interface{}) error {
 	if !ok {
 		return errors.New("Can't set: not able to convert")
 	}
-	tim, ok := m[o.timeField].(TimeUUID)
+	tim, ok := m[o.timeField].(time.Time)
 	if !ok {
-		return errors.New("timeuuidField is not actually timeuuidField")
+		return errors.New("timeField is not actually a time.Time")
 	}
-	m[bucketFieldName] = tim.v.Time().UnixNano()/int64(o.bucketSize)
+	m[bucketFieldName] = tim.UnixNano()/int64(o.bucketSize)
 	return o.t.Set(m)
 }
 

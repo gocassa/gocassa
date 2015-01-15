@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/gocql/gocql"
 	"strings"
-	r "github.com/hailocab/cmagic/reflect"
 	"time"
 )
 
@@ -36,9 +35,9 @@ func New(nameSp, username, password string, nodeIps []string) (KeySpace, error) 
 
 // Table returns a new Table. A Table is analogous to column families in Cassandra or tables in RDBMSes.
 func (k *K) Table(name string, entity interface{}, keys Keys) Table {
-	m, ok := r.StructToMap(entity)
+	m, ok := toMap(entity)
 	if !ok {
-		panic("Entity is not a struct")
+		panic("Unrecognized row type")
 	}
 	ti := newTableInfo(k.name, name, keys, entity, m)
 	return &T{
@@ -68,13 +67,19 @@ func (k *K) OneToManyTable(name, fieldToIndexBy, id string, row interface{}) One
 }
 
 func (k *K) TimeSeriesTable(name, timeField, idField string, bucketSize time.Duration, row interface{}) TimeSeriesTable {
+	m, ok := toMap(row)
+	if !ok {
+		panic("Unrecognized row type")
+	}
+	m[bucketFieldName] = int64(0)
 	return &timeSeriesTable{
-		t: k.Table(name, row, Keys{
-			PartitionKeys: []string{"_bucket"},
+		t: k.Table(name, m, Keys{
+			PartitionKeys: []string{bucketFieldName},
 			ClusteringColumns: []string{timeField, idField},
 		}),
 		timeField: timeField,
 		idField: idField,
+		bucketSize: bucketSize,
 	}
 }
 
@@ -97,7 +102,7 @@ func (k K) Exists(cf string) (bool, error) {
 		return false, err
 	}
 	for _, v := range ts {
-		if v == cf {
+		if strings.ToLower(v) == strings.ToLower(cf) {
 			return true, nil
 		}
 	}
