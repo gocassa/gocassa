@@ -22,25 +22,25 @@ type Relation struct {
 
 func (r Relation) cql() (string, []interface{}) {
 	ret := ""
+	key := strings.ToLower(r.key)
 	switch r.op {
 	case equality:
-		ret = r.key + " = ?"
+		ret = key + " = ?"
 	case in:
-		//return r.key + " IN (?)", []interface{}{r.terms}
 		// Ideally the above code should work.
 		qs := []string{}
 		for i := 0; i < len(r.terms); i++ {
 			qs = append(qs, "?")
 		}
-		return fmt.Sprintf(r.key+" IN (%v)", strings.Join(qs, ", ")), r.terms
+		return fmt.Sprintf(key+" IN (%v)", strings.Join(qs, ", ")), r.terms
 	case greaterThan:
-		ret = r.key + " > ?"
+		ret = key + " > ?"
 	case greaterThanOrEquals:
-		ret = r.key + " >= ?"
+		ret = key + " >= ?"
 	case lesserThan:
-		ret = r.key + " < ?"
+		ret = key + " < ?"
 	case lesserThanOrEquals:
-		ret = r.key + " <= ?"
+		ret = key + " <= ?"
 	}
 	return ret, r.terms
 }

@@ -96,6 +96,23 @@ func (k *K) TimeSeriesTable(name, timeField, idField string, bucketSize time.Dur
 	}
 }
 
+func (k *K) TimeSeriesBTable(name, timeField, indexField, idField string, bucketSize time.Duration, row interface{}) TimeSeriesBTable {
+	m, ok := toMap(row)
+	if !ok {
+		panic("Unrecognized row type")
+	}
+	m[bucketFieldName] = int64(0)
+	return &timeSeriesBTable{
+		t: k.table(name, row, m, Keys{
+			PartitionKeys: []string{bucketFieldName},
+			ClusteringColumns: []string{timeField, idField},
+		}),
+		timeField: timeField,
+		idField: idField,
+		bucketSize: bucketSize,
+	}
+}
+
 // Returns table names in a keyspace
 func (n *K) Tables() ([]string, error) {
 	stmt := fmt.Sprintf("SELECT columnfamily_name FROM system.schema_columnfamilies WHERE keyspace_name='%v'", n.name)

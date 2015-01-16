@@ -13,6 +13,7 @@ type KeySpace interface {
 	OneToOneTable(tableName, id string, row interface{}) OneToOneTable
 	OneToManyTable(tableName, fieldToIndexBy, uniqueKey string, row interface{}) OneToManyTable
 	TimeSeriesTable(tableName, timeField, uniqueKey string, bucketSize time.Duration, row interface{}) TimeSeriesTable
+	TimeSeriesBTable(tableName, timeField, fieldToIndexByField, uniqueKey string, bucketSize time.Duration, row interface{}) TimeSeriesBTable
 	Table(tableName string, row interface{}, keys Keys) Table
 	DebugMode(bool)
 }
@@ -48,7 +49,7 @@ type OneToManyTable interface {
 //
 
 // TimeSeries currently require both timestamp and UUID
-// to identify a row, similarly to the OneToManyT recipe
+// to identify a row, similarly to the OneToMany recipe
 type TimeSeriesTable interface {
 	// timeField and idField must be present
 	Set(v interface{}) error
@@ -56,6 +57,19 @@ type TimeSeriesTable interface {
 	List(start, end time.Time) ([]interface{}, error)
 	Read(timeStamp time.Time, id interface{}) (interface{}, error)
 	Delete(timeStamp time.Time, id interface{}) error
+}
+
+//
+// TimeSeries B recipe
+//
+
+type TimeSeriesBTable interface {
+	// timeField and idField must be present
+	Set(v interface{}) error
+	Update(v interface{}, timeStamp time.Time, id interface{},  m map[string]interface{}) error
+	List(v interface{}, start, end time.Time) ([]interface{}, error)
+	Read(v interface{}, timeStamp time.Time, id interface{}) (interface{}, error)
+	Delete(v interface{}, timeStamp time.Time, id interface{}) error
 }
 
 //

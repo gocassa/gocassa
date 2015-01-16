@@ -6,16 +6,15 @@ import(
 	"time"
 )
 
-const bucketFieldName = "bucket"
-
-type timeSeriesTable struct {
+type timeSeriesBTable struct {
 	t Table
+	fieldToIndexBy string
 	timeField string
 	idField string
 	bucketSize time.Duration
 }
 
-func (o *timeSeriesTable) Set(v interface{}) error {
+func (o *timeSeriesBTable) Set(v interface{}) error {
 	m, ok := toMap(v)
 	if !ok {
 		return errors.New("Can't set: not able to convert")
@@ -28,21 +27,21 @@ func (o *timeSeriesTable) Set(v interface{}) error {
 	return o.t.Set(m)
 }
 
-func (o *timeSeriesTable) bucket(t time.Time) int64 {
+func (o *timeSeriesBTable) bucket(t time.Time) int64 {
 	return t.UnixNano()/int64(o.bucketSize)
 }
 
-func (o *timeSeriesTable) Update(timeStamp time.Time, id interface{}, m map[string]interface{}) error {
+func (o *timeSeriesBTable) Update(v interface{}, timeStamp time.Time, id interface{}, m map[string]interface{}) error {
 	bucket := o.bucket(timeStamp)
 	return o.t.Where(Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Update(m)
 }
 
-func (o *timeSeriesTable) Delete(timeStamp time.Time, id interface{}) error {
+func (o *timeSeriesBTable) Delete(v interface{}, timeStamp time.Time, id interface{}) error {
 	bucket := o.bucket(timeStamp)
 	return o.t.Where(Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Delete()
 }
 
-func (o *timeSeriesTable) Read(timeStamp time.Time, id interface{}) (interface{}, error) {
+func (o *timeSeriesBTable) Read(v interface{}, timeStamp time.Time, id interface{}) (interface{}, error) {
 	bucket := o.bucket(timeStamp)
 	res, err := o.t.Where(Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Query().Read()
 	if err != nil {
@@ -54,7 +53,7 @@ func (o *timeSeriesTable) Read(timeStamp time.Time, id interface{}) (interface{}
 	return res[0], nil
 }
 
-func (o *timeSeriesTable) List(startTime time.Time, endTime time.Time) ([]interface{}, error) {
+func (o *timeSeriesBTable) List(v interface{}, startTime time.Time, endTime time.Time) ([]interface{}, error) {
 	buckets := []interface{}{}
 	for i:=startTime.UnixNano();;i+=int64(o.bucketSize) {
 		buckets = append(buckets, i/int64(o.bucketSize))
