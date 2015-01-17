@@ -96,7 +96,7 @@ func (k *K) TimeSeriesTable(name, timeField, idField string, bucketSize time.Dur
 	}
 }
 
-func (k *K) TimeSeriesBTable(name, timeField, indexField, idField string, bucketSize time.Duration, row interface{}) TimeSeriesBTable {
+func (k *K) TimeSeriesBTable(name, indexField, timeField, idField string, bucketSize time.Duration, row interface{}) TimeSeriesBTable {
 	m, ok := toMap(row)
 	if !ok {
 		panic("Unrecognized row type")
@@ -104,9 +104,10 @@ func (k *K) TimeSeriesBTable(name, timeField, indexField, idField string, bucket
 	m[bucketFieldName] = int64(0)
 	return &timeSeriesBTable{
 		t: k.table(name, row, m, Keys{
-			PartitionKeys: []string{bucketFieldName},
+			PartitionKeys: []string{indexField, bucketFieldName},
 			ClusteringColumns: []string{timeField, idField},
 		}),
+		indexField: indexField,
 		timeField: timeField,
 		idField: idField,
 		bucketSize: bucketSize,
