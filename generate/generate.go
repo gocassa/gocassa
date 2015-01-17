@@ -46,12 +46,15 @@ func CreateTable(keySpace, cf string, partitionKeys, colKeys []string, fields []
 	}
 	fieldLines = append(fieldLines, fmt.Sprintf(str, j(partitionKeys), j(colKeys)))
 	stmt := strings.Join([]string{firstLine, strings.Join(fieldLines, ",\n"), ");"}, "\n")
-	//fmt.Println(stmt)
 	return stmt, nil
 }
 
 func j(s []string) string {
-	return strings.Join(s, ", ")
+	s1 := []string{}
+	for _, v := range s {
+		s1 = append(s1, strings.ToLower(v))
+	}
+	return strings.Join(s1, ", ")
 }
 
 func CreateKeyspace(keyspaceName string) string {
