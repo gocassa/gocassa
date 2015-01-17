@@ -73,4 +73,11 @@ func TestTimeSeriesBTable(t *testing.T) {
 	if len(ts) != 2 {
 		t.Fatal(ts)
 	}
+	ts, err = tbl.List("B", parse("2006 Jan 2 15:03:58"), parse("2006 Jan 2 15:05:00"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(ts) != 1 {
+		t.Fatal(ts)
+	}
 }
