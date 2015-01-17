@@ -24,26 +24,26 @@ func (o *timeSeriesTable) Set(v interface{}) error {
 	if !ok {
 		return errors.New("timeField is not actually a time.Time")
 	}
-	m[bucketFieldName] = tim.UnixNano()/int64(o.bucketSize)
+	m[bucketFieldName] = o.bucket(tim.Unix())
 	return o.t.Set(m)
 }
 
-func (o *timeSeriesTable) bucket(t time.Time) int64 {
-	return t.UnixNano()/int64(o.bucketSize)
+func (o *timeSeriesTable) bucket(secs int64) int64 {
+	return secs - secs%int64(o.bucketSize/time.Second)
 }
 
 func (o *timeSeriesTable) Update(timeStamp time.Time, id interface{}, m map[string]interface{}) error {
-	bucket := o.bucket(timeStamp)
+	bucket := o.bucket(timeStamp.Unix())
 	return o.t.Where(Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Update(m)
 }
 
 func (o *timeSeriesTable) Delete(timeStamp time.Time, id interface{}) error {
-	bucket := o.bucket(timeStamp)
+	bucket := o.bucket(timeStamp.Unix())
 	return o.t.Where(Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Delete()
 }
 
 func (o *timeSeriesTable) Read(timeStamp time.Time, id interface{}) (interface{}, error) {
-	bucket := o.bucket(timeStamp)
+	bucket := o.bucket(timeStamp.Unix())
 	res, err := o.t.Where(Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Query().Read()
 	if err != nil {
 		return nil, err
@@ -56,9 +56,10 @@ func (o *timeSeriesTable) Read(timeStamp time.Time, id interface{}) (interface{}
 
 func (o *timeSeriesTable) List(startTime time.Time, endTime time.Time) ([]interface{}, error) {
 	buckets := []interface{}{}
-	for i:=startTime.UnixNano();;i+=int64(o.bucketSize) {
-		buckets = append(buckets, i/int64(o.bucketSize))
-		if i>=endTime.UnixNano() {
+	start := o.bucket(startTime.Unix())
+	for i:=start;;i+=int64(o.bucketSize/time.Second) {
+		buckets = append(buckets, o.bucket(i))
+		if i>=endTime.Unix() {
 			break
 		}
 	}
