@@ -81,6 +81,14 @@ func (t T) Where(rs ...Relation) Filter {
 	}
 }
 
+func (t T) generateFieldNames() string {
+	xs := []string{}
+	for _, v := range t.info.fields {
+		xs = append(xs, strings.ToLower(v))
+	}
+	return strings.Join(xs, ", ")
+}
+
 // INSERT INTO Hollywood.NerdMovies (user_uuid, fan)
 //   VALUES ('cfd66ccc-d857-4e90-b1e5-df98a3d40cd6', 'johndoe')
 //
