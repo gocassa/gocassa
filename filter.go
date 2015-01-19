@@ -50,8 +50,12 @@ func (f filter) Update(m map[string]interface{}) error {
 }
 
 func (f filter) Delete() error {
-	// return c.keySpace.session.Query(g.DeleteById(c.keySpace.name, c.info.primaryKey), id).Exec()
-	return nil
+	str, vals := f.generateWhere()
+	stmt := fmt.Sprintf("DELETE FROM %v.%v ", f.t.keySpace.name, f.t.info.name) + str
+	if f.t.keySpace.debugMode {
+		fmt.Println(stmt, vals)
+	}
+	return f.t.keySpace.session.Query(stmt, vals...).Exec()
 }
 
 func (f filter) Query() Query {

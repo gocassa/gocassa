@@ -20,11 +20,11 @@ func (o *oneToMany) Update(field, id interface{}, m map[string]interface{}) erro
 }
 
 func (o *oneToMany) Delete(field, id interface{}) error {
-	return o.t.Where(Eq(o.idField, id)).Delete()
+	return o.t.Where(Eq(o.fieldToIndexBy, field), Eq(o.idField, id)).Delete()
 }
 
 func (o *oneToMany) Read(field, id interface{}) (interface{}, error) {
-	res, err := o.t.Where(Eq(o.idField, id)).Query().Read()
+	res, err := o.t.Where(Eq(o.fieldToIndexBy, field), Eq(o.idField, id)).Query().Read()
 	if err != nil {
 		return nil, err
 	}
