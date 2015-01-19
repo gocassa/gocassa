@@ -29,7 +29,7 @@ func (o *timeSeriesTable) Set(v interface{}) error {
 }
 
 func (o *timeSeriesTable) bucket(secs int64) int64 {
-	return secs - secs%int64(o.bucketSize/time.Second)
+	return (secs - secs%int64(o.bucketSize/time.Second)) * 1000
 }
 
 func (o *timeSeriesTable) Update(timeStamp time.Time, id interface{}, m map[string]interface{}) error {
@@ -57,9 +57,9 @@ func (o *timeSeriesTable) Read(timeStamp time.Time, id interface{}) (interface{}
 func (o *timeSeriesTable) List(startTime time.Time, endTime time.Time) ([]interface{}, error) {
 	buckets := []interface{}{}
 	start := o.bucket(startTime.Unix())
-	for i:=start;;i+=int64(o.bucketSize/time.Second) {
-		buckets = append(buckets, o.bucket(i))
-		if i>=endTime.Unix() {
+	for i:=start;;i+=int64(o.bucketSize/time.Second)*1000 {
+		buckets = append(buckets, i)
+		if i>=endTime.Unix()*1000 {
 			break
 		}
 	}

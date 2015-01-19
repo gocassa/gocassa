@@ -84,7 +84,7 @@ func (k *K) TimeSeriesTable(name, timeField, idField string, bucketSize time.Dur
 	if !ok {
 		panic("Unrecognized row type")
 	}
-	m[bucketFieldName] = int64(0)
+	m[bucketFieldName] = time.Now()
 	return &timeSeriesTable{
 		t: k.table(name, row, m, Keys{
 			PartitionKeys: []string{bucketFieldName},
@@ -101,7 +101,7 @@ func (k *K) TimeSeriesBTable(name, indexField, timeField, idField string, bucket
 	if !ok {
 		panic("Unrecognized row type")
 	}
-	m[bucketFieldName] = int64(0)
+	m[bucketFieldName] = time.Now()
 	return &timeSeriesBTable{
 		t: k.table(name, row, m, Keys{
 			PartitionKeys: []string{indexField, bucketFieldName},
