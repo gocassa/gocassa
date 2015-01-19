@@ -26,20 +26,16 @@ func (f filter) Replace(i interface{}) error {
 }
 
 // UPDATE keyspace.Movies SET col1 = val1, col2 = val2
-func updateStatement(cfName string, pkName string, fieldNames []string) string {
+func updateStatement(kn, cfName string, fieldNames []string) string {
 	cols := []string{}
 	for _, v := range fieldNames {
 		cols = append(cols, v+" = ?")
 	}
-	return fmt.Sprintf("UPDATE %v SET "+strings.Join(cols, ", "), cfName)
+	return fmt.Sprintf("UPDATE %v.%v SET "+strings.Join(cols, ", "), kn, cfName)
 }
 
 func (f filter) Update(m map[string]interface{}) error {
 	fields, values := keyValues(m)
-	for k, v := range m {
-		fields = append(fields, k)
-		values = append(values, v)
-	}
 	str, wvals := f.generateWhere()
 	stmt := updateStatement(f.t.keySpace.name, f.t.info.name, fields)
 	sess := f.t.keySpace.session

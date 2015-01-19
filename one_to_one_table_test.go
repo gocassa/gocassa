@@ -32,3 +32,36 @@ func TestOneToOneTable(t *testing.T) {
 		t.Fatal(c, err)
 	}
 }
+
+func TestOneToOneUpdate(t *testing.T) {
+	tbl := ns.OneToOneTable("customer82", "Id", Customer{})
+	createIf(ns, tbl.(*oneToOne).t, t)
+	joe := Customer{
+		Id: "33",
+		Name: "Joe",
+	}
+	err := tbl.Set(joe)
+	if err != nil {
+		t.Fatal(err)
+	}
+	c, err := tbl.Read("33")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(*(c.(*Customer)), joe) {
+		t.Fatal(*(c.(*Customer)), joe)
+	}
+	err = tbl.Update("33", map[string]interface{}{
+		"Name": "John",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	c, err = tbl.Read("33")
+	if err != nil {
+		t.Fatal(c, err)
+	}
+	if c.(*Customer).Name != "John" {
+		t.Fatal(c)
+	}
+}
