@@ -34,6 +34,19 @@ func TestOneToManyTableInsertRead(t *testing.T) {
 	if err == nil {
 		t.Fatal(c)
 	}
+	err = tbl.Update("A", "33", map[string]interface{}{
+		"Name": "John",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	c, err = tbl.Read("A", "33")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if c.(*Customer2).Name != "John" {
+		t.Fatal(c)
+	}
 }
 
 func TestOneToManyTableDelete(t *testing.T) {
