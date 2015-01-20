@@ -13,7 +13,7 @@ type TripB struct {
 
 func TestTimeSeriesBT(t *testing.T) {
 	tbl := ns.TimeSeriesBTable("tripTime6", "Tag", "Time", "Id", time.Minute, TripB{})
-	createIf(ns, tbl.(*TimeSeriesBT).Table, t)
+	createIf(ns, tbl.(*TimeSeriesBT).T, t)
 	err := tbl.Set(TripB{
 		Id: "1",
 		Time: parse("2006 Jan 2 15:03:59"),

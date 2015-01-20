@@ -6,21 +6,21 @@ import(
 )
 
 type OneToManyT struct {
-	Table
+	*T
 	fieldToIndexBy string 
 	idField string
 }
 
 func (o *OneToManyT) Update(field, id interface{}, m map[string]interface{}) error {
-	return o.Table.Where(Eq(o.fieldToIndexBy, field), Eq(o.idField, id)).Update(m)
+	return o.T.Where(Eq(o.fieldToIndexBy, field), Eq(o.idField, id)).Update(m)
 }
 
 func (o *OneToManyT) Delete(field, id interface{}) error {
-	return o.Table.Where(Eq(o.fieldToIndexBy, field), Eq(o.idField, id)).Delete()
+	return o.T.Where(Eq(o.fieldToIndexBy, field), Eq(o.idField, id)).Delete()
 }
 
 func (o *OneToManyT) Read(field, id interface{}) (interface{}, error) {
-	res, err := o.Table.Where(Eq(o.fieldToIndexBy, field), Eq(o.idField, id)).Query().Read()
+	res, err := o.T.Where(Eq(o.fieldToIndexBy, field), Eq(o.idField, id)).Query().Read()
 	if err != nil {
 		return nil, err
 	}
@@ -31,5 +31,5 @@ func (o *OneToManyT) Read(field, id interface{}) (interface{}, error) {
 }
 
 func (o *OneToManyT) List(field, startId interface{}, limit int) ([]interface{}, error) {
-	return o.Table.Where(Eq(o.fieldToIndexBy, field), GTE(o.idField, startId)).Query().Limit(limit).Read()
+	return o.T.Where(Eq(o.fieldToIndexBy, field), GTE(o.idField, startId)).Query().Limit(limit).Read()
 }

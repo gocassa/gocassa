@@ -9,7 +9,7 @@ import(
 const bucketFieldName = "bucket"
 
 type TimeSeriesT struct {
-	Table
+	*T
 	timeField string
 	idField string
 	bucketSize time.Duration
@@ -25,7 +25,7 @@ func (o *TimeSeriesT) Set(v interface{}) error {
 		return errors.New("timeField is not actually a time.Time")
 	}
 	m[bucketFieldName] = o.bucket(tim.Unix())
-	return o.Table.Set(m)
+	return o.T.Set(m)
 }
 
 func (o *TimeSeriesT) bucket(secs int64) int64 {
@@ -34,17 +34,17 @@ func (o *TimeSeriesT) bucket(secs int64) int64 {
 
 func (o *TimeSeriesT) Update(timeStamp time.Time, id interface{}, m map[string]interface{}) error {
 	bucket := o.bucket(timeStamp.Unix())
-	return o.Table.Where(Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Update(m)
+	return o.T.Where(Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Update(m)
 }
 
 func (o *TimeSeriesT) Delete(timeStamp time.Time, id interface{}) error {
 	bucket := o.bucket(timeStamp.Unix())
-	return o.Table.Where(Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Delete()
+	return o.T.Where(Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Delete()
 }
 
 func (o *TimeSeriesT) Read(timeStamp time.Time, id interface{}) (interface{}, error) {
 	bucket := o.bucket(timeStamp.Unix())
-	res, err := o.Table.Where(Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Query().Read()
+	res, err := o.T.Where(Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Query().Read()
 	if err != nil {
 		return nil, err
 	}
@@ -63,5 +63,5 @@ func (o *TimeSeriesT) List(startTime time.Time, endTime time.Time) ([]interface{
 			break
 		}
 	}
-	return o.Table.Where(In(bucketFieldName, buckets...), GTE(o.timeField, startTime), LTE(o.timeField, endTime)).Query().Read()
+	return o.T.Where(In(bucketFieldName, buckets...), GTE(o.timeField, startTime), LTE(o.timeField, endTime)).Query().Read()
 }
