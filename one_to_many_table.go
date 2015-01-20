@@ -5,26 +5,22 @@ import(
 	"errors"
 )
 
-type oneToMany struct {
-	t Table
+type OneToManyT struct {
+	Table
 	fieldToIndexBy string 
 	idField string
 }
 
-func (o *oneToMany) Set(v interface{}) error {
-	return o.t.Set(v)
+func (o *OneToManyT) Update(field, id interface{}, m map[string]interface{}) error {
+	return o.Table.Where(Eq(o.fieldToIndexBy, field), Eq(o.idField, id)).Update(m)
 }
 
-func (o *oneToMany) Update(field, id interface{}, m map[string]interface{}) error {
-	return o.t.Where(Eq(o.fieldToIndexBy, field), Eq(o.idField, id)).Update(m)
+func (o *OneToManyT) Delete(field, id interface{}) error {
+	return o.Table.Where(Eq(o.fieldToIndexBy, field), Eq(o.idField, id)).Delete()
 }
 
-func (o *oneToMany) Delete(field, id interface{}) error {
-	return o.t.Where(Eq(o.fieldToIndexBy, field), Eq(o.idField, id)).Delete()
-}
-
-func (o *oneToMany) Read(field, id interface{}) (interface{}, error) {
-	res, err := o.t.Where(Eq(o.fieldToIndexBy, field), Eq(o.idField, id)).Query().Read()
+func (o *OneToManyT) Read(field, id interface{}) (interface{}, error) {
+	res, err := o.Table.Where(Eq(o.fieldToIndexBy, field), Eq(o.idField, id)).Query().Read()
 	if err != nil {
 		return nil, err
 	}
@@ -34,6 +30,6 @@ func (o *oneToMany) Read(field, id interface{}) (interface{}, error) {
 	return res[0], nil
 }
 
-func (o *oneToMany) List(field, startId interface{}, limit int) ([]interface{}, error) {
-	return o.t.Where(Eq(o.fieldToIndexBy, field), GTE(o.idField, startId)).Query().Limit(limit).Read()
+func (o *OneToManyT) List(field, startId interface{}, limit int) ([]interface{}, error) {
+	return o.Table.Where(Eq(o.fieldToIndexBy, field), GTE(o.idField, startId)).Query().Limit(limit).Read()
 }

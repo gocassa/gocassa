@@ -5,9 +5,9 @@ import (
 	"testing"
 )
 
-func TestOneToOneTable(t *testing.T) {
-	tbl := ns.OneToOneTable("customer81", "Id", Customer{})
-	createIf(ns, tbl.(*oneToOne).t, t)
+func TestOnyToOneTTable(t *testing.T) {
+	tbl := ns.OnyToOneTTable("customer81", "Id", Customer{})
+	createIf(ns, tbl.(*OnyToOneT).t, t)
 	joe := Customer{
 		Id: "33",
 		Name: "Joe",
@@ -33,9 +33,9 @@ func TestOneToOneTable(t *testing.T) {
 	}
 }
 
-func TestOneToOneUpdate(t *testing.T) {
-	tbl := ns.OneToOneTable("customer82", "Id", Customer{})
-	createIf(ns, tbl.(*oneToOne).t, t)
+func TestOnyToOneTUpdate(t *testing.T) {
+	tbl := ns.OnyToOneTTable("customer82", "Id", Customer{})
+	createIf(ns, tbl.(*OnyToOneT).t, t)
 	joe := Customer{
 		Id: "33",
 		Name: "Joe",

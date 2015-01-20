@@ -5,25 +5,21 @@ import(
 	"errors"
 )
 
-type oneToOne struct {
-	t Table
+type OneToOneT struct {
+	Table
 	idField string
 }
 
-func (o *oneToOne) Set(v interface{}) error {
-	return o.t.Set(v)
+func (o *OneToOneT) Update(id interface{}, m map[string]interface{}) error {
+	return o.Table.Where(Eq(o.idField, id)).Update(m)
 }
 
-func (o *oneToOne) Update(id interface{}, m map[string]interface{}) error {
-	return o.t.Where(Eq(o.idField, id)).Update(m)
+func (o *OneToOneT) Delete(id interface{}) error {
+	return o.Table.Where(Eq(o.idField, id)).Delete()
 }
 
-func (o *oneToOne) Delete(id interface{}) error {
-	return o.t.Where(Eq(o.idField, id)).Delete()
-}
-
-func (o *oneToOne) Read(id interface{}) (interface{}, error) {
-	res, err := o.t.Where(Eq(o.idField, id)).Query().Read()
+func (o *OneToOneT) Read(id interface{}) (interface{}, error) {
+	res, err := o.Table.Where(Eq(o.idField, id)).Query().Read()
 	if err != nil {
 		return nil, err
 	}
