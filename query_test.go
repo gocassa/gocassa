@@ -180,7 +180,7 @@ func TestTypesMarshal(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(res) != 1 {
-		t.Fatal()
+		t.Fatal(res)
 	}
 	if !reflect.DeepEqual(c, *res[0].(*Customer3)) {
 		t.Fatal(c, *res[0].(*Customer3))
