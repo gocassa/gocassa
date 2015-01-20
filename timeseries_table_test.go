@@ -18,9 +18,9 @@ func parse(value string) time.Time {
 	return t
 }
 
-func TestTimeSeriesTable(t *testing.T) {
+func TestTimeSeriesT(t *testing.T) {
 	tbl := ns.TimeSeriesTable("tripTime5", "Time", "Id", time.Minute, Trip{})
-	createIf(ns, tbl.(*timeSeriesTable).t, t)
+	createIf(ns, tbl.(*TimeSeriesT).Table, t)
 	err := tbl.Set(Trip{
 		Id: "1",
 		Time: parse("2006 Jan 2 15:03:59"),

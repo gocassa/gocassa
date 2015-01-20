@@ -56,8 +56,8 @@ func (k *K) table(name string, entity interface{}, fieldSource map[string]interf
 }
 
 func (k *K) OneToOneTable(name, id string, row interface{}) OneToOneTable {
-	return &oneToOne{
-		t: k.Table(name, row, Keys{
+	return &OneToOneT{
+		Table: k.Table(name, row, Keys{
 			PartitionKeys: []string{id},
 		}),
 		idField: id,
@@ -69,8 +69,8 @@ func (k *K) SetKeysSpaceName(name string) {
 }
 
 func (k *K) OneToManyTable(name, fieldToIndexBy, id string, row interface{}) OneToManyTable {
-	return &oneToMany{
-		t: k.Table(name, row, Keys{
+	return &OneToManyT{
+		Table: k.Table(name, row, Keys{
 			PartitionKeys: []string{fieldToIndexBy},
 			ClusteringColumns: []string{id},
 		}),
@@ -85,8 +85,8 @@ func (k *K) TimeSeriesTable(name, timeField, idField string, bucketSize time.Dur
 		panic("Unrecognized row type")
 	}
 	m[bucketFieldName] = time.Now()
-	return &timeSeriesTable{
-		t: k.table(name, row, m, Keys{
+	return &TimeSeriesT{
+		Table: k.table(name, row, m, Keys{
 			PartitionKeys: []string{bucketFieldName},
 			ClusteringColumns: []string{timeField, idField},
 		}),
@@ -102,8 +102,8 @@ func (k *K) TimeSeriesBTable(name, indexField, timeField, idField string, bucket
 		panic("Unrecognized row type")
 	}
 	m[bucketFieldName] = time.Now()
-	return &timeSeriesBTable{
-		t: k.table(name, row, m, Keys{
+	return &TimeSeriesBT{
+		Table: k.table(name, row, m, Keys{
 			PartitionKeys: []string{indexField, bucketFieldName},
 			ClusteringColumns: []string{timeField, idField},
 		}),

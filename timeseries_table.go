@@ -8,14 +8,14 @@ import(
 
 const bucketFieldName = "bucket"
 
-type timeSeriesTable struct {
-	t Table
+type TimeSeriesT struct {
+	Table
 	timeField string
 	idField string
 	bucketSize time.Duration
 }
 
-func (o *timeSeriesTable) Set(v interface{}) error {
+func (o *TimeSeriesT) Set(v interface{}) error {
 	m, ok := toMap(v)
 	if !ok {
 		return errors.New("Can't set: not able to convert")
@@ -25,26 +25,26 @@ func (o *timeSeriesTable) Set(v interface{}) error {
 		return errors.New("timeField is not actually a time.Time")
 	}
 	m[bucketFieldName] = o.bucket(tim.Unix())
-	return o.t.Set(m)
+	return o.Table.Set(m)
 }
 
-func (o *timeSeriesTable) bucket(secs int64) int64 {
+func (o *TimeSeriesT) bucket(secs int64) int64 {
 	return (secs - secs%int64(o.bucketSize/time.Second)) * 1000
 }
 
-func (o *timeSeriesTable) Update(timeStamp time.Time, id interface{}, m map[string]interface{}) error {
+func (o *TimeSeriesT) Update(timeStamp time.Time, id interface{}, m map[string]interface{}) error {
 	bucket := o.bucket(timeStamp.Unix())
-	return o.t.Where(Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Update(m)
+	return o.Table.Where(Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Update(m)
 }
 
-func (o *timeSeriesTable) Delete(timeStamp time.Time, id interface{}) error {
+func (o *TimeSeriesT) Delete(timeStamp time.Time, id interface{}) error {
 	bucket := o.bucket(timeStamp.Unix())
-	return o.t.Where(Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Delete()
+	return o.Table.Where(Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Delete()
 }
 
-func (o *timeSeriesTable) Read(timeStamp time.Time, id interface{}) (interface{}, error) {
+func (o *TimeSeriesT) Read(timeStamp time.Time, id interface{}) (interface{}, error) {
 	bucket := o.bucket(timeStamp.Unix())
-	res, err := o.t.Where(Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Query().Read()
+	res, err := o.Table.Where(Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Query().Read()
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +54,7 @@ func (o *timeSeriesTable) Read(timeStamp time.Time, id interface{}) (interface{}
 	return res[0], nil
 }
 
-func (o *timeSeriesTable) List(startTime time.Time, endTime time.Time) ([]interface{}, error) {
+func (o *TimeSeriesT) List(startTime time.Time, endTime time.Time) ([]interface{}, error) {
 	buckets := []interface{}{}
 	start := o.bucket(startTime.Unix())
 	for i:=start;;i+=int64(o.bucketSize/time.Second)*1000 {
@@ -63,5 +63,5 @@ func (o *timeSeriesTable) List(startTime time.Time, endTime time.Time) ([]interf
 			break
 		}
 	}
-	return o.t.Where(In(bucketFieldName, buckets...), GTE(o.timeField, startTime), LTE(o.timeField, endTime)).Query().Read()
+	return o.Table.Where(In(bucketFieldName, buckets...), GTE(o.timeField, startTime), LTE(o.timeField, endTime)).Query().Read()
 }
