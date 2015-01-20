@@ -58,10 +58,10 @@ func (o *TimeSeriesT) List(startTime time.Time, endTime time.Time) ([]interface{
 	buckets := []interface{}{}
 	start := o.bucket(startTime.Unix())
 	for i:=start;;i+=int64(o.bucketSize/time.Second)*1000 {
-		buckets = append(buckets, i)
 		if i>=endTime.Unix()*1000 {
 			break
 		}
+		buckets = append(buckets, i)
 	}
 	return o.T.Where(In(bucketFieldName, buckets...), GTE(o.timeField, startTime), LTE(o.timeField, endTime)).Query().Read()
 }
