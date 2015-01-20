@@ -13,7 +13,7 @@ type KeySpace interface {
 	OneToOneTable(tableName, id string, row interface{}) OneToOneTable
 	OneToManyTable(tableName, fieldToIndexBy, uniqueKey string, row interface{}) OneToManyTable
 	TimeSeriesTable(tableName, timeField, uniqueKey string, bucketSize time.Duration, row interface{}) TimeSeriesTable
-	TimeSeriesBTable(tableName, timeField, fieldToIndexByField, uniqueKey string, bucketSize time.Duration, row interface{}) TimeSeriesBTable
+	TimeSeriesBTable(tableName, fieldToIndexByField, timeField, uniqueKey string, bucketSize time.Duration, row interface{}) TimeSeriesBTable
 	Table(tableName string, row interface{}, keys Keys) Table
 	DebugMode(bool)
 }
