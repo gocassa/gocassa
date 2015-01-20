@@ -39,6 +39,7 @@ type OneToManyTable interface {
 	Set(v interface{}) error
 	Update(v, id interface{}, m map[string]interface{}) error
 	Delete(v, id interface{}) error
+	DeleteAll(v interface{}) error
 	List(v, startId interface{}, limit int) ([]interface{}, error)
 	Read(v, id interface{}) (interface{}, error)
 	// MultiRead LATER

@@ -19,6 +19,10 @@ func (o *OneToManyT) Delete(field, id interface{}) error {
 	return o.T.Where(Eq(o.fieldToIndexBy, field), Eq(o.idField, id)).Delete()
 }
 
+func (o *OneToManyT) DeleteAll(field interface{}) error {
+	return o.T.Where(Eq(o.fieldToIndexBy, field)).Delete()
+}
+
 func (o *OneToManyT) Read(field, id interface{}) (interface{}, error) {
 	res, err := o.T.Where(Eq(o.fieldToIndexBy, field), Eq(o.idField, id)).Query().Read()
 	if err != nil {
