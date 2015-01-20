@@ -22,6 +22,8 @@ func cassaType(i interface{}) gocql.Type {
 		return gocql.TypeBoolean 
 	case time.Time:
 		return gocql.TypeTimestamp
+	case gocql.UUID:
+		return gocql.TypeUUID
 	}
 	return gocql.TypeCustom
 }
@@ -43,6 +45,8 @@ func cassaTypeToString(t gocql.Type) (string, error) {
 		return "boolean", nil
 	case gocql.TypeTimestamp:
 		return "timestamp", nil
+	case gocql.TypeUUID:
+		return "uuid", nil
 	}
 	return "", errors.New("unkown cassandra type")
 }
