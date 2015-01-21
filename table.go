@@ -48,7 +48,7 @@ func newTableInfo(keyspace, name string, keys Keys, entity interface{}, fieldSou
 	return cinf
 }
 
-func (t T) zero() interface{} {
+func (t *T) zero() interface{} {
 	return reflect.New(reflect.TypeOf(t.info.marshalSource)).Interface()
 }
 
@@ -105,15 +105,15 @@ func insert(cfName string, fieldNames []string) string {
 	return fmt.Sprintf("INSERT INTO %v ("+strings.Join(lowerFieldNames, ", ")+") VALUES ("+strings.Join(placeHolders, ", ")+")", cfName)
 }
 
-func (c T) Set(i interface{}) error {
+func (t T) Set(i interface{}) error {
 	m, ok := toMap(i)
 	if !ok {
 		return errors.New("Can't create: value not understood")
 	}
 	fields, values := keyValues(m)
-	stmt := insert(c.info.name, fields)
-	sess := c.keySpace.session
-	if c.keySpace.debugMode {
+	stmt := insert(t.info.name, fields)
+	sess := t.keySpace.session
+	if t.keySpace.debugMode {
 		fmt.Println(stmt, values)
 	}
 	return sess.Query(stmt, values...).Exec()

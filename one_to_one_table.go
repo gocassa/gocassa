@@ -5,20 +5,20 @@ import (
 	"fmt"
 )
 
-type OneToOneT struct {
+type oneToOneT struct {
 	*T
 	idField string
 }
 
-func (o *OneToOneT) Update(id interface{}, m map[string]interface{}) error {
+func (o *oneToOneT) Update(id interface{}, m map[string]interface{}) error {
 	return o.T.Where(Eq(o.idField, id)).Update(m)
 }
 
-func (o *OneToOneT) Delete(id interface{}) error {
+func (o *oneToOneT) Delete(id interface{}) error {
 	return o.T.Where(Eq(o.idField, id)).Delete()
 }
 
-func (o *OneToOneT) Read(id interface{}) (interface{}, error) {
+func (o *oneToOneT) Read(id interface{}) (interface{}, error) {
 	res, err := o.T.Where(Eq(o.idField, id)).Query().Read()
 	if err != nil {
 		return nil, err
