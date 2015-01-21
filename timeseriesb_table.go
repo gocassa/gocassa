@@ -24,7 +24,7 @@ func (o *timeSeriesBT) Set(v interface{}) error {
 		return errors.New("timeField is not actually a time.Time")
 	}
 	m[bucketFieldName] = o.bucket(tim.Unix())
-	return o.Set(m)
+	return o.t.Set(m)
 }
 
 func (o *timeSeriesBT) bucket(secs int64) int64 {
