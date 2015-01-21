@@ -11,7 +11,7 @@ type Customer2 struct {
 	Tag  string
 }
 
-func TestoneToManyTableInsertRead(t *testing.T) {
+func TestOneToManyTableInsertRead(t *testing.T) {
 	tbl := ns.OneToManyTable("customer91", "Tag", "Id", Customer2{})
 	createIf(ns, tbl.(*oneToManyT).T, t)
 	joe := Customer2{
@@ -49,7 +49,7 @@ func TestoneToManyTableInsertRead(t *testing.T) {
 	}
 }
 
-func TestoneToManyTableDelete(t *testing.T) {
+func TestOneToManyTableDelete(t *testing.T) {
 	tbl := ns.OneToManyTable("customer92", "Tag", "Id", Customer2{})
 	createIf(ns, tbl.(*oneToManyT).T, t)
 	joe := Customer2{

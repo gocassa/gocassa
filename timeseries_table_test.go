@@ -18,7 +18,7 @@ func parse(value string) time.Time {
 	return t
 }
 
-func TesttimeSeriesT(t *testing.T) {
+func TestTimeSeriesT(t *testing.T) {
 	tbl := ns.TimeSeriesTable("tripTime5", "Time", "Id", time.Minute, Trip{})
 	createIf(ns, tbl.(*timeSeriesT).T, t)
 	err := tbl.Set(Trip{

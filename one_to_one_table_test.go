@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestoneToOneTable(t *testing.T) {
+func TestOneToOneTable(t *testing.T) {
 	tbl := ns.OneToOneTable("customer81", "Id", Customer{})
 	createIf(ns, tbl.(*oneToOneT).T, t)
 	joe := Customer{
@@ -33,7 +33,7 @@ func TestoneToOneTable(t *testing.T) {
 	}
 }
 
-func TestoneToOneTableUpdate(t *testing.T) {
+func TestOneToOneTableUpdate(t *testing.T) {
 	tbl := ns.OneToOneTable("customer82", "Id", Customer{})
 	createIf(ns, tbl.(*oneToOneT).T, t)
 	joe := Customer{
