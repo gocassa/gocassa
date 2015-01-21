@@ -7,7 +7,7 @@ import (
 )
 
 type timeSeriesBT struct {
-	*T
+	*t
 	indexField string
 	timeField  string
 	idField    string
@@ -24,7 +24,7 @@ func (o *timeSeriesBT) Set(v interface{}) error {
 		return errors.New("timeField is not actually a time.Time")
 	}
 	m[bucketFieldName] = o.bucket(tim.Unix())
-	return o.T.Set(m)
+	return o.Set(m)
 }
 
 func (o *timeSeriesBT) bucket(secs int64) int64 {
@@ -33,17 +33,17 @@ func (o *timeSeriesBT) bucket(secs int64) int64 {
 
 func (o *timeSeriesBT) Update(v interface{}, timeStamp time.Time, id interface{}, m map[string]interface{}) error {
 	bucket := o.bucket(timeStamp.Unix())
-	return o.T.Where(Eq(o.indexField, v), Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Update(m)
+	return o.Where(Eq(o.indexField, v), Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Update(m)
 }
 
 func (o *timeSeriesBT) Delete(v interface{}, timeStamp time.Time, id interface{}) error {
 	bucket := o.bucket(timeStamp.Unix())
-	return o.T.Where(Eq(o.indexField, v), Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Delete()
+	return o.Where(Eq(o.indexField, v), Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Delete()
 }
 
 func (o *timeSeriesBT) Read(v interface{}, timeStamp time.Time, id interface{}) (interface{}, error) {
 	bucket := o.bucket(timeStamp.Unix())
-	res, err := o.T.Where(Eq(o.indexField, v), Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Query().Read()
+	res, err := o.Where(Eq(o.indexField, v), Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Query().Read()
 	if err != nil {
 		return nil, err
 	}
@@ -62,5 +62,5 @@ func (o *timeSeriesBT) List(v interface{}, startTime time.Time, endTime time.Tim
 		}
 		buckets = append(buckets, i)
 	}
-	return o.T.Where(Eq(o.indexField, v), In(bucketFieldName, buckets...), GTE(o.timeField, startTime), LTE(o.timeField, endTime)).Query().Read()
+	return o.Where(Eq(o.indexField, v), In(bucketFieldName, buckets...), GTE(o.timeField, startTime), LTE(o.timeField, endTime)).Query().Read()
 }

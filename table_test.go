@@ -7,19 +7,10 @@ import (
 	"time"
 )
 
-func createIf(ns KeySpace, cs Table, t *testing.T) {
-	name := cs.(*T).info.name
-	if ex, err := ns.(*K).Exists(name); ex && err == nil {
-		err = ns.(*K).DropTable(name)
-		if err != nil {
-			t.Fatal(err)
-		}
-	} else if err != nil {
-		t.Fatal(err)
-	}
-	err := cs.(*T).Create()
+func createIf(cs TableChanger, tes *testing.T) {
+	err := cs.(TableChanger).Recreate()
 	if err != nil {
-		t.Fatal(err)
+		tes.Fatal(err)
 	}
 }
 
@@ -40,7 +31,7 @@ func TestCreateTable(t *testing.T) {
 	cs := ns.Table(name, Customer{}, Keys{
 		PartitionKeys: []string{"Id", "Name"},
 	})
-	createIf(ns, cs, t)
+	createIf(cs, t)
 	err := cs.Set(Customer{
 		Id:   "1001",
 		Name: "Joe",

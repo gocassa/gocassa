@@ -20,7 +20,7 @@ func parse(value string) time.Time {
 
 func TestTimeSeriesT(t *testing.T) {
 	tbl := ns.TimeSeriesTable("tripTime5", "Time", "Id", time.Minute, Trip{})
-	createIf(ns, tbl.(*timeSeriesT).T, t)
+	createIf(tbl.(TableChanger), t)
 	err := tbl.Set(Trip{
 		Id:   "1",
 		Time: parse("2006 Jan 2 15:03:59"),

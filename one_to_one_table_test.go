@@ -7,7 +7,7 @@ import (
 
 func TestOneToOneTable(t *testing.T) {
 	tbl := ns.OneToOneTable("customer81", "Id", Customer{})
-	createIf(ns, tbl.(*oneToOneT).T, t)
+	createIf(tbl.(TableChanger), t)
 	joe := Customer{
 		Id:   "33",
 		Name: "Joe",
@@ -35,7 +35,7 @@ func TestOneToOneTable(t *testing.T) {
 
 func TestOneToOneTableUpdate(t *testing.T) {
 	tbl := ns.OneToOneTable("customer82", "Id", Customer{})
-	createIf(ns, tbl.(*oneToOneT).T, t)
+	createIf(tbl.(TableChanger), t)
 	joe := Customer{
 		Id:   "33",
 		Name: "Joe",

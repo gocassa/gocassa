@@ -27,7 +27,7 @@ type OneToOneTable interface {
 	Update(id interface{}, m map[string]interface{}) error
 	Delete(id interface{}) error
 	Read(id interface{}) (interface{}, error)
-	TableOps
+	TableChanger
 }
 
 //
@@ -42,7 +42,7 @@ type OneToManyTable interface {
 	DeleteAll(v interface{}) error
 	List(v, startId interface{}, limit int) ([]interface{}, error)
 	Read(v, id interface{}) (interface{}, error)
-	TableOps
+	TableChanger
 }
 
 //
@@ -59,7 +59,7 @@ type TimeSeriesTable interface {
 	Read(timeStamp time.Time, id interface{}) (interface{}, error)
 	Delete(timeStamp time.Time, id interface{}) error
 	//DeleteAll(start, end time.Time) error
-	TableOps
+	TableChanger
 }
 
 //
@@ -74,7 +74,7 @@ type TimeSeriesBTable interface {
 	Read(v interface{}, timeStamp time.Time, id interface{}) (interface{}, error)
 	Delete(v interface{}, timeStamp time.Time, id interface{}) error
 	//DeleteAll(v interface{}, start, end time.Time) error
-	TableOps
+	TableChanger
 }
 
 //
@@ -104,9 +104,11 @@ type Keys struct {
 	ClusteringColumns []string
 }
 
-type TableOps interface {
+// Danger zone! Do not use this interface unless you really know what you are doing
+type TableChanger interface {
 	Create() error
 	CreateStatement() (string, error)
+	Recreate() error
 	//Drop() error
 	//CreateIfDoesNotExist() error
 }
@@ -116,5 +118,5 @@ type Table interface {
 	// To only overwrite some of the fields, use Query.Update
 	Set(v interface{}) error
 	Where(relations ...Relation) Filter // Because we provide selections
-	TableOps
+	TableChanger
 }

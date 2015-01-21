@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-type T struct {
+type t struct {
 	keySpace *K
 	info     *tableInfo
 }
@@ -48,7 +48,7 @@ func newTableInfo(keyspace, name string, keys Keys, entity interface{}, fieldSou
 	return cinf
 }
 
-func (t *T) zero() interface{} {
+func (t *t) zero() interface{} {
 	return reflect.New(reflect.TypeOf(t.info.marshalSource)).Interface()
 }
 
@@ -74,14 +74,14 @@ func toMap(i interface{}) (map[string]interface{}, bool) {
 	return r.StructToMap(i)
 }
 
-func (t T) Where(rs ...Relation) Filter {
+func (t t) Where(rs ...Relation) Filter {
 	return filter{
 		t:  t,
 		rs: rs,
 	}
 }
 
-func (t T) generateFieldNames() string {
+func (t t) generateFieldNames() string {
 	xs := []string{}
 	for _, v := range t.info.fields {
 		xs = append(xs, strings.ToLower(v))
@@ -105,7 +105,7 @@ func insert(cfName string, fieldNames []string) string {
 	return fmt.Sprintf("INSERT INTO %v ("+strings.Join(lowerFieldNames, ", ")+") VALUES ("+strings.Join(placeHolders, ", ")+")", cfName)
 }
 
-func (t T) Set(i interface{}) error {
+func (t t) Set(i interface{}) error {
 	m, ok := toMap(i)
 	if !ok {
 		return errors.New("Can't create: value not understood")
@@ -119,7 +119,7 @@ func (t T) Set(i interface{}) error {
 	return sess.Query(stmt, values...).Exec()
 }
 
-func (t T) Create() error {
+func (t t) Create() error {
 	stmt, err := t.CreateStatement()
 	if err != nil {
 		return err
@@ -127,7 +127,21 @@ func (t T) Create() error {
 	return t.keySpace.session.Query(stmt).Exec()
 }
 
-func (t T) CreateStatement() (string, error) {
+// Drop table if exists and create it again
+func (t t) Recreate() error {
+	if ex, err := t.keySpace.Exists(t.info.name); ex && err == nil {
+		err = t.keySpace.DropTable(t.info.name)
+		if err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+	return t.Create()
+}
+
+
+func (t t) CreateStatement() (string, error) {
 	return g.CreateTable(t.keySpace.name, t.info.name, t.info.keys.PartitionKeys, t.info.keys.ClusteringColumns, t.info.fields, t.info.fieldValues)
 }
 
