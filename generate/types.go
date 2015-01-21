@@ -7,7 +7,7 @@ import (
 	"github.com/gocql/gocql"
 )
 
-func cassaType(i interface{}) gocql.Type {
+func CassaType(i interface{}) gocql.Type {
 	switch i.(type) {
 	case int, int32:
 		return gocql.TypeInt

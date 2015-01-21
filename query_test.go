@@ -46,7 +46,7 @@ func TestEq(t *testing.T) {
 		t.Fatal(err)
 	}
 	res := &[]Customer{}
-	err = cs.Where(Eq("Id", "50")).Query().Read(res)
+	err = cs.Where(Eq("Name", "50")).Query().Read(res)
 	if err != nil {
 		t.Fatal(err)
 	}
