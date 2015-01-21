@@ -1,4 +1,4 @@
-package cmagic
+package gocassa
 
 import (
 	"reflect"

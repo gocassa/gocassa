@@ -1,10 +1,10 @@
-package cmagic
+package gocassa
 
 import (
 	"errors"
 	"fmt"
-	g "github.com/hailocab/cmagic/generate"
-	r "github.com/hailocab/cmagic/reflect"
+	g "github.com/hailocab/gocassa/generate"
+	r "github.com/hailocab/gocassa/reflect"
 	"reflect"
 	"strings"
 )
@@ -139,7 +139,6 @@ func (t t) Recreate() error {
 	}
 	return t.Create()
 }
-
 
 func (t t) CreateStatement() (string, error) {
 	return g.CreateTable(t.keySpace.name, t.info.name, t.info.keys.PartitionKeys, t.info.keys.ClusteringColumns, t.info.fields, t.info.fieldValues)
