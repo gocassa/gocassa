@@ -16,7 +16,7 @@ func createIf(cs TableChanger, tes *testing.T) {
 
 // cqlsh> CREATE TABLE test.customer1 (id text, name text, PRIMARY KEY((id, name)));
 func TestTables(t *testing.T) {
-	res, err := ns.(*K).Tables()
+	res, err := ns.(*k).Tables()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -46,7 +46,7 @@ func TestCreateTable(t *testing.T) {
 	if len(res) != 1 {
 		t.Fatal("Not found ", len(res))
 	}
-	err = ns.(*K).DropTable(name)
+	err = ns.(*k).DropTable(name)
 	if err != nil {
 		t.Fatal(err)
 	}

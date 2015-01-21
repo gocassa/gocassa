@@ -59,12 +59,11 @@ func TestEq(t *testing.T) {
 
 func TestMultipleRowResults(t *testing.T) {
 	name := "customer_multipletest"
-	ns.(*K).DropTable(name)
 	cs := ns.Table(name, Customer{}, Keys{
 		PartitionKeys:     []string{"Name"},
 		ClusteringColumns: []string{"Id"},
 	})
-	err := cs.(TableChanger).Create()
+	err := cs.(TableChanger).Recreate()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -163,16 +162,8 @@ func TestTypesMarshal(t *testing.T) {
 		Field7: true,
 	}
 	tbl := ns.Table("customer3", Customer3{}, Keys{PartitionKeys: []string{"Id"}})
-	err := tbl.(TableChanger).Create()
-	if ex, err := ns.(*K).Exists("customer3"); err != nil {
-		t.Fatal(err)
-	} else if !ex {
-		err := tbl.(TableChanger).Create()
-		if err != nil {
-			t.Fatal("Create table failed :", err)
-		}
-	}
-	if err = tbl.Set(c); err != nil {
+	createIf(tbl.(TableChanger), t)
+	if err := tbl.Set(c); err != nil {
 		t.Fatal(err)
 	}
 	res, err := tbl.Where(Eq("Id", "1")).Query().Read()

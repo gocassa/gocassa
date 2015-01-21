@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-type K struct {
+type k struct {
 	session *gocql.Session
 	name    string
 	// nodeIps 	[]string
@@ -27,19 +27,19 @@ func ConnectToKeySpace(name string, nodeIps []string, username, password string)
 	if err != nil {
 		return nil, err
 	}
-	return &K{
+	return &k{
 		session: sess,
 		name:    name,
 		// nodeIps: nodeIps,
 	}, nil
 }
 
-func (k *K) DebugMode(b bool) {
+func (k *k) DebugMode(b bool) {
 	k.debugMode = true
 }
 
 // Table returns a new Table. A Table is analogous to column families in Cassandra or tables in RDBMSes.
-func (k *K) Table(name string, entity interface{}, keys Keys) Table {
+func (k *k) Table(name string, entity interface{}, keys Keys) Table {
 	m, ok := toMap(entity)
 	if !ok {
 		panic("Unrecognized row type")
@@ -47,7 +47,7 @@ func (k *K) Table(name string, entity interface{}, keys Keys) Table {
 	return k.table(name, entity, m, keys)
 }
 
-func (k *K) table(name string, entity interface{}, fieldSource map[string]interface{}, keys Keys) Table {
+func (k *k) table(name string, entity interface{}, fieldSource map[string]interface{}, keys Keys) Table {
 	ti := newTableInfo(k.name, name, keys, entity, fieldSource)
 	return &t{
 		keySpace: k,
@@ -55,7 +55,7 @@ func (k *K) table(name string, entity interface{}, fieldSource map[string]interf
 	}
 }
 
-func (k *K) OneToOneTable(name, id string, row interface{}) OneToOneTable {
+func (k *k) OneToOneTable(name, id string, row interface{}) OneToOneTable {
 	return &oneToOneT{
 		t: k.Table(fmt.Sprintf("%v_oneToOne_%v", name, id), row, Keys{
 			PartitionKeys: []string{id},
@@ -64,11 +64,11 @@ func (k *K) OneToOneTable(name, id string, row interface{}) OneToOneTable {
 	}
 }
 
-func (k *K) SetKeysSpaceName(name string) {
+func (k *k) SetKeysSpaceName(name string) {
 	k.name = name
 }
 
-func (k *K) OneToManyTable(name, fieldToIndexBy, id string, row interface{}) OneToManyTable {
+func (k *k) OneToManyTable(name, fieldToIndexBy, id string, row interface{}) OneToManyTable {
 	return &oneToManyT{
 		t: k.Table(fmt.Sprintf("%v_oneToMany_%v_%v", name, fieldToIndexBy, id), row, Keys{
 			PartitionKeys:     []string{fieldToIndexBy},
@@ -79,7 +79,7 @@ func (k *K) OneToManyTable(name, fieldToIndexBy, id string, row interface{}) One
 	}
 }
 
-func (k *K) TimeSeriesTable(name, timeField, idField string, bucketSize time.Duration, row interface{}) TimeSeriesTable {
+func (k *k) TimeSeriesTable(name, timeField, idField string, bucketSize time.Duration, row interface{}) TimeSeriesTable {
 	m, ok := toMap(row)
 	if !ok {
 		panic("Unrecognized row type")
@@ -96,7 +96,7 @@ func (k *K) TimeSeriesTable(name, timeField, idField string, bucketSize time.Dur
 	}
 }
 
-func (k *K) TimeSeriesBTable(name, indexField, timeField, idField string, bucketSize time.Duration, row interface{}) TimeSeriesBTable {
+func (k *k) TimeSeriesBTable(name, indexField, timeField, idField string, bucketSize time.Duration, row interface{}) TimeSeriesBTable {
 	m, ok := toMap(row)
 	if !ok {
 		panic("Unrecognized row type")
@@ -115,7 +115,7 @@ func (k *K) TimeSeriesBTable(name, indexField, timeField, idField string, bucket
 }
 
 // Returns table names in a keyspace
-func (n *K) Tables() ([]string, error) {
+func (n *k) Tables() ([]string, error) {
 	stmt := fmt.Sprintf("SELECT columnfamily_name FROM system.schema_columnfamilies WHERE keyspace_name='%v'", n.name)
 	iter := n.session.Query(stmt).Iter()
 	ret := []string{}
@@ -127,7 +127,7 @@ func (n *K) Tables() ([]string, error) {
 	return ret, iter.Close()
 }
 
-func (k *K) Exists(cf string) (bool, error) {
+func (k *k) Exists(cf string) (bool, error) {
 	ts, err := k.Tables()
 	if err != nil {
 		return false, err
@@ -140,7 +140,7 @@ func (k *K) Exists(cf string) (bool, error) {
 	return false, nil
 }
 
-func (k *K) DropTable(cf string) error {
+func (k *k) DropTable(cf string) error {
 	stmt := fmt.Sprintf("DROP TABLE IF EXISTS %v.%v", k.name, cf)
 	return k.session.Query(stmt).Exec()
 }
