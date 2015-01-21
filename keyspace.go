@@ -127,7 +127,7 @@ func (n *K) Tables() ([]string, error) {
 	return ret, iter.Close()
 }
 
-func (k K) Exists(cf string) (bool, error) {
+func (k *K) Exists(cf string) (bool, error) {
 	ts, err := k.Tables()
 	if err != nil {
 		return false, err
@@ -140,7 +140,7 @@ func (k K) Exists(cf string) (bool, error) {
 	return false, nil
 }
 
-func (k K) DropTable(cf string) error {
+func (k *K) DropTable(cf string) error {
 	stmt := fmt.Sprintf("DROP TABLE IF EXISTS %v.%v", k.name, cf)
 	return k.session.Query(stmt).Exec()
 }
