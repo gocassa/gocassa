@@ -37,7 +37,7 @@ func init() {
 
 func TestEq(t *testing.T) {
 	cs := ns.Table("customer", Customer{}, Keys{PartitionKeys: []string{"Id"}})
-	createIf(ns, cs.(*T), t)
+	createIf(cs.(TableChanger), t)
 	err := cs.Set(Customer{
 		Id:   "50",
 		Name: "Joe",
@@ -64,7 +64,7 @@ func TestMultipleRowResults(t *testing.T) {
 		PartitionKeys:     []string{"Name"},
 		ClusteringColumns: []string{"Id"},
 	})
-	err := cs.(*T).Create()
+	err := cs.(TableChanger).Create()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -115,7 +115,7 @@ func TestIn(t *testing.T) {
 
 func TestAnd(t *testing.T) {
 	cs := ns.Table("customer1", Customer{}, Keys{PartitionKeys: []string{"Id", "Name"}})
-	createIf(ns, cs.(*T), t)
+	createIf(cs.(TableChanger), t)
 	err := cs.Set(Customer{
 		Id:   "100",
 		Name: "Joe",
@@ -163,11 +163,11 @@ func TestTypesMarshal(t *testing.T) {
 		Field7: true,
 	}
 	tbl := ns.Table("customer3", Customer3{}, Keys{PartitionKeys: []string{"Id"}})
-	err := tbl.(*T).Create()
+	err := tbl.(TableChanger).Create()
 	if ex, err := ns.(*K).Exists("customer3"); err != nil {
 		t.Fatal(err)
 	} else if !ex {
-		err := tbl.(*T).Create()
+		err := tbl.(TableChanger).Create()
 		if err != nil {
 			t.Fatal("Create table failed :", err)
 		}
