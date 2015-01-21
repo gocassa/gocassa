@@ -24,6 +24,7 @@ type KeySpace interface {
 // OneToOne recipe
 //
 
+// Simple CRUD interface. You can do CRUD by Id.
 type OneToOneTable interface {
 	Set(v interface{}) error
 	Update(id interface{}, m map[string]interface{}) error
@@ -36,7 +37,7 @@ type OneToOneTable interface {
 // OneToMany recipe
 //
 
-// Maybe have UpdateAll and DeleteAll?
+// OneToMany lets you list rows based on a field equality, eg. 'list all sales where seller id = v'.
 type OneToManyTable interface {
 	Set(v interface{}) error
 	Update(v, id interface{}, m map[string]interface{}) error
@@ -51,8 +52,7 @@ type OneToManyTable interface {
 // TimeSeries recipe
 //
 
-// TimeSeries currently require both timestamp and UUID
-// to identify a row, similarly to the OneToMany recipe
+// TimeSeries lets you list rows which have a field value between two date ranges.
 type TimeSeriesTable interface {
 	// timeField and idField must be present
 	Set(v interface{}) error
@@ -68,6 +68,7 @@ type TimeSeriesTable interface {
 // TimeSeries B recipe
 //
 
+// TimeSeriesB is a cross between TimeSeries and OneToMany tables.
 type TimeSeriesBTable interface {
 	// timeField and idField must be present
 	Set(v interface{}) error
@@ -92,7 +93,7 @@ type Query interface {
 }
 
 // A Filter is a subset of a Table, filtered by Relations.
-// You can do operations or queries on a filter.
+// You can do writes or reads on a filter.
 type Filter interface {
 	// Selection modifiers
 	Query() Query

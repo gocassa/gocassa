@@ -57,7 +57,6 @@ func Eq(key string, term interface{}) Relation {
 	}
 }
 
-// In is broken at the moment. Please don't use
 func In(key string, terms ...interface{}) Relation {
 	return Relation{
 		op:    in,
