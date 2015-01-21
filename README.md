@@ -46,7 +46,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	sale, err := sales.Read("sale-1")
+	sale, err := sales.Where(Eq("Id", "sale-1")).Query().Read()
 	if err != nil {
 		panic(err)
 	}
