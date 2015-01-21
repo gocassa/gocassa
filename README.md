@@ -1,101 +1,64 @@
-SUCH MAGIC, MUCH CASSANDRA WOW
+gocassa
 ===
 
-This library is highly experimental.
+Gocassa is a high level library on top of [gocql](https://github.com/gocql/gocql).
 
+Compared to gocql, it provides query building, data binding and it identifies certain use cases and provides different kind of tables for them. Unlike [cqlc](https://github.com/relops/cqlc), it does not require the user to generate code. It encourages the user to define their types in a way which is most natural for them.
 
-### Example: cassa geoindex
+#### Table types
 
-The following thing:
+##### Raw CQL Table
+
+The Raw CQL table pretty much let's you write any CQL query, here is an example:
 
 ```
-CREATE TABLE geo_index (
-  geohash text,
-  realm text,
-  unique_id int,
-  update_time timestamp,
-  lat float,
-  lon float,
-  PRIMARY KEY (geohash, realm, unique_id)
+package main
+
+import(
+	"time"
+	"github.com/hailocab/gocassa"
+	"fmt"
 )
-```
 
-Would be represented in Go like:
-
-```go
-type GeoIndex struct {
-	Geohash string
-	Realm string
-	UniqueId int
-	UpdateTime time.Time
-	Lat float64
-	Long float64
-}
-keys := Keys{
-	PartitionKeys: []string{"Geohash", "UniqueId"},
-}
-geoTable := keyspace.Table("GeoIndex", GeoIndex{}, keys)
-```
-
-Then
-
-```go
-queryString := fmt.Sprintf("INSERT INTO %v (geohash, realm, unique_id, update_time, lat, lon) VALUES ('%s', '%s', %d, dateof(now()), %f, %f) USING TTL %d;", table, geoHashes["centre"], realm, uniqueId, latitude, longitude, ttl)
-
-// Equals to
-
-g := GeoIndex{
-	GeoHash: "ff8989x",
-	Realm: "London",
-	UniqueId: 42,
-	Lat: 0.1,
-	Long: 0.2
-}
-// Note: TTL is missing, Insert needs no selection? There are problems with this...
-geoTable.Insert(g)
-```
-
-Querying:
-
-```go
-queryString := fmt.Sprintf("SELECT geohash, realm, unique_id, lat, lon, update_time FROM %v WHERE geohash IN (%v) AND realm = '%v';", table, geoHashesList, realm)
-
-// Equals to
-geoHashesList := []string{"absdsd3", "fddff833f", "hsbrh3g4h3", "j3hg43h4g3hg4"}
-rows, err := geoTable.Where(In("geoHash", geoHashesList...)).Query().Read()
-```
-
-### Recipes are in progress for this library:
-
-The idea behind Recipes is that we identify certain query patterns and instead of letting people define their own PartitionKeys and Clustering Columns and then being able to construct any kind of query,
-we:
-- name certain PartitionKey-ClusteringColumn patterns: (("Id")) becomes Entity, ((SomeField), Id) becomes OneToMany
-- creating different table objects for the different recipes
-- restrict the queries the can make on such table object thus not allowing invalid queries to be made on a table
-
-This will hopefully decrease the cognitive load when working with the most common usecases and increase the level of type safety somewhat to prevent runtime errors.
-
-Something like this vague sketch here:
-
-```
-// New entity recipe
-func NewEntity(interface{}) Entity {
-	//...
-}
-
-type Entity interface {
-	//Crud stuff:
-	Read(id string) (interface{}, error)
-	Set(i interface{}) error
-	Delete(id string) error
-}
-
-// fieldName is the field to do the query based on
-func NewOneToMany(fieldName string, interface{}) OneToMany {
-}
-
-type OneToMany interface {
-	//CRUD stuff (still in progress since it can not be the same as)
-	List(fieldEqualsTo interface{}, p PagingOptions) ([]interface, error)
+type Sale struct {
+	Id 			string
+	CustomerId	string
+	SellerId 	string
+	Price 		int
+	Created     time.Time
 }
 ```
+
+func main() {
+	keySpace, err := gocassa.ConnectToKeySpace("test", []string{"127.0.0.1"}, "", "")
+	if err != nil {
+		panic(err)
+	}
+	sales := keySpace.Table("sale", Sale{}, gocassa.Keys{
+		PartitionKeys: []string{"Id"},
+	})
+	err = sales.Set(Sale{
+		Id: "sale-1",
+		CustomerId: "customer-1",
+		SellerId: "seller-1",
+		Price: 42,
+		Created: time.Now(),
+	})
+	if err != nil {
+		panic(err)
+	}
+	sale, err := sales.Read("sale-1")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(sale.(*Sale))
+}
+
+
+##### OneToOne Table
+
+##### OneToMany Table
+
+##### TimeSeries Table
+
+#####

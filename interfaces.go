@@ -4,6 +4,8 @@ import (
 	"time"
 )
 
+// The Connection interface only exists because one can not connect to a keyspace if it does not exist, thus having a Create on KeySpace is not possible.
+// Use ConnectToKeySpace to acquire an instance of KeySpace.
 type Connection interface {
 	CreateKeySpace(name string) error
 	DropKeySpace(name string) error
