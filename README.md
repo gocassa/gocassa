@@ -11,7 +11,7 @@ Compared to gocql, it provides query building, data binding and it identifies ce
 
 The Raw CQL table pretty much let's you write any CQL query, here is an example:
 
-```
+```go
 package main
 
 import(
@@ -27,7 +27,6 @@ type Sale struct {
 	Price 		int
 	Created     time.Time
 }
-```
 
 func main() {
 	keySpace, err := gocassa.ConnectToKeySpace("test", []string{"127.0.0.1"}, "", "")
@@ -53,7 +52,7 @@ func main() {
 	}
 	fmt.Println(sale.(*Sale))
 }
-
+```
 
 ##### OneToOne Table
 
