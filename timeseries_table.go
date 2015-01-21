@@ -8,14 +8,14 @@ import (
 
 const bucketFieldName = "bucket"
 
-type TimeSeriesT struct {
+type timeSeriesT struct {
 	*T
 	timeField  string
 	idField    string
 	bucketSize time.Duration
 }
 
-func (o *TimeSeriesT) Set(v interface{}) error {
+func (o *timeSeriesT) Set(v interface{}) error {
 	m, ok := toMap(v)
 	if !ok {
 		return errors.New("Can't set: not able to convert")
@@ -28,21 +28,21 @@ func (o *TimeSeriesT) Set(v interface{}) error {
 	return o.T.Set(m)
 }
 
-func (o *TimeSeriesT) bucket(secs int64) int64 {
+func (o *timeSeriesT) bucket(secs int64) int64 {
 	return (secs - secs%int64(o.bucketSize/time.Second)) * 1000
 }
 
-func (o *TimeSeriesT) Update(timeStamp time.Time, id interface{}, m map[string]interface{}) error {
+func (o *timeSeriesT) Update(timeStamp time.Time, id interface{}, m map[string]interface{}) error {
 	bucket := o.bucket(timeStamp.Unix())
 	return o.T.Where(Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Update(m)
 }
 
-func (o *TimeSeriesT) Delete(timeStamp time.Time, id interface{}) error {
+func (o *timeSeriesT) Delete(timeStamp time.Time, id interface{}) error {
 	bucket := o.bucket(timeStamp.Unix())
 	return o.T.Where(Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Delete()
 }
 
-func (o *TimeSeriesT) Read(timeStamp time.Time, id interface{}) (interface{}, error) {
+func (o *timeSeriesT) Read(timeStamp time.Time, id interface{}) (interface{}, error) {
 	bucket := o.bucket(timeStamp.Unix())
 	res, err := o.T.Where(Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Query().Read()
 	if err != nil {
@@ -54,7 +54,7 @@ func (o *TimeSeriesT) Read(timeStamp time.Time, id interface{}) (interface{}, er
 	return res[0], nil
 }
 
-func (o *TimeSeriesT) List(startTime time.Time, endTime time.Time) ([]interface{}, error) {
+func (o *timeSeriesT) List(startTime time.Time, endTime time.Time) ([]interface{}, error) {
 	buckets := []interface{}{}
 	start := o.bucket(startTime.Unix())
 	for i := start; ; i += int64(o.bucketSize/time.Second) * 1000 {

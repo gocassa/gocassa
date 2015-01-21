@@ -5,25 +5,25 @@ import (
 	"fmt"
 )
 
-type OneToManyT struct {
+type oneToManyT struct {
 	*T
 	fieldToIndexBy string
 	idField        string
 }
 
-func (o *OneToManyT) Update(field, id interface{}, m map[string]interface{}) error {
+func (o *oneToManyT) Update(field, id interface{}, m map[string]interface{}) error {
 	return o.T.Where(Eq(o.fieldToIndexBy, field), Eq(o.idField, id)).Update(m)
 }
 
-func (o *OneToManyT) Delete(field, id interface{}) error {
+func (o *oneToManyT) Delete(field, id interface{}) error {
 	return o.T.Where(Eq(o.fieldToIndexBy, field), Eq(o.idField, id)).Delete()
 }
 
-func (o *OneToManyT) DeleteAll(field interface{}) error {
+func (o *oneToManyT) DeleteAll(field interface{}) error {
 	return o.T.Where(Eq(o.fieldToIndexBy, field)).Delete()
 }
 
-func (o *OneToManyT) Read(field, id interface{}) (interface{}, error) {
+func (o *oneToManyT) Read(field, id interface{}) (interface{}, error) {
 	res, err := o.T.Where(Eq(o.fieldToIndexBy, field), Eq(o.idField, id)).Query().Read()
 	if err != nil {
 		return nil, err
@@ -34,6 +34,6 @@ func (o *OneToManyT) Read(field, id interface{}) (interface{}, error) {
 	return res[0], nil
 }
 
-func (o *OneToManyT) List(field, startId interface{}, limit int) ([]interface{}, error) {
+func (o *oneToManyT) List(field, startId interface{}, limit int) ([]interface{}, error) {
 	return o.T.Where(Eq(o.fieldToIndexBy, field), GTE(o.idField, startId)).Query().Limit(limit).Read()
 }

@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-type TimeSeriesBT struct {
+type timeSeriesBT struct {
 	*T
 	indexField string
 	timeField  string
@@ -14,7 +14,7 @@ type TimeSeriesBT struct {
 	bucketSize time.Duration
 }
 
-func (o *TimeSeriesBT) Set(v interface{}) error {
+func (o *timeSeriesBT) Set(v interface{}) error {
 	m, ok := toMap(v)
 	if !ok {
 		return errors.New("Can't set: not able to convert")
@@ -27,21 +27,21 @@ func (o *TimeSeriesBT) Set(v interface{}) error {
 	return o.T.Set(m)
 }
 
-func (o *TimeSeriesBT) bucket(secs int64) int64 {
+func (o *timeSeriesBT) bucket(secs int64) int64 {
 	return (secs - secs%int64(o.bucketSize/time.Second)) * 1000
 }
 
-func (o *TimeSeriesBT) Update(v interface{}, timeStamp time.Time, id interface{}, m map[string]interface{}) error {
+func (o *timeSeriesBT) Update(v interface{}, timeStamp time.Time, id interface{}, m map[string]interface{}) error {
 	bucket := o.bucket(timeStamp.Unix())
 	return o.T.Where(Eq(o.indexField, v), Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Update(m)
 }
 
-func (o *TimeSeriesBT) Delete(v interface{}, timeStamp time.Time, id interface{}) error {
+func (o *timeSeriesBT) Delete(v interface{}, timeStamp time.Time, id interface{}) error {
 	bucket := o.bucket(timeStamp.Unix())
 	return o.T.Where(Eq(o.indexField, v), Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Delete()
 }
 
-func (o *TimeSeriesBT) Read(v interface{}, timeStamp time.Time, id interface{}) (interface{}, error) {
+func (o *timeSeriesBT) Read(v interface{}, timeStamp time.Time, id interface{}) (interface{}, error) {
 	bucket := o.bucket(timeStamp.Unix())
 	res, err := o.T.Where(Eq(o.indexField, v), Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Query().Read()
 	if err != nil {
@@ -53,7 +53,7 @@ func (o *TimeSeriesBT) Read(v interface{}, timeStamp time.Time, id interface{}) 
 	return res[0], nil
 }
 
-func (o *TimeSeriesBT) List(v interface{}, startTime time.Time, endTime time.Time) ([]interface{}, error) {
+func (o *timeSeriesBT) List(v interface{}, startTime time.Time, endTime time.Time) ([]interface{}, error) {
 	buckets := []interface{}{}
 	start := o.bucket(startTime.Unix())
 	for i := start; ; i += int64(o.bucketSize/time.Second) * 1000 {
