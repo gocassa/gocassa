@@ -19,7 +19,7 @@ func cassaType(i interface{}) gocql.Type {
 	case float64:
 		return gocql.TypeDouble
 	case bool:
-		return gocql.TypeBoolean 
+		return gocql.TypeBoolean
 	case time.Time:
 		return gocql.TypeTimestamp
 	case gocql.UUID:

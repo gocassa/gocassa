@@ -1,8 +1,8 @@
-package cmagic 
+package cmagic
 
-import(
-	"fmt"
+import (
 	"errors"
+	"fmt"
 	"time"
 )
 
@@ -10,8 +10,8 @@ const bucketFieldName = "bucket"
 
 type TimeSeriesT struct {
 	*T
-	timeField string
-	idField string
+	timeField  string
+	idField    string
 	bucketSize time.Duration
 }
 
@@ -57,8 +57,8 @@ func (o *TimeSeriesT) Read(timeStamp time.Time, id interface{}) (interface{}, er
 func (o *TimeSeriesT) List(startTime time.Time, endTime time.Time) ([]interface{}, error) {
 	buckets := []interface{}{}
 	start := o.bucket(startTime.Unix())
-	for i:=start;;i+=int64(o.bucketSize/time.Second)*1000 {
-		if i>=endTime.Unix()*1000 {
+	for i := start; ; i += int64(o.bucketSize/time.Second) * 1000 {
+		if i >= endTime.Unix()*1000 {
 			break
 		}
 		buckets = append(buckets, i)

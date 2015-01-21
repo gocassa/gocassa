@@ -6,18 +6,18 @@ import (
 )
 
 type Customer2 struct {
-	Id string
+	Id   string
 	Name string
-	Tag string
+	Tag  string
 }
 
 func TestOneToManyTableInsertRead(t *testing.T) {
 	tbl := ns.OneToManyTable("customer91", "Tag", "Id", Customer2{})
 	createIf(ns, tbl.(*OneToManyT).T, t)
 	joe := Customer2{
-		Id: "33",
+		Id:   "33",
 		Name: "Joe",
-		Tag: "A",
+		Tag:  "A",
 	}
 	err := tbl.Set(joe)
 	if err != nil {
@@ -53,9 +53,9 @@ func TestOneToManyTableDelete(t *testing.T) {
 	tbl := ns.OneToManyTable("customer92", "Tag", "Id", Customer2{})
 	createIf(ns, tbl.(*OneToManyT).T, t)
 	joe := Customer2{
-		Id: "33",
+		Id:   "33",
 		Name: "Joe",
-		Tag: "A",
+		Tag:  "A",
 	}
 	err := tbl.Set(joe)
 	if err != nil {

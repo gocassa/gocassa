@@ -1,8 +1,8 @@
-package cmagic 
+package cmagic
 
-import(
-	"fmt"
+import (
 	"errors"
+	"fmt"
 )
 
 type OneToOneT struct {

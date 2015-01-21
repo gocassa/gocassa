@@ -1,6 +1,6 @@
 package cmagic
 
-import(
+import (
 	"time"
 )
 
@@ -54,10 +54,11 @@ type OneToManyTable interface {
 type TimeSeriesTable interface {
 	// timeField and idField must be present
 	Set(v interface{}) error
-	Update(timeStamp time.Time, id interface{},  m map[string]interface{}) error
+	Update(timeStamp time.Time, id interface{}, m map[string]interface{}) error
 	List(start, end time.Time) ([]interface{}, error)
 	Read(timeStamp time.Time, id interface{}) (interface{}, error)
 	Delete(timeStamp time.Time, id interface{}) error
+	//DeleteAll(start, end time.Time) error
 }
 
 //
@@ -67,10 +68,11 @@ type TimeSeriesTable interface {
 type TimeSeriesBTable interface {
 	// timeField and idField must be present
 	Set(v interface{}) error
-	Update(v interface{}, timeStamp time.Time, id interface{},  m map[string]interface{}) error
+	Update(v interface{}, timeStamp time.Time, id interface{}, m map[string]interface{}) error
 	List(v interface{}, start, end time.Time) ([]interface{}, error)
 	Read(v interface{}, timeStamp time.Time, id interface{}) (interface{}, error)
 	Delete(v interface{}, timeStamp time.Time, id interface{}) error
+	//DeleteAll(v interface{}, start, end time.Time) error
 }
 
 //

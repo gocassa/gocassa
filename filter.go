@@ -1,8 +1,8 @@
 package cmagic
 
 import (
-	"strings"
 	"fmt"
+	"strings"
 )
 
 type filter struct {
@@ -40,9 +40,9 @@ func (f filter) Update(m map[string]interface{}) error {
 	stmt := updateStatement(f.t.keySpace.name, f.t.info.name, fields)
 	sess := f.t.keySpace.session
 	if f.t.keySpace.debugMode {
-		fmt.Println(stmt +" "+ str, append(values, wvals...))
+		fmt.Println(stmt+" "+str, append(values, wvals...))
 	}
-	return sess.Query(stmt +" "+ str, append(values, wvals...)...).Exec()
+	return sess.Query(stmt+" "+str, append(values, wvals...)...).Exec()
 }
 
 func (f filter) Delete() error {

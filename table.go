@@ -17,21 +17,21 @@ type T struct {
 // Contains mostly analyzed information about the entity
 type tableInfo struct {
 	keyspace, name string
-	marshalSource 	interface{}
-	fieldSource   	map[string]interface{}
-	keys           	Keys
-	fieldNames     	map[string]struct{} // This is here only to check containment
-	fields         	[]string
-	fieldValues    	[]interface{}
+	marshalSource  interface{}
+	fieldSource    map[string]interface{}
+	keys           Keys
+	fieldNames     map[string]struct{} // This is here only to check containment
+	fields         []string
+	fieldValues    []interface{}
 }
 
 func newTableInfo(keyspace, name string, keys Keys, entity interface{}, fieldSource map[string]interface{}) *tableInfo {
 	cinf := &tableInfo{
-		keyspace: 		keyspace,
-		name:     		name,
-		marshalSource:  entity,
-		keys:     		keys,
-		fieldSource: 	fieldSource,
+		keyspace:      keyspace,
+		name:          name,
+		marshalSource: entity,
+		keys:          keys,
+		fieldSource:   fieldSource,
 	}
 	fields := []string{}
 	values := []interface{}{}

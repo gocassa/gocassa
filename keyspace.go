@@ -1,17 +1,17 @@
 package cmagic
 
 import (
+	"fmt"
 	"github.com/gocql/gocql"
 	"strings"
 	"time"
-	"fmt"
 )
 
 type K struct {
 	session *gocql.Session
-	name    	string
+	name    string
 	// nodeIps 	[]string
-	debugMode 	bool
+	debugMode bool
 }
 
 func ConnectToKeySpace(name string, nodeIps []string, username, password string) (KeySpace, error) {
@@ -57,7 +57,7 @@ func (k *K) table(name string, entity interface{}, fieldSource map[string]interf
 
 func (k *K) OneToOneTable(name, id string, row interface{}) OneToOneTable {
 	return &OneToOneT{
-		T: k.Table(fmt.Sprintf("%v_oneToOne_%v", name, id)	, row, Keys{
+		T: k.Table(fmt.Sprintf("%v_oneToOne_%v", name, id), row, Keys{
 			PartitionKeys: []string{id},
 		}).(*T),
 		idField: id,
@@ -71,10 +71,10 @@ func (k *K) SetKeysSpaceName(name string) {
 func (k *K) OneToManyTable(name, fieldToIndexBy, id string, row interface{}) OneToManyTable {
 	return &OneToManyT{
 		T: k.Table(fmt.Sprintf("%v_oneToMany_%v_%v", name, fieldToIndexBy, id), row, Keys{
-			PartitionKeys: []string{fieldToIndexBy},
+			PartitionKeys:     []string{fieldToIndexBy},
 			ClusteringColumns: []string{id},
 		}).(*T),
-		idField: id,
+		idField:        id,
 		fieldToIndexBy: fieldToIndexBy,
 	}
 }
@@ -87,11 +87,11 @@ func (k *K) TimeSeriesTable(name, timeField, idField string, bucketSize time.Dur
 	m[bucketFieldName] = time.Now()
 	return &TimeSeriesT{
 		T: k.table(fmt.Sprintf("%v_timeSeries_%v_%v_%v", name, timeField, idField, bucketSize), row, m, Keys{
-			PartitionKeys: []string{bucketFieldName},
+			PartitionKeys:     []string{bucketFieldName},
 			ClusteringColumns: []string{timeField, idField},
 		}).(*T),
-		timeField: timeField,
-		idField: idField,
+		timeField:  timeField,
+		idField:    idField,
 		bucketSize: bucketSize,
 	}
 }
@@ -104,12 +104,12 @@ func (k *K) TimeSeriesBTable(name, indexField, timeField, idField string, bucket
 	m[bucketFieldName] = time.Now()
 	return &TimeSeriesBT{
 		T: k.table(fmt.Sprintf("%v_timeSeries_%v_%v_%v_%v", name, indexField, timeField, idField, bucketSize), row, m, Keys{
-			PartitionKeys: []string{indexField, bucketFieldName},
+			PartitionKeys:     []string{indexField, bucketFieldName},
 			ClusteringColumns: []string{timeField, idField},
 		}).(*T),
 		indexField: indexField,
-		timeField: timeField,
-		idField: idField,
+		timeField:  timeField,
+		idField:    idField,
 		bucketSize: bucketSize,
 	}
 }

@@ -2,8 +2,8 @@ package cmagic
 
 import (
 	"fmt"
-	"testing"
 	"reflect"
+	"testing"
 )
 
 type Customer struct {
@@ -36,7 +36,7 @@ func init() {
 }
 
 func TestEq(t *testing.T) {
-	cs := ns.Table("customer", Customer{}, Keys{PartitionKeys:[]string{"Id"}})
+	cs := ns.Table("customer", Customer{}, Keys{PartitionKeys: []string{"Id"}})
 	createIf(ns, cs.(*T), t)
 	err := cs.Set(Customer{
 		Id:   "50",
@@ -114,7 +114,7 @@ func TestIn(t *testing.T) {
 }
 
 func TestAnd(t *testing.T) {
-	cs := ns.Table("customer1", Customer{}, Keys{PartitionKeys:[]string{"Id", "Name"}})
+	cs := ns.Table("customer1", Customer{}, Keys{PartitionKeys: []string{"Id", "Name"}})
 	createIf(ns, cs.(*T), t)
 	err := cs.Set(Customer{
 		Id:   "100",
@@ -141,9 +141,9 @@ func TestQueryReturnError(t *testing.T) {
 }
 
 type Customer3 struct {
-	Id string 
-	Field1 string 
-	Field2 int 
+	Id     string
+	Field1 string
+	Field2 int
 	Field3 int32
 	Field4 int64
 	Field5 float32
@@ -153,7 +153,7 @@ type Customer3 struct {
 
 func TestTypesMarshal(t *testing.T) {
 	c := Customer3{
-		Id: "1",
+		Id:     "1",
 		Field1: "A",
 		Field2: 1,
 		Field3: 2,

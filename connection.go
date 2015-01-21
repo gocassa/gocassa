@@ -1,15 +1,15 @@
 package cmagic
 
-import(
-	"github.com/gocql/gocql"
+import (
 	"fmt"
+	"github.com/gocql/gocql"
 )
 
 type connection struct {
-	s *gocql.Session
-	nodeIps []string
+	s        *gocql.Session
+	nodeIps  []string
 	userName string
-	pass string
+	pass     string
 }
 
 func Connect(nodeIps []string, username, password string) (Connection, error) {
@@ -24,10 +24,10 @@ func Connect(nodeIps []string, username, password string) (Connection, error) {
 		return nil, err
 	}
 	return &connection{
-		s: sess,
-		nodeIps: nodeIps,
+		s:        sess,
+		nodeIps:  nodeIps,
 		userName: username,
-		pass: password,
+		pass:     password,
 	}, nil
 }
 

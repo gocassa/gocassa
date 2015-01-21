@@ -1,14 +1,14 @@
-package cmagic 
+package cmagic
 
-import(
-	"fmt"
+import (
 	"errors"
+	"fmt"
 )
 
 type OneToManyT struct {
 	*T
-	fieldToIndexBy string 
-	idField string
+	fieldToIndexBy string
+	idField        string
 }
 
 func (o *OneToManyT) Update(field, id interface{}, m map[string]interface{}) error {
