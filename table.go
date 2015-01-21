@@ -1,10 +1,10 @@
-package cmagic
+package gocassa
 
 import (
 	"errors"
 	"fmt"
-	g "github.com/hailocab/cmagic/generate"
-	r "github.com/hailocab/cmagic/reflect"
+	g "github.com/hailocab/gocassa/generate"
+	r "github.com/hailocab/gocassa/reflect"
 	"reflect"
 	"strings"
 )
