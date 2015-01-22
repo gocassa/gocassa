@@ -91,7 +91,7 @@ TimeSeriesB is like a cross between OneToMany and TimeSeries, it lets you list r
 The following lists sales between two time ranges, done by a certain seller:
 
 ```go
-	salesTable := keySpace.TimeSeriesBTable("sale", "SellerId", Created, "Id", Sale{})
+	salesTable := keySpace.TimeSeriesBTable("sale", "SellerId", "Created", "Id", Sale{})
 	//...
 	sales, err := sales.List("seller-1", yesterdayTime, todayTime)
 ```
