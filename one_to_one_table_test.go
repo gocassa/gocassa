@@ -65,3 +65,37 @@ func TestOneToOneTableUpdate(t *testing.T) {
 		t.Fatal(c)
 	}
 }
+
+func TestOneToOneTableMultiRead(t *testing.T) {
+	tbl := ns.OneToOneTable("customer83", "Id", Customer{})
+	createIf(tbl.(TableChanger), t)
+	joe := Customer{
+		Id:   "33",
+		Name: "Joe",
+	}
+	err := tbl.Set(joe)
+	if err != nil {
+		t.Fatal(err)
+	}
+	jane := Customer{
+		Id:   "34",
+		Name: "Jane",
+	}
+	err = tbl.Set(jane)
+	if err != nil {
+		t.Fatal(err)
+	}
+	customers, err := tbl.MultiRead("33", "34")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(customers) != 2 {
+		t.Fatal("Expected to multiread 2 records, got %d", len(customers))
+	}
+	if !reflect.DeepEqual(customers[0].(*Customer), &joe) {
+		t.Fatal("Expected to find joe, got %v", customers[0])
+	}
+	if !reflect.DeepEqual(customers[1].(*Customer), &jane) {
+		t.Fatal("Expected to find jane, got %v", customers[1])
+	}
+}

@@ -28,3 +28,11 @@ func (o *oneToOneT) Read(id interface{}) (interface{}, error) {
 	}
 	return res[0], nil
 }
+
+func (o *oneToOneT) MultiRead(ids ...interface{}) ([]interface{}, error) {
+	res, err := o.Where(In(o.idField, ids...)).Query().Read()
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}

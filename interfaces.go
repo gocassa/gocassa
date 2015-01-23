@@ -30,6 +30,7 @@ type OneToOneTable interface {
 	Update(id interface{}, m map[string]interface{}) error
 	Delete(id interface{}) error
 	Read(id interface{}) (interface{}, error)
+	MultiRead(ids ...interface{}) ([]interface{}, error)
 	TableChanger
 }
 
@@ -45,6 +46,7 @@ type OneToManyTable interface {
 	DeleteAll(v interface{}) error
 	List(v, startId interface{}, limit int) ([]interface{}, error)
 	Read(v, id interface{}) (interface{}, error)
+	MultiRead(id interface{}, ids ...interface{}) ([]interface{}, error)
 	TableChanger
 }
 
