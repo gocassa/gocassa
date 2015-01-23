@@ -35,11 +35,7 @@ func (o *oneToManyT) Read(field, id interface{}) (interface{}, error) {
 }
 
 func (o *oneToManyT) MultiRead(field interface{}, ids ...interface{}) ([]interface{}, error) {
-	res, err := o.Where(Eq(o.fieldToIndexBy, field), In(o.idField, ids...)).Query().Read()
-	if err != nil {
-		return nil, err
-	}
-	return res, nil
+	return o.Where(Eq(o.fieldToIndexBy, field), In(o.idField, ids...)).Query().Read()
 }
 
 func (o *oneToManyT) List(field, startId interface{}, limit int) ([]interface{}, error) {
