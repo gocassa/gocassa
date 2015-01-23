@@ -77,3 +77,39 @@ func TestOneToManyTableDelete(t *testing.T) {
 		t.Fatal(c, err)
 	}
 }
+
+func TestOneToManyTableMultiRead(t *testing.T) {
+	tbl := ns.OneToManyTable("customer93", "Tag", "Id", Customer2{})
+	createIf(tbl.(TableChanger), t)
+	joe := Customer2{
+		Id:   "33",
+		Name: "Joe",
+		Tag:  "A",
+	}
+	err := tbl.Set(joe)
+	if err != nil {
+		t.Fatal(err)
+	}
+	jane := Customer2{
+		Id:   "34",
+		Name: "Jane",
+		Tag:  "A",
+	}
+	err = tbl.Set(jane)
+	if err != nil {
+		t.Fatal(err)
+	}
+	customers, err := tbl.MultiRead("A", "33", "34")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(customers) != 2 {
+		t.Fatal("Expected to multiread 2 records, got %d", len(customers))
+	}
+	if !reflect.DeepEqual(customers[0].(*Customer2), &joe) {
+		t.Fatal("Expected to find joe, got %v", customers[0])
+	}
+	if !reflect.DeepEqual(customers[1].(*Customer2), &jane) {
+		t.Fatal("Expected to find jane, got %v", customers[1])
+	}
+}
