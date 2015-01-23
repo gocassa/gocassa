@@ -1,15 +1,15 @@
 gocassa
 ===
 
-Gocassa is a high level library on top of [gocql](https://github.com/gocql/gocql).
+Gocassa is a high-level library on top of [gocql](https://github.com/gocql/gocql).
 
-Compared to gocql, it provides query building, data binding and it identifies certain query use cases and provides different kind of tables for them. Unlike [cqlc](https://github.com/relops/cqlc), it does not require the user to generate code. It encourages the user to define their types in a way which is most natural for them.
+Compared to gocql, it provides query building, data binding, and it identifies certain query use cases and provides different kinds of tables for them. Unlike [cqlc](https://github.com/relops/cqlc), it does not require the user to generate code. It encourages the user to define their types in the most natural way for them.
 
 #### Table types
 
 ##### Raw CQL Table
 
-The Raw CQL table pretty much let's you write any CQL query, here is an example:
+The Raw CQL table pretty much lets you write any CQL query. Here is an example:
 
 ```go
 package main
@@ -54,9 +54,9 @@ func main() {
 }
 ```
 
-##### OneToOne Table
+##### `OneToOneTable`
 
-OneToOne table provides only very simple CRUD functionality.
+`OneToOneTable` provides only very simple CRUD functionality:
 
 ```go
 	sales := keySpace.OneToOneTable("sale", "Id", Sale{})
@@ -65,9 +65,9 @@ OneToOne table provides only very simple CRUD functionality.
 }
 ```
 
-##### OneToMany Table
+##### `OneToManyTable`
 
-OneToMany can list rows based on a field equality, eg. if we want to list sales based on sellerId:
+`OneToManyTable` can list rows based on a field equality (eg. if we want to list sales based on `sellerId`):
 
 ```go
 	saleTables := keySpace.OneToOneTable("sale", "SellerId", Id", Sale{})
@@ -75,9 +75,9 @@ OneToMany can list rows based on a field equality, eg. if we want to list sales 
 	sale, err := sales.List("seller-1", nil, nil)
 ```
 
-##### TimeSeries Table
+##### `TimeSeriesTable`
 
-TimeSeries provides an interface to list rows between two time ranges.
+`TimeSeriesTable` provides an interface to list rows between two time ranges:
 
 ```go
 	salesTable := keySpace.TimeSeriesTable("sale", "Created", "Id", Sale{})
@@ -85,10 +85,9 @@ TimeSeries provides an interface to list rows between two time ranges.
 	sales, err := sales.List(yesterdayTime, todayTime)
 ```
 
-##### TimeSeriesB Table
+##### `TimeSeriesBTable`
 
-TimeSeriesB is like a cross between OneToMany and TimeSeries, it lets you list rows between time ranges, filtered by a field equality.
-The following lists sales between two time ranges, done by a certain seller:
+`TimeSeriesBTable` is like a cross between `OneToManyTable` and `TimeSeriesTable`. It lets you list rows between time ranges, filtered by a equality of a single field. The following lists sales between two time ranges, by a certain seller:
 
 ```go
 	salesTable := keySpace.TimeSeriesBTable("sale", "SellerId", "Created", "Id", Sale{})
