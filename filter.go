@@ -47,7 +47,7 @@ func (f filter) Update(m map[string]interface{}) error {
 
 func (f filter) Delete() error {
 	str, vals := f.generateWhere()
-	stmt := fmt.Sprintf("DELETE FROM %v.%v ", f.t.keySpace.name, f.t.info.name) + str
+	stmt := fmt.Sprintf("DELETE FROM %s.%s ", f.t.keySpace.name, f.t.info.name) + str
 	if f.t.keySpace.debugMode {
 		fmt.Println(stmt, vals)
 	}
