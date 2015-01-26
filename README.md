@@ -71,7 +71,7 @@ func main() {
 `OneToManyTable` can list rows filtered by equality of a single field (eg. list sales based on their `sellerId`):
 
 ```go
-    saleTables := keySpace.OneToOneTable("sale", "SellerId", Id", Sale{})
+    saleTables := keySpace.OneToOneTable("sale", "SellerId", "Id", Sale{})
     // …
     sale, err := sales.List("seller-1", nil, nil)
 ```
