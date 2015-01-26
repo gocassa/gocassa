@@ -57,7 +57,7 @@ func (k *k) table(name string, entity interface{}, fieldSource map[string]interf
 
 func (k *k) OneToOneTable(name, id string, row interface{}) OneToOneTable {
 	return &oneToOneT{
-		t: k.Table(fmt.Sprintf("%v_oneToOne_%v", name, id), row, Keys{
+		t: k.Table(fmt.Sprintf("%s_oneToOne_%s", name, id), row, Keys{
 			PartitionKeys: []string{id},
 		}).(*t),
 		idField: id,
@@ -70,7 +70,7 @@ func (k *k) SetKeysSpaceName(name string) {
 
 func (k *k) OneToManyTable(name, fieldToIndexBy, id string, row interface{}) OneToManyTable {
 	return &oneToManyT{
-		t: k.Table(fmt.Sprintf("%v_oneToMany_%v_%v", name, fieldToIndexBy, id), row, Keys{
+		t: k.Table(fmt.Sprintf("%s_oneToMany_%s_%s", name, fieldToIndexBy, id), row, Keys{
 			PartitionKeys:     []string{fieldToIndexBy},
 			ClusteringColumns: []string{id},
 		}).(*t),
@@ -86,7 +86,7 @@ func (k *k) TimeSeriesTable(name, timeField, idField string, bucketSize time.Dur
 	}
 	m[bucketFieldName] = time.Now()
 	return &timeSeriesT{
-		t: k.table(fmt.Sprintf("%v_timeSeries_%v_%v_%v", name, timeField, idField, bucketSize), row, m, Keys{
+		t: k.table(fmt.Sprintf("%s_timeSeries_%s_%s_%s", name, timeField, idField, bucketSize.String()), row, m, Keys{
 			PartitionKeys:     []string{bucketFieldName},
 			ClusteringColumns: []string{timeField, idField},
 		}).(*t),
@@ -103,7 +103,7 @@ func (k *k) TimeSeriesBTable(name, indexField, timeField, idField string, bucket
 	}
 	m[bucketFieldName] = time.Now()
 	return &timeSeriesBT{
-		t: k.table(fmt.Sprintf("%v_timeSeries_%v_%v_%v_%v", name, indexField, timeField, idField, bucketSize), row, m, Keys{
+		t: k.table(fmt.Sprintf("%s_timeSeries_%s_%s_%s_%s", name, indexField, timeField, idField, bucketSize.String()), row, m, Keys{
 			PartitionKeys:     []string{indexField, bucketFieldName},
 			ClusteringColumns: []string{timeField, idField},
 		}).(*t),
@@ -116,7 +116,7 @@ func (k *k) TimeSeriesBTable(name, indexField, timeField, idField string, bucket
 
 // Returns table names in a keyspace
 func (n *k) Tables() ([]string, error) {
-	stmt := fmt.Sprintf("SELECT columnfamily_name FROM system.schema_columnfamilies WHERE keyspace_name='%v'", n.name)
+	stmt := fmt.Sprintf("SELECT columnfamily_name FROM system.schema_columnfamilies WHERE keyspace_name='%s'", n.name)
 	iter := n.session.Query(stmt).Iter()
 	ret := []string{}
 	m := map[string]interface{}{}
@@ -141,7 +141,7 @@ func (k *k) Exists(cf string) (bool, error) {
 }
 
 func (k *k) DropTable(cf string) error {
-	stmt := fmt.Sprintf("DROP TABLE IF EXISTS %v.%v", k.name, cf)
+	stmt := fmt.Sprintf("DROP TABLE IF EXISTS %s.%s", k.name, cf)
 	return k.session.Query(stmt).Exec()
 }
 

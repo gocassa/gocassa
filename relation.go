@@ -32,7 +32,7 @@ func (r Relation) cql() (string, []interface{}) {
 		for i := 0; i < len(r.terms); i++ {
 			qs = append(qs, "?")
 		}
-		return fmt.Sprintf(key+" IN (%v)", strings.Join(qs, ", ")), r.terms
+		return fmt.Sprintf(key+" IN (%s)", strings.Join(qs, ", ")), r.terms
 	case greaterThan:
 		ret = key + " > ?"
 	case greaterThanOrEquals:

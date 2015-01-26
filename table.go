@@ -82,9 +82,9 @@ func (t t) Where(rs ...Relation) Filter {
 }
 
 func (t t) generateFieldNames() string {
-	xs := []string{}
-	for _, v := range t.info.fields {
-		xs = append(xs, strings.ToLower(v))
+	xs := make([]string, len(t.info.fields))
+	for i, v := range t.info.fields {
+		xs[i] = strings.ToLower(v)
 	}
 	return strings.Join(xs, ", ")
 }
@@ -94,15 +94,15 @@ func (t t) generateFieldNames() string {
 //
 // Gotcha: primkey must be first
 func insert(cfName string, fieldNames []string) string {
-	placeHolders := []string{}
+	placeHolders := make([]string, len(fieldNames))
 	for i := 0; i < len(fieldNames); i++ {
-		placeHolders = append(placeHolders, "?")
+		placeHolders[i] = "?"
 	}
-	lowerFieldNames := []string{}
-	for _, v := range fieldNames {
-		lowerFieldNames = append(lowerFieldNames, strings.ToLower(v))
+	lowerFieldNames := make([]string, len(fieldNames))
+	for i, v := range fieldNames {
+		lowerFieldNames[i] = strings.ToLower(v)
 	}
-	return fmt.Sprintf("INSERT INTO %v ("+strings.Join(lowerFieldNames, ", ")+") VALUES ("+strings.Join(placeHolders, ", ")+")", cfName)
+	return fmt.Sprintf("INSERT INTO %s ("+strings.Join(lowerFieldNames, ", ")+") VALUES ("+strings.Join(placeHolders, ", ")+")", cfName)
 }
 
 func (t t) Set(i interface{}) error {
