@@ -15,7 +15,7 @@ type timeSeriesT struct {
 	bucketSize time.Duration
 }
 
-func (o *timeSeriesT) Set(v interface{}) error {
+func (o *timeSeriesT) SetWithTTL(v interface{}, ttl time.Duration) error {
 	m, ok := toMap(v)
 	if !ok {
 		return errors.New("Can't set: not able to convert")
@@ -25,7 +25,11 @@ func (o *timeSeriesT) Set(v interface{}) error {
 		return errors.New("timeField is not actually a time.Time")
 	}
 	m[bucketFieldName] = o.bucket(tim.Unix())
-	return o.t.Set(m)
+	return o.t.SetWithTTL(v, ttl)
+}
+
+func (o *timeSeriesT) Set(v interface{}) error {
+	return o.SetWithTTL(v, 0)
 }
 
 func (o *timeSeriesT) bucket(secs int64) int64 {

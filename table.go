@@ -1,12 +1,16 @@
 package gocassa
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"reflect"
+	"strconv"
+	"strings"
+	"time"
+
 	g "github.com/hailocab/gocassa/generate"
 	r "github.com/hailocab/gocassa/reflect"
-	"reflect"
-	"strings"
 )
 
 type t struct {
@@ -93,7 +97,7 @@ func (t t) generateFieldNames() string {
 //   VALUES ('cfd66ccc-d857-4e90-b1e5-df98a3d40cd6', 'johndoe')
 //
 // Gotcha: primkey must be first
-func insert(cfName string, fieldNames []string) string {
+func insert(cfName string, fieldNames []string, ttl time.Duration) string {
 	placeHolders := make([]string, len(fieldNames))
 	for i := 0; i < len(fieldNames); i++ {
 		placeHolders[i] = "?"
@@ -102,16 +106,26 @@ func insert(cfName string, fieldNames []string) string {
 	for i, v := range fieldNames {
 		lowerFieldNames[i] = strings.ToLower(v)
 	}
-	return fmt.Sprintf("INSERT INTO %s ("+strings.Join(lowerFieldNames, ", ")+") VALUES ("+strings.Join(placeHolders, ", ")+")", cfName)
+
+	buf := new(bytes.Buffer)
+	buf.WriteString(fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)",
+		cfName,
+		strings.Join(lowerFieldNames, ", "),
+		strings.Join(placeHolders, ", ")))
+	if ttl != 0 {
+		buf.WriteString(" USING TTL ")
+		buf.WriteString(strconv.FormatFloat(ttl.Seconds(), 'f', 0, 64))
+	}
+	return buf.String()
 }
 
-func (t t) Set(i interface{}) error {
+func (t t) SetWithTTL(i interface{}, ttl time.Duration) error {
 	m, ok := toMap(i)
 	if !ok {
 		return errors.New("Can't create: value not understood")
 	}
 	fields, values := keyValues(m)
-	stmt := insert(t.info.name, fields)
+	stmt := insert(t.info.name, fields, ttl)
 	sess := t.keySpace.session
 	if t.keySpace.debugMode {
 		fmt.Println(stmt, values)
@@ -119,19 +133,22 @@ func (t t) Set(i interface{}) error {
 	return sess.Query(stmt, values...).Exec()
 }
 
+func (t t) Set(i interface{}) error {
+	return t.SetWithTTL(i, 0)
+}
+
 func (t t) Create() error {
-	stmt, err := t.CreateStatement()
-	if err != nil {
+	if stmt, err := t.CreateStatement(); err != nil {
 		return err
+	} else {
+		return t.keySpace.session.Query(stmt).Exec()
 	}
-	return t.keySpace.session.Query(stmt).Exec()
 }
 
 // Drop table if exists and create it again
 func (t t) Recreate() error {
 	if ex, err := t.keySpace.Exists(t.info.name); ex && err == nil {
-		err = t.keySpace.DropTable(t.info.name)
-		if err != nil {
+		if err := t.keySpace.DropTable(t.info.name); err != nil {
 			return err
 		}
 	} else if err != nil {
@@ -141,7 +158,12 @@ func (t t) Recreate() error {
 }
 
 func (t t) CreateStatement() (string, error) {
-	return g.CreateTable(t.keySpace.name, t.info.name, t.info.keys.PartitionKeys, t.info.keys.ClusteringColumns, t.info.fields, t.info.fieldValues)
+	return g.CreateTable(t.keySpace.name,
+		t.info.name,
+		t.info.keys.PartitionKeys,
+		t.info.keys.ClusteringColumns,
+		t.info.fields,
+		t.info.fieldValues)
 }
 
 //const (
