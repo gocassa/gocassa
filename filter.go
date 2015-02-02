@@ -3,6 +3,7 @@ package gocassa
 import (
 	"bytes"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
