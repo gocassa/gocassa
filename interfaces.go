@@ -26,8 +26,9 @@ type KeySpace interface {
 
 // Simple CRUD interface. You can do CRUD by Id.
 type OneToOneTable interface {
+	SetWithOptions(v interface{}, opts Options) error
 	Set(v interface{}) error
-	SetWithTTL(v interface{}, ttl time.Duration) error
+	UpdateWithOptions(id interface{}, m map[string]interface{}, opts Options) error
 	Update(id interface{}, m map[string]interface{}) error
 	Delete(id interface{}) error
 	Read(id interface{}) (interface{}, error)
@@ -41,8 +42,9 @@ type OneToOneTable interface {
 
 // OneToMany lets you list rows based on a field equality, eg. 'list all sales where seller id = v'.
 type OneToManyTable interface {
+	SetWithOptions(v interface{}, opts Options) error
 	Set(v interface{}) error
-	SetWithTTL(v interface{}, ttl time.Duration) error
+	UpdateWithOptions(v, id interface{}, m map[string]interface{}, opts Options) error
 	Update(v, id interface{}, m map[string]interface{}) error
 	Delete(v, id interface{}) error
 	DeleteAll(v interface{}) error
@@ -59,13 +61,13 @@ type OneToManyTable interface {
 // TimeSeries lets you list rows which have a field value between two date ranges.
 type TimeSeriesTable interface {
 	// timeField and idField must be present
+	SetWithOptions(v interface{}, opts Options) error
 	Set(v interface{}) error
-	SetWithTTL(v interface{}, ttl time.Duration) error
+	UpdateWithOptions(timeStamp time.Time, id interface{}, m map[string]interface{}, opts Options) error
 	Update(timeStamp time.Time, id interface{}, m map[string]interface{}) error
 	List(start, end time.Time) ([]interface{}, error)
 	Read(timeStamp time.Time, id interface{}) (interface{}, error)
 	Delete(timeStamp time.Time, id interface{}) error
-	//DeleteAll(start, end time.Time) error
 	TableChanger
 }
 
@@ -76,13 +78,13 @@ type TimeSeriesTable interface {
 // TimeSeriesB is a cross between TimeSeries and OneToMany tables.
 type TimeSeriesBTable interface {
 	// timeField and idField must be present
+	SetWithOptions(v interface{}, opts Options) error
 	Set(v interface{}) error
-	SetWithTTL(v interface{}, ttl time.Duration) error
+	UpdateWithOptions(v interface{}, timeStamp time.Time, id interface{}, m map[string]interface{}, opts Options) error
 	Update(v interface{}, timeStamp time.Time, id interface{}, m map[string]interface{}) error
 	List(v interface{}, start, end time.Time) ([]interface{}, error)
 	Read(v interface{}, timeStamp time.Time, id interface{}) (interface{}, error)
 	Delete(v interface{}, timeStamp time.Time, id interface{}) error
-	//DeleteAll(v interface{}, start, end time.Time) error
 	TableChanger
 }
 
@@ -94,8 +96,6 @@ type TimeSeriesBTable interface {
 type Query interface {
 	Read() ([]interface{}, error)
 	Limit(int) Query
-	// For pagination
-	// Start(token string) Query
 }
 
 // A Filter is a subset of a Table, filtered by Relations.
@@ -105,6 +105,7 @@ type Filter interface {
 	Query() Query
 	// Partial update.
 	Update(m map[string]interface{}) error // Probably this is danger zone (can't be implemented efficiently) on a selectuinb with more than 1 document
+	UpdateWithOptions(m map[string]interface{}, opts Options) error
 	Delete() error
 }
 
@@ -126,8 +127,7 @@ type Table interface {
 	// Set Inserts, or Replaces your row with the supplied struct. Be aware that what is not in your struct
 	// will be deleted. To only overwrite some of the fields, use Query.Update.
 	Set(v interface{}) error
-	// SetWithTTL behaves like Set(), but also allows specification of a row TTL
-	SetWithTTL(v interface{}, ttl time.Duration) error
+	SetWithOptions(v interface{}, opts Options) error
 	Where(relations ...Relation) Filter // Because we provide selections
 	TableChanger
 }

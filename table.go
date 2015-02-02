@@ -7,7 +7,6 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
-	"time"
 
 	g "github.com/hailocab/gocassa/generate"
 	r "github.com/hailocab/gocassa/reflect"
@@ -97,7 +96,7 @@ func (t t) generateFieldNames() string {
 //   VALUES ('cfd66ccc-d857-4e90-b1e5-df98a3d40cd6', 'johndoe')
 //
 // Gotcha: primkey must be first
-func insert(cfName string, fieldNames []string, ttl time.Duration) string {
+func insert(cfName string, fieldNames []string, opts Options) string {
 	placeHolders := make([]string, len(fieldNames))
 	for i := 0; i < len(fieldNames); i++ {
 		placeHolders[i] = "?"
@@ -112,20 +111,23 @@ func insert(cfName string, fieldNames []string, ttl time.Duration) string {
 		cfName,
 		strings.Join(lowerFieldNames, ", "),
 		strings.Join(placeHolders, ", ")))
-	if ttl != 0 {
+
+	// Apply options
+	if opts.TTL != 0 {
 		buf.WriteString(" USING TTL ")
-		buf.WriteString(strconv.FormatFloat(ttl.Seconds(), 'f', 0, 64))
+		buf.WriteString(strconv.FormatFloat(opts.TTL.Seconds(), 'f', 0, 64))
 	}
+
 	return buf.String()
 }
 
-func (t t) SetWithTTL(i interface{}, ttl time.Duration) error {
+func (t t) SetWithOptions(i interface{}, opts Options) error {
 	m, ok := toMap(i)
 	if !ok {
 		return errors.New("Can't create: value not understood")
 	}
 	fields, values := keyValues(m)
-	stmt := insert(t.info.name, fields, ttl)
+	stmt := insert(t.info.name, fields, opts)
 	sess := t.keySpace.session
 	if t.keySpace.debugMode {
 		fmt.Println(stmt, values)
@@ -134,7 +136,7 @@ func (t t) SetWithTTL(i interface{}, ttl time.Duration) error {
 }
 
 func (t t) Set(i interface{}) error {
-	return t.SetWithTTL(i, 0)
+	return t.SetWithOptions(i, Options{})
 }
 
 func (t t) Create() error {

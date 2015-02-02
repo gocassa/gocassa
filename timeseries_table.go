@@ -15,21 +15,21 @@ type timeSeriesT struct {
 	bucketSize time.Duration
 }
 
-func (o *timeSeriesT) SetWithTTL(v interface{}, ttl time.Duration) error {
+func (o *timeSeriesT) SetWithOptions(v interface{}, opts Options) error {
 	m, ok := toMap(v)
 	if !ok {
 		return errors.New("Can't set: not able to convert")
 	}
-	tim, ok := m[o.timeField].(time.Time)
-	if !ok {
+	if tim, ok := m[o.timeField].(time.Time); !ok {
 		return errors.New("timeField is not actually a time.Time")
+	} else {
+		m[bucketFieldName] = o.bucket(tim.Unix())
 	}
-	m[bucketFieldName] = o.bucket(tim.Unix())
-	return o.t.SetWithTTL(v, ttl)
+	return o.t.SetWithOptions(v, opts)
 }
 
 func (o *timeSeriesT) Set(v interface{}) error {
-	return o.SetWithTTL(v, 0)
+	return o.SetWithOptions(v, Options{})
 }
 
 func (o *timeSeriesT) bucket(secs int64) int64 {
@@ -41,6 +41,11 @@ func (o *timeSeriesT) Update(timeStamp time.Time, id interface{}, m map[string]i
 	return o.Where(Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Update(m)
 }
 
+func (o *timeSeriesT) UpdateWithOptions(timeStamp time.Time, id interface{}, m map[string]interface{}, opts Options) error {
+	bucket := o.bucket(timeStamp.Unix())
+	return o.Where(Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).UpdateWithOptions(m, opts)
+}
+
 func (o *timeSeriesT) Delete(timeStamp time.Time, id interface{}) error {
 	bucket := o.bucket(timeStamp.Unix())
 	return o.Where(Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Delete()
@@ -48,14 +53,13 @@ func (o *timeSeriesT) Delete(timeStamp time.Time, id interface{}) error {
 
 func (o *timeSeriesT) Read(timeStamp time.Time, id interface{}) (interface{}, error) {
 	bucket := o.bucket(timeStamp.Unix())
-	res, err := o.Where(Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Query().Read()
-	if err != nil {
+	if res, err := o.Where(Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Query().Read(); err != nil {
 		return nil, err
+	} else if len(res) == 0 {
+		return nil, fmt.Errorf("Row with id %v not found", id)
+	} else {
+		return res[0], nil
 	}
-	if len(res) == 0 {
-		return nil, errors.New(fmt.Sprintf("Row with id %v not found", id))
-	}
-	return res[0], nil
 }
 
 func (o *timeSeriesT) List(startTime time.Time, endTime time.Time) ([]interface{}, error) {
