@@ -25,7 +25,7 @@ func (o *timeSeriesT) SetWithOptions(v interface{}, opts Options) error {
 	} else {
 		m[bucketFieldName] = o.bucket(tim.Unix())
 	}
-	return o.t.SetWithOptions(v, opts)
+	return o.t.SetWithOptions(m, opts)
 }
 
 func (o *timeSeriesT) Set(v interface{}) error {
