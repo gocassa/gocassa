@@ -2,10 +2,10 @@
 package generate
 
 import (
-	"errors"
 	"fmt"
-	"github.com/gocql/gocql"
 	"strings"
+
+	"github.com/gocql/gocql"
 )
 
 // CREATE TABLE users (
@@ -31,7 +31,7 @@ func CreateTable(keySpace, cf string, partitionKeys, colKeys []string, fields []
 	for i, _ := range fields {
 		ct := cassaType(values[i])
 		if ct == gocql.TypeCustom {
-			return "", errors.New(fmt.Sprintf("Unsupported type %T", values[i]))
+			return "", fmt.Errorf("Unsupported type %T", values[i])
 		}
 		typ, err := cassaTypeToString(ct)
 		if err != nil {

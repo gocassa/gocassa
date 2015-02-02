@@ -1,7 +1,9 @@
 package gocassa
 
 import (
+	"bytes"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -26,23 +28,42 @@ func (f filter) Replace(i interface{}) error {
 }
 
 // UPDATE keyspace.Movies SET col1 = val1, col2 = val2
-func updateStatement(kn, cfName string, fieldNames []string) string {
-	cols := []string{}
-	for _, v := range fieldNames {
-		cols = append(cols, v+" = ?")
+func updateStatement(kn, cfName string, fieldNames []string, opts Options) string {
+	buf := new(bytes.Buffer)
+	buf.WriteString(fmt.Sprintf("UPDATE %s.%s ", kn, cfName))
+
+	// Apply options
+	if opts.TTL != 0 {
+		buf.WriteString("USING TTL ")
+		buf.WriteString(strconv.FormatFloat(opts.TTL.Seconds(), 'f', 0, 64))
+		buf.WriteRune(' ')
 	}
-	return fmt.Sprintf("UPDATE %v.%v SET "+strings.Join(cols, ", "), kn, cfName)
+
+	buf.WriteString("SET ")
+	for i, v := range fieldNames {
+		if i > 0 {
+			buf.WriteString(", ")
+		}
+		buf.WriteString(v)
+		buf.WriteString(" = ?")
+	}
+
+	return buf.String()
 }
 
-func (f filter) Update(m map[string]interface{}) error {
+func (f filter) UpdateWithOptions(m map[string]interface{}, opts Options) error {
 	fields, values := keyValues(m)
 	str, wvals := f.generateWhere()
-	stmt := updateStatement(f.t.keySpace.name, f.t.info.name, fields)
+	stmt := updateStatement(f.t.keySpace.name, f.t.info.name, fields, opts)
 	sess := f.t.keySpace.session
 	if f.t.keySpace.debugMode {
 		fmt.Println(stmt+" "+str, append(values, wvals...))
 	}
 	return sess.Query(stmt+" "+str, append(values, wvals...)...).Exec()
+}
+
+func (f filter) Update(m map[string]interface{}) error {
+	return f.UpdateWithOptions(m, Options{})
 }
 
 func (f filter) Delete() error {

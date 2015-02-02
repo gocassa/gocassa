@@ -1,7 +1,6 @@
 package gocassa
 
 import (
-	"errors"
 	"fmt"
 )
 
@@ -15,6 +14,10 @@ func (o *oneToManyT) Update(field, id interface{}, m map[string]interface{}) err
 	return o.Where(Eq(o.fieldToIndexBy, field), Eq(o.idField, id)).Update(m)
 }
 
+func (o *oneToManyT) UpdateWithOptions(field, id interface{}, m map[string]interface{}, opts Options) error {
+	return o.Where(Eq(o.fieldToIndexBy, field), Eq(o.idField, id)).UpdateWithOptions(m, opts)
+}
+
 func (o *oneToManyT) Delete(field, id interface{}) error {
 	return o.Where(Eq(o.fieldToIndexBy, field), Eq(o.idField, id)).Delete()
 }
@@ -24,14 +27,13 @@ func (o *oneToManyT) DeleteAll(field interface{}) error {
 }
 
 func (o *oneToManyT) Read(field, id interface{}) (interface{}, error) {
-	res, err := o.Where(Eq(o.fieldToIndexBy, field), Eq(o.idField, id)).Query().Read()
-	if err != nil {
+	if res, err := o.Where(Eq(o.fieldToIndexBy, field), Eq(o.idField, id)).Query().Read(); err != nil {
 		return nil, err
+	} else if len(res) == 0 {
+		return nil, fmt.Errorf("Row with id %v not found", id)
+	} else {
+		return res[0], nil
 	}
-	if len(res) == 0 {
-		return nil, errors.New(fmt.Sprintf("Row with id %v not found", id))
-	}
-	return res[0], nil
 }
 
 func (o *oneToManyT) MultiRead(field interface{}, ids ...interface{}) ([]interface{}, error) {
