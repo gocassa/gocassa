@@ -29,7 +29,16 @@ func (f filter) Replace(i interface{}) error {
 // UPDATE keyspace.Movies SET col1 = val1, col2 = val2
 func updateStatement(kn, cfName string, fieldNames []string, opts Options) string {
 	buf := new(bytes.Buffer)
-	buf.WriteString(fmt.Sprintf("UPDATE %s.%s SET ", kn, cfName))
+	buf.WriteString(fmt.Sprintf("UPDATE %s.%s ", kn, cfName))
+
+	// Apply options
+	if opts.TTL != 0 {
+		buf.WriteString("USING TTL ")
+		buf.WriteString(strconv.FormatFloat(opts.TTL.Seconds(), 'f', 0, 64))
+		buf.WriteRune(' ')
+	}
+
+	buf.WriteString("SET ")
 	for i, v := range fieldNames {
 		if i > 0 {
 			buf.WriteString(", ")
@@ -37,6 +46,7 @@ func updateStatement(kn, cfName string, fieldNames []string, opts Options) strin
 		buf.WriteString(v)
 		buf.WriteString(" = ?")
 	}
+
 	return buf.String()
 }
 
