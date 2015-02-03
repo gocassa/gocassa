@@ -38,6 +38,19 @@ func (q *query) Read() ([]interface{}, error) {
 	return ret, nil
 }
 
+func (q *query) ReadInto(pointerToASlice interface{}) error {
+	stmt, vals := q.generateRead()
+	maps, err := q.f.t.keySpace.qe.Query(stmt, vals...)
+	if err != nil {
+		return err
+	}
+	bytes, err := json.Marshal(maps)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(bytes, pointerToASlice)
+}
+
 func (q *query) generateRead() (string, []interface{}) {
 	w, wv := q.f.generateWhere()
 	o, ov := q.generateOrderBy()

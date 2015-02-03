@@ -96,6 +96,7 @@ type TimeSeriesBTable interface {
 // A Query is a subset of a Table intended to be read
 type Query interface {
 	Read() ([]interface{}, error)
+	ReadInto(pointerToASlice interface{}) error
 	Limit(int) Query
 }
 
