@@ -54,7 +54,9 @@ type OneToManyTable interface {
 	List(v, startId interface{}, limit int) ([]interface{}, error)
 	ListInto(v, startId interface{}, limit int, pointerToASlice interface{}) error
 	Read(v, id interface{}) (interface{}, error)
-	MultiRead(id interface{}, ids ...interface{}) ([]interface{}, error)
+	ReadInto
+	MultiRead(v interface{}, ids ...interface{}) ([]interface{}, error)
+	MultiReadInto()
 	TableChanger
 }
 
@@ -72,6 +74,7 @@ type TimeSeriesTable interface {
 	List(start, end time.Time) ([]interface{}, error)
 	ListInto(start, end time.Time, pointerToASlice interface{}) error
 	Read(timeStamp time.Time, id interface{}) (interface{}, error)
+	ReadInto(timeStamp)
 	Delete(timeStamp time.Time, id interface{}) error
 	TableChanger
 }

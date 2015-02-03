@@ -27,7 +27,7 @@ func (o *oneToManyT) DeleteAll(field interface{}) error {
 }
 
 func (o *oneToManyT) readQuery(field, id interface{}) {
-	
+
 }
 
 func (o *oneToManyT) Read(field, id interface{}) (interface{}, error) {
@@ -50,9 +50,15 @@ func (o *oneToManyT) ReadInto(field, id, pointer interface{}) (interface{}, erro
 	}
 }
 
+func (o *oneToManyT) multiReadQuery(field interface{}, ids ...interface{}) Query {
+
+}
+
 func (o *oneToManyT) MultiRead(field interface{}, ids ...interface{}) ([]interface{}, error) {
 	return o.Where(Eq(o.fieldToIndexBy, field), In(o.idField, ids...)).Query().Read()
 }
+
+func (o *oneToMany)
 
 func (o *oneToManyT) List(field, startId interface{}, limit int) ([]interface{}, error) {
 	return o.Where(Eq(o.fieldToIndexBy, field), GTE(o.idField, startId)).Query().Limit(limit).Read()
