@@ -1,15 +1,15 @@
 package gocassa
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
-	"encoding/json"
 )
 
 type k struct {
-	qe QueryExecutor
-	name    string
+	qe        QueryExecutor
+	name      string
 	debugMode bool
 }
 

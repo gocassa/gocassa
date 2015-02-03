@@ -29,7 +29,7 @@ func (q *query) Read() ([]interface{}, error) {
 			return nil, err
 		}
 		ret = append(ret, r)
-		
+
 	}
 	return ret, nil
 }

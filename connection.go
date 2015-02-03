@@ -1,9 +1,9 @@
 package gocassa
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/gocql/gocql"
-	"encoding/json"
 )
 
 type connection struct {
@@ -79,7 +79,7 @@ func (c *connection) DropKeySpace(name string) error {
 
 func (c *connection) KeySpace(name string) KeySpace {
 	return &k{
-		qe: 	c.q,
-		name:   name,
+		qe:   c.q,
+		name: name,
 	}
 }
