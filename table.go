@@ -96,7 +96,7 @@ func (t t) generateFieldNames() string {
 //   VALUES ('cfd66ccc-d857-4e90-b1e5-df98a3d40cd6', 'johndoe')
 //
 // Gotcha: primkey must be first
-func insert(cfName string, fieldNames []string, opts Options) string {
+func insert(keySpaceName, cfName string, fieldNames []string, opts Options) string {
 	placeHolders := make([]string, len(fieldNames))
 	for i := 0; i < len(fieldNames); i++ {
 		placeHolders[i] = "?"
@@ -107,7 +107,8 @@ func insert(cfName string, fieldNames []string, opts Options) string {
 	}
 
 	buf := new(bytes.Buffer)
-	buf.WriteString(fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)",
+	buf.WriteString(fmt.Sprintf("INSERT INTO %s.%s (%s) VALUES (%s)",
+		keySpaceName,
 		cfName,
 		strings.Join(lowerFieldNames, ", "),
 		strings.Join(placeHolders, ", ")))
@@ -127,12 +128,11 @@ func (t t) SetWithOptions(i interface{}, opts Options) error {
 		return errors.New("Can't create: value not understood")
 	}
 	fields, values := keyValues(m)
-	stmt := insert(t.info.name, fields, opts)
-	sess := t.keySpace.session
+	stmt := insert(t.keySpace.name, t.info.name, fields, opts)
 	if t.keySpace.debugMode {
 		fmt.Println(stmt, values)
 	}
-	return sess.Query(stmt, values...).Exec()
+	return t.keySpace.qe.Execute(stmt, values...)
 }
 
 func (t t) Set(i interface{}) error {
@@ -143,7 +143,7 @@ func (t t) Create() error {
 	if stmt, err := t.CreateStatement(); err != nil {
 		return err
 	} else {
-		return t.keySpace.session.Query(stmt).Exec()
+		return t.keySpace.qe.Execute(stmt)
 	}
 }
 

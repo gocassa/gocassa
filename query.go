@@ -17,25 +17,21 @@ func (q *query) Limit(i int) Query {
 
 func (q *query) Read() ([]interface{}, error) {
 	stmt, vals := q.generateRead()
-	sess := q.f.t.keySpace.session
+	blobs, err := q.f.t.keySpace.qe.Query(stmt, vals...)
+	if err != nil {
+		return nil, err
+	}
 	ret := []interface{}{}
-	m := map[string]interface{}{}
-	qu := sess.Query(stmt, vals...)
-	iter := qu.Iter()
-	for iter.MapScan(m) {
-		bytes, err := json.Marshal(m)
-		if err != nil {
-			return nil, err
-		}
+	for _, bytes := range blobs {
 		r := q.f.t.zero()
 		err = json.Unmarshal(bytes, r)
 		if err != nil {
 			return nil, err
 		}
 		ret = append(ret, r)
-		m = map[string]interface{}{}
+		
 	}
-	return ret, iter.Close()
+	return ret, nil
 }
 
 func (q *query) generateRead() (string, []interface{}) {
