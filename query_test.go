@@ -45,7 +45,8 @@ func TestEq(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	res, err := cs.Where(Eq("Id", "50")).Query().Read()
+	q := cs.Where(Eq("Id", "50")).Query()
+	res, err := q.Read()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -54,6 +55,13 @@ func TestEq(t *testing.T) {
 	}
 	if res[0].(*Customer).Id != "50" {
 		t.Fatal(res[0].(*Customer))
+	}
+	custs := &[]Customer{}
+	if err = q.ReadInto(custs); err != nil {
+		t.Fatal(err)
+	}
+	if (*custs)[0].Id != "50" {
+		t.Fatal((*custs)[0])
 	}
 }
 

@@ -2,36 +2,22 @@ package gocassa
 
 import (
 	"fmt"
-	"github.com/gocql/gocql"
 	"strings"
 	"time"
 )
 
 type k struct {
-	session *gocql.Session
-	name    string
-	// nodeIps 	[]string
+	qe        QueryExecutor
+	name      string
 	debugMode bool
 }
 
-func ConnectToKeySpace(name string, nodeIps []string, username, password string) (KeySpace, error) {
-	// clean up this duplication
-	cluster := gocql.NewCluster(nodeIps...)
-	cluster.Keyspace = name
-	cluster.Consistency = gocql.One
-	cluster.Authenticator = gocql.PasswordAuthenticator{
-		Username: username,
-		Password: password,
-	}
-	sess, err := cluster.CreateSession()
+func ConnectToKeySpace(keySpace string, nodeIps []string, username, password string) (KeySpace, error) {
+	c, err := Connect(nodeIps, username, password)
 	if err != nil {
 		return nil, err
 	}
-	return &k{
-		session: sess,
-		name:    name,
-		// nodeIps: nodeIps,
-	}, nil
+	return c.KeySpace(keySpace), nil
 }
 
 func (k *k) DebugMode(b bool) {
@@ -115,16 +101,17 @@ func (k *k) TimeSeriesBTable(name, indexField, timeField, idField string, bucket
 }
 
 // Returns table names in a keyspace
-func (n *k) Tables() ([]string, error) {
-	stmt := fmt.Sprintf("SELECT columnfamily_name FROM system.schema_columnfamilies WHERE keyspace_name='%s'", n.name)
-	iter := n.session.Query(stmt).Iter()
-	ret := []string{}
-	m := map[string]interface{}{}
-	for iter.MapScan(m) {
-		ret = append(ret, m["columnfamily_name"].(string))
-		m = map[string]interface{}{} // This is needed... @cruft
+func (k *k) Tables() ([]string, error) {
+	stmt := fmt.Sprintf("SELECT columnfamily_name FROM system.schema_columnfamilies WHERE keyspace_name='%s'", k.name)
+	maps, err := k.qe.Query(stmt)
+	if err != nil {
+		return nil, err
 	}
-	return ret, iter.Close()
+	ret := []string{}
+	for _, m := range maps {
+		ret = append(ret, m["columnfamily_name"].(string))
+	}
+	return ret, nil
 }
 
 func (k *k) Exists(cf string) (bool, error) {
@@ -142,7 +129,7 @@ func (k *k) Exists(cf string) (bool, error) {
 
 func (k *k) DropTable(cf string) error {
 	stmt := fmt.Sprintf("DROP TABLE IF EXISTS %s.%s", k.name, cf)
-	return k.session.Query(stmt).Exec()
+	return k.qe.Execute(stmt)
 }
 
 // Translate errors returned by cassandra

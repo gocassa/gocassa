@@ -9,6 +9,7 @@ import (
 type Connection interface {
 	CreateKeySpace(name string) error
 	DropKeySpace(name string) error
+	KeySpace(name string) KeySpace
 }
 
 type KeySpace interface {
@@ -32,7 +33,9 @@ type OneToOneTable interface {
 	Update(id interface{}, m map[string]interface{}) error
 	Delete(id interface{}) error
 	Read(id interface{}) (interface{}, error)
+	ReadInto(id, pointer interface{}) error
 	MultiRead(ids ...interface{}) ([]interface{}, error)
+	MultiReadInto(ids []interface{}, pointerToASlice interface{}) error
 	TableChanger
 }
 
@@ -49,8 +52,11 @@ type OneToManyTable interface {
 	Delete(v, id interface{}) error
 	DeleteAll(v interface{}) error
 	List(v, startId interface{}, limit int) ([]interface{}, error)
+	ListInto(v, startId interface{}, limit int, pointerToASlice interface{}) error
 	Read(v, id interface{}) (interface{}, error)
-	MultiRead(id interface{}, ids ...interface{}) ([]interface{}, error)
+	ReadInto
+	MultiRead(v interface{}, ids ...interface{}) ([]interface{}, error)
+	MultiReadInto()
 	TableChanger
 }
 
@@ -66,7 +72,9 @@ type TimeSeriesTable interface {
 	UpdateWithOptions(timeStamp time.Time, id interface{}, m map[string]interface{}, opts Options) error
 	Update(timeStamp time.Time, id interface{}, m map[string]interface{}) error
 	List(start, end time.Time) ([]interface{}, error)
+	ListInto(start, end time.Time, pointerToASlice interface{}) error
 	Read(timeStamp time.Time, id interface{}) (interface{}, error)
+	ReadInto(timeStamp)
 	Delete(timeStamp time.Time, id interface{}) error
 	TableChanger
 }
@@ -83,7 +91,9 @@ type TimeSeriesBTable interface {
 	UpdateWithOptions(v interface{}, timeStamp time.Time, id interface{}, m map[string]interface{}, opts Options) error
 	Update(v interface{}, timeStamp time.Time, id interface{}, m map[string]interface{}) error
 	List(v interface{}, start, end time.Time) ([]interface{}, error)
+	ListInto(v interface{}, start, end time.Time, pointerToASlice []interface{}) error
 	Read(v interface{}, timeStamp time.Time, id interface{}) (interface{}, error)
+	ReadInto(v interface{}, timeStamp time.Time, id, pointer interface{}) error
 	Delete(v interface{}, timeStamp time.Time, id interface{}) error
 	TableChanger
 }
@@ -92,10 +102,17 @@ type TimeSeriesBTable interface {
 // Raw CQL
 //
 
-// A Query is a subset of a Table intended to be read
-type Query interface {
+type Result() interface{
 	Read() ([]interface{}, error)
+	ReadInto(pointerToASlice interface{}) error
+	ReadOne() (interface{}, error)
+	ReadIntoOne(pointer interface{}) error
+}
+
+// A Query is a subset of a Table intended to be read.
+type Query interface {
 	Limit(int) Query
+	Result() Result
 }
 
 // A Filter is a subset of a Table, filtered by Relations.
@@ -130,4 +147,9 @@ type Table interface {
 	SetWithOptions(v interface{}, opts Options) error
 	Where(relations ...Relation) Filter // Because we provide selections
 	TableChanger
+}
+
+type QueryExecutor interface {
+	Query(stmt string, params ...interface{}) ([]map[string]interface{}, error)
+	Execute(stmt string, params ...interface{}) error
 }

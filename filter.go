@@ -55,11 +55,10 @@ func (f filter) UpdateWithOptions(m map[string]interface{}, opts Options) error 
 	fields, values := keyValues(m)
 	str, wvals := f.generateWhere()
 	stmt := updateStatement(f.t.keySpace.name, f.t.info.name, fields, opts)
-	sess := f.t.keySpace.session
 	if f.t.keySpace.debugMode {
 		fmt.Println(stmt+" "+str, append(values, wvals...))
 	}
-	return sess.Query(stmt+" "+str, append(values, wvals...)...).Exec()
+	return f.t.keySpace.qe.Execute(stmt+" "+str, append(values, wvals...)...)
 }
 
 func (f filter) Update(m map[string]interface{}) error {
@@ -72,7 +71,7 @@ func (f filter) Delete() error {
 	if f.t.keySpace.debugMode {
 		fmt.Println(stmt, vals)
 	}
-	return f.t.keySpace.session.Query(stmt, vals...).Exec()
+	return f.t.keySpace.qe.Execute(stmt, vals...)
 }
 
 func (f filter) Query() Query {
