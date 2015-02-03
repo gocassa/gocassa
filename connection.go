@@ -1,7 +1,6 @@
 package gocassa
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/gocql/gocql"
 )
@@ -14,18 +13,14 @@ type goCQLBackend struct {
 	session *gocql.Session
 }
 
-func (cb goCQLBackend) Query(stmt string, vals ...interface{}) ([][]byte, error) {
+func (cb goCQLBackend) Query(stmt string, vals ...interface{}) ([]map[string]interface{}, error) {
 	qu := cb.session.Query(stmt, vals...)
 	iter := qu.Iter()
-	ret := [][]byte{}
-	m := map[string]interface{}{}
-	for iter.MapScan(m) {
-		bytes, err := json.Marshal(m)
-		if err != nil {
-			return nil, err
-		}
-		ret = append(ret, bytes)
-		m = map[string]interface{}{}
+	ret := []map[string]interface{}{}
+	m := &map[string]interface{}{}
+	for iter.MapScan(*m) {
+		ret = append(ret, *m)
+		m = &map[string]interface{}{}
 	}
 	return ret, iter.Close()
 }

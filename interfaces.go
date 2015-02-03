@@ -134,6 +134,6 @@ type Table interface {
 }
 
 type QueryExecutor interface {
-	Query(stmt string, params ...interface{}) ([][]byte, error)
+	Query(stmt string, params ...interface{}) ([]map[string]interface{}, error)
 	Execute(stmt string, params ...interface{}) error
 }

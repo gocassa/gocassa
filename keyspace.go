@@ -1,7 +1,6 @@
 package gocassa
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -104,17 +103,12 @@ func (k *k) TimeSeriesBTable(name, indexField, timeField, idField string, bucket
 // Returns table names in a keyspace
 func (k *k) Tables() ([]string, error) {
 	stmt := fmt.Sprintf("SELECT columnfamily_name FROM system.schema_columnfamilies WHERE keyspace_name='%s'", k.name)
-	blobs, err := k.qe.Query(stmt)
+	maps, err := k.qe.Query(stmt)
 	if err != nil {
 		return nil, err
 	}
 	ret := []string{}
-	for _, v := range blobs {
-		m := map[string]interface{}{}
-		err := json.Unmarshal(v, &m)
-		if err != nil {
-			return nil, err
-		}
+	for _, m := range maps {
 		ret = append(ret, m["columnfamily_name"].(string))
 	}
 	return ret, nil
