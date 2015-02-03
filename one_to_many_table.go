@@ -26,7 +26,21 @@ func (o *oneToManyT) DeleteAll(field interface{}) error {
 	return o.Where(Eq(o.fieldToIndexBy, field)).Delete()
 }
 
+func (o *oneToManyT) readQuery(field, id interface{}) {
+	
+}
+
 func (o *oneToManyT) Read(field, id interface{}) (interface{}, error) {
+	if res, err := o.Where(Eq(o.fieldToIndexBy, field), Eq(o.idField, id)).Query().Read(); err != nil {
+		return nil, err
+	} else if len(res) == 0 {
+		return nil, fmt.Errorf("Row with id %v not found", id)
+	} else {
+		return res[0], nil
+	}
+}
+
+func (o *oneToManyT) ReadInto(field, id, pointer interface{}) (interface{}, error) {
 	if res, err := o.Where(Eq(o.fieldToIndexBy, field), Eq(o.idField, id)).Query().Read(); err != nil {
 		return nil, err
 	} else if len(res) == 0 {
