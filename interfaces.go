@@ -9,6 +9,7 @@ import (
 type Connection interface {
 	CreateKeySpace(name string) error
 	DropKeySpace(name string) error
+	KeySpace(name string) KeySpace
 }
 
 type KeySpace interface {
@@ -130,4 +131,9 @@ type Table interface {
 	SetWithOptions(v interface{}, opts Options) error
 	Where(relations ...Relation) Filter // Because we provide selections
 	TableChanger
+}
+
+type QueryExecutor interface {
+	Query(stmt string, params ...interface{}) ([]map[string]interface{}, error)
+	Execute(stmt string, params ...interface{}) error
 }

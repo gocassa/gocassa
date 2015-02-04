@@ -17,12 +17,12 @@ func (q *query) Limit(i int) Query {
 
 func (q *query) Read() ([]interface{}, error) {
 	stmt, vals := q.generateRead()
-	sess := q.f.t.keySpace.session
+	maps, err := q.f.t.keySpace.qe.Query(stmt, vals...)
+	if err != nil {
+		return nil, err
+	}
 	ret := []interface{}{}
-	m := map[string]interface{}{}
-	qu := sess.Query(stmt, vals...)
-	iter := qu.Iter()
-	for iter.MapScan(m) {
+	for _, m := range maps {
 		bytes, err := json.Marshal(m)
 		if err != nil {
 			return nil, err
@@ -33,9 +33,9 @@ func (q *query) Read() ([]interface{}, error) {
 			return nil, err
 		}
 		ret = append(ret, r)
-		m = map[string]interface{}{}
+
 	}
-	return ret, iter.Close()
+	return ret, nil
 }
 
 func (q *query) generateRead() (string, []interface{}) {
