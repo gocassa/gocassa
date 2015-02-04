@@ -26,6 +26,11 @@ func (k *k) DebugMode(b bool) {
 
 // Table returns a new Table. A Table is analogous to column families in Cassandra or tables in RDBMSes.
 func (k *k) Table(name string, entity interface{}, keys Keys) Table {
+	n := name + "__" + strings.Join(keys.PartitionKeys, "_") + "__" + strings.Join(keys.ClusteringColumns, "_")
+	return k.rawTable(n, entity, keys)
+}
+
+func (k *k) rawTable(name string, entity interface{}, keys Keys) Table {
 	m, ok := toMap(entity)
 	if !ok {
 		panic("Unrecognized row type")
@@ -43,7 +48,7 @@ func (k *k) table(name string, entity interface{}, fieldSource map[string]interf
 
 func (k *k) OneToOneTable(name, id string, row interface{}) OneToOneTable {
 	return &oneToOneT{
-		t: k.Table(fmt.Sprintf("%s_oneToOne_%s", name, id), row, Keys{
+		t: k.rawTable(fmt.Sprintf("%s_oneToOne_%s", name, id), row, Keys{
 			PartitionKeys: []string{id},
 		}).(*t),
 		idField: id,
@@ -56,7 +61,7 @@ func (k *k) SetKeysSpaceName(name string) {
 
 func (k *k) OneToManyTable(name, fieldToIndexBy, id string, row interface{}) OneToManyTable {
 	return &oneToManyT{
-		t: k.Table(fmt.Sprintf("%s_oneToMany_%s_%s", name, fieldToIndexBy, id), row, Keys{
+		t: k.rawTable(fmt.Sprintf("%s_oneToMany_%s_%s", name, fieldToIndexBy, id), row, Keys{
 			PartitionKeys:     []string{fieldToIndexBy},
 			ClusteringColumns: []string{id},
 		}).(*t),

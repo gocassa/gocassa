@@ -87,7 +87,9 @@ func TestMultipleRowResults(t *testing.T) {
 }
 
 func TestIn(t *testing.T) {
-	cs := ns.Table("customer", Customer{}, Keys{})
+	cs := ns.Table("customer", Customer{}, Keys{
+		PartitionKeys: []string{"Id"},
+	})
 	err := cs.Set(Customer{
 		Id:   "100",
 		Name: "Joe",
