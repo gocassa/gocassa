@@ -6,7 +6,7 @@ import (
 )
 
 type timeSeriesBT struct {
-	*t
+	Table
 	indexField string
 	timeField  string
 	idField    string
@@ -23,7 +23,7 @@ func (o *timeSeriesBT) SetWithOptions(v interface{}, opts Options) error {
 	} else {
 		m[bucketFieldName] = o.bucket(tim.Unix())
 	}
-	return o.t.SetWithOptions(m, opts)
+	return o.Table.SetWithOptions(m, opts)
 }
 
 func (o *timeSeriesBT) Set(v interface{}) error {

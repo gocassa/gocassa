@@ -4,7 +4,7 @@ import (
 )
 
 type oneToOneT struct {
-	*t
+	Table
 	idField string
 }
 

@@ -5,7 +5,7 @@ import (
 )
 
 type oneToManyT struct {
-	*t
+	Table
 	fieldToIndexBy string
 	idField        string
 }
