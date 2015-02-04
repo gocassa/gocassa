@@ -20,6 +20,13 @@ func ConnectToKeySpace(keySpace string, nodeIps []string, username, password str
 	return c.KeySpace(keySpace), nil
 }
 
+func KeySpaceWithExecutor(keySpace string, qe QueryExecutor) (KeySpace, error) {
+	return &k{
+		qe:   qe,
+		name: keySpace,
+	}, nil
+}
+
 func (k *k) DebugMode(b bool) {
 	k.debugMode = true
 }
