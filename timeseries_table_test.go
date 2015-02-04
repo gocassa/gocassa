@@ -49,21 +49,23 @@ func TestTimeSeriesT(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ts, err := tbl.List(parse("2006 Jan 2 15:03:58"), parse("2006 Jan 2 15:04:02"))
+	ts := &[]Trip{}
+	err = tbl.List(parse("2006 Jan 2 15:03:58"), parse("2006 Jan 2 15:04:02"), ts)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(ts) != 3 {
+	if len(*ts) != 3 {
 		t.Fatal(ts)
 	}
-	if ts[0].(*Trip).Id != "1" || ts[1].(*Trip).Id != "2" || ts[2].(*Trip).Id != "3" {
-		t.Fatal(ts[0].(*Trip), ts[1].(*Trip), ts[2].(*Trip))
+	ts1 := *ts
+	if ts1[0].Id != "1" || ts1[1].Id != "2" || ts1[2].Id != "3" {
+		t.Fatal(ts1[0], ts1[1], ts1[2])
 	}
-	ts, err = tbl.List(parse("2006 Jan 2 15:03:58"), parse("2006 Jan 2 15:05:02"))
+	err = tbl.List(parse("2006 Jan 2 15:03:58"), parse("2006 Jan 2 15:05:02"), ts)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(ts) != 4 {
+	if len(*ts) != 4 {
 		t.Fatal(ts)
 	}
 }

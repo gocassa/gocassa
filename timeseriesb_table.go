@@ -2,7 +2,6 @@ package gocassa
 
 import (
 	"errors"
-	"fmt"
 	"time"
 )
 
@@ -50,18 +49,13 @@ func (o *timeSeriesBT) Delete(v interface{}, timeStamp time.Time, id interface{}
 	return o.Where(Eq(o.indexField, v), Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Delete()
 }
 
-func (o *timeSeriesBT) Read(v interface{}, timeStamp time.Time, id interface{}) (interface{}, error) {
+func (o *timeSeriesBT) Read(v interface{}, timeStamp time.Time, id, pointer interface{}) error {
 	bucket := o.bucket(timeStamp.Unix())
-	if res, err := o.Where(Eq(o.indexField, v), Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Query().Read(); err != nil {
-		return nil, err
-	} else if len(res) == 0 {
-		return nil, fmt.Errorf("Row with id %v not found", id)
-	} else {
-		return res[0], nil
-	}
+	return o.Where(Eq(o.indexField, v), Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Query().ReadOne(pointer)
+
 }
 
-func (o *timeSeriesBT) List(v interface{}, startTime time.Time, endTime time.Time) ([]interface{}, error) {
+func (o *timeSeriesBT) List(v interface{}, startTime time.Time, endTime time.Time, pointerToASlice interface{}) error {
 	buckets := []interface{}{}
 	start := o.bucket(startTime.Unix())
 	for i := start; ; i += int64(o.bucketSize/time.Second) * 1000 {
@@ -70,5 +64,5 @@ func (o *timeSeriesBT) List(v interface{}, startTime time.Time, endTime time.Tim
 		}
 		buckets = append(buckets, i)
 	}
-	return o.Where(Eq(o.indexField, v), In(bucketFieldName, buckets...), GTE(o.timeField, startTime), LTE(o.timeField, endTime)).Query().Read()
+	return o.Where(Eq(o.indexField, v), In(bucketFieldName, buckets...), GTE(o.timeField, startTime), LTE(o.timeField, endTime)).Query().Read(pointerToASlice)
 }

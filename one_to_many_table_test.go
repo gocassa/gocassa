@@ -23,16 +23,17 @@ func TestOneToManyTableInsertRead(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	c, err := tbl.Read("A", "33")
+	res := &Customer2{}
+	err = tbl.Read("A", "33", res)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(*(c.(*Customer2)), joe) {
-		t.Fatal(*(c.(*Customer2)), joe)
+	if !reflect.DeepEqual(*res, joe) {
+		t.Fatal(*res, joe)
 	}
-	c, err = tbl.Read("B", "33")
+	err = tbl.Read("B", "33", res)
 	if err == nil {
-		t.Fatal(c)
+		t.Fatal(*res)
 	}
 	err = tbl.Update("A", "33", map[string]interface{}{
 		"Name": "John",
@@ -40,12 +41,12 @@ func TestOneToManyTableInsertRead(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	c, err = tbl.Read("A", "33")
+	err = tbl.Read("A", "33", res)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if c.(*Customer2).Name != "John" {
-		t.Fatal(c)
+	if res.Name != "John" {
+		t.Fatal(*res)
 	}
 }
 
@@ -61,20 +62,21 @@ func TestOneToManyTableDelete(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	c, err := tbl.Read("A", "33")
+	res := &Customer2{}
+	err = tbl.Read("A", "33", res)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(*(c.(*Customer2)), joe) {
-		t.Fatal(*(c.(*Customer2)), joe)
+	if !reflect.DeepEqual(*res, joe) {
+		t.Fatal(*res, joe)
 	}
 	err = tbl.Delete("A", "33")
 	if err != nil {
 		t.Fatal(err)
 	}
-	c, err = tbl.Read("A", "33")
-	if err == nil || c != nil {
-		t.Fatal(c, err)
+	err = tbl.Read("A", "33", res)
+	if err == nil {
+		t.Fatal(res)
 	}
 }
 
@@ -99,17 +101,18 @@ func TestOneToManyTableMultiRead(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	customers, err := tbl.MultiRead("A", "33", "34")
+	customers := &[]Customer2{}
+	err = tbl.MultiRead("A", []interface{}{"33", "34"}, customers)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(customers) != 2 {
-		t.Fatal("Expected to multiread 2 records, got %d", len(customers))
+	if len(*customers) != 2 {
+		t.Fatal("Expected to multiread 2 records, got %d", len(*customers))
 	}
-	if !reflect.DeepEqual(customers[0].(*Customer2), &joe) {
-		t.Fatal("Expected to find joe, got %v", customers[0])
+	if !reflect.DeepEqual((*customers)[0], joe) {
+		t.Fatal("Expected to find joe, got %v", (*customers)[0])
 	}
-	if !reflect.DeepEqual(customers[1].(*Customer2), &jane) {
-		t.Fatal("Expected to find jane, got %v", customers[1])
+	if !reflect.DeepEqual((*customers)[1], jane) {
+		t.Fatal("Expected to find jane, got %v", (*customers)[1])
 	}
 }

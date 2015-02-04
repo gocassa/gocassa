@@ -15,27 +15,33 @@ func (q *query) Limit(i int) Query {
 	return q
 }
 
-func (q *query) Read() ([]interface{}, error) {
+func (q *query) Read(pointerToASlice interface{}) error {
 	stmt, vals := q.generateRead()
 	maps, err := q.f.t.keySpace.qe.Query(stmt, vals...)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	ret := []interface{}{}
-	for _, m := range maps {
-		bytes, err := json.Marshal(m)
-		if err != nil {
-			return nil, err
-		}
-		r := q.f.t.zero()
-		err = json.Unmarshal(bytes, r)
-		if err != nil {
-			return nil, err
-		}
-		ret = append(ret, r)
+	bytes, err := json.Marshal(maps)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(bytes, pointerToASlice)
+}
 
+func (q *query) ReadOne(pointer interface{}) error {
+	stmt, vals := q.generateRead()
+	maps, err := q.f.t.keySpace.qe.Query(stmt, vals...)
+	if err != nil {
+		return err
 	}
-	return ret, nil
+	if len(maps) == 0 {
+		return fmt.Errorf("Can not read one: no results")
+	}
+	bytes, err := json.Marshal(maps[0])
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(bytes, pointer)
 }
 
 func (q *query) generateRead() (string, []interface{}) {

@@ -32,8 +32,8 @@ type OneToOneTable interface {
 	UpdateWithOptions(id interface{}, m map[string]interface{}, opts Options) error
 	Update(id interface{}, m map[string]interface{}) error
 	Delete(id interface{}) error
-	Read(id interface{}) (interface{}, error)
-	MultiRead(ids ...interface{}) ([]interface{}, error)
+	Read(id, pointer interface{}) error
+	MultiRead(ids []interface{}, pointerToASlice interface{}) error
 	TableChanger
 }
 
@@ -49,9 +49,9 @@ type OneToManyTable interface {
 	Update(v, id interface{}, m map[string]interface{}) error
 	Delete(v, id interface{}) error
 	DeleteAll(v interface{}) error
-	List(v, startId interface{}, limit int) ([]interface{}, error)
-	Read(v, id interface{}) (interface{}, error)
-	MultiRead(id interface{}, ids ...interface{}) ([]interface{}, error)
+	List(v, startId interface{}, limit int, pointerToASlice interface{}) error
+	Read(v, id, pointer interface{}) error
+	MultiRead(id interface{}, ids []interface{}, pointerToASlice interface{}) error
 	TableChanger
 }
 
@@ -66,8 +66,8 @@ type TimeSeriesTable interface {
 	Set(v interface{}) error
 	UpdateWithOptions(timeStamp time.Time, id interface{}, m map[string]interface{}, opts Options) error
 	Update(timeStamp time.Time, id interface{}, m map[string]interface{}) error
-	List(start, end time.Time) ([]interface{}, error)
-	Read(timeStamp time.Time, id interface{}) (interface{}, error)
+	List(start, end time.Time, pointerToASlice interface{}) error
+	Read(timeStamp time.Time, id, pointer interface{}) error
 	Delete(timeStamp time.Time, id interface{}) error
 	TableChanger
 }
@@ -83,8 +83,8 @@ type TimeSeriesBTable interface {
 	Set(v interface{}) error
 	UpdateWithOptions(v interface{}, timeStamp time.Time, id interface{}, m map[string]interface{}, opts Options) error
 	Update(v interface{}, timeStamp time.Time, id interface{}, m map[string]interface{}) error
-	List(v interface{}, start, end time.Time) ([]interface{}, error)
-	Read(v interface{}, timeStamp time.Time, id interface{}) (interface{}, error)
+	List(v interface{}, start, end time.Time, pointerToASlice interface{}) error
+	Read(v interface{}, timeStamp time.Time, id, pointer interface{}) error
 	Delete(v interface{}, timeStamp time.Time, id interface{}) error
 	TableChanger
 }
@@ -95,7 +95,8 @@ type TimeSeriesBTable interface {
 
 // A Query is a subset of a Table intended to be read
 type Query interface {
-	Read() ([]interface{}, error)
+	Read(pointerToASlice interface{}) error
+	ReadOne(pointer interface{}) error
 	Limit(int) Query
 }
 
