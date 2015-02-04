@@ -45,15 +45,16 @@ func TestEq(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	res, err := cs.Where(Eq("Id", "50")).Query().Read()
+	res := &[]Customer{}
+	err = cs.Where(Eq("Id", "50")).Query().Read(res)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(res) == 0 {
+	if len(*res) == 0 {
 		t.Fatal("Not found")
 	}
-	if res[0].(*Customer).Id != "50" {
-		t.Fatal(res[0].(*Customer))
+	if (*res)[0].Id != "50" {
+		t.Fatal((*res)[0])
 	}
 }
 
@@ -75,12 +76,13 @@ func TestMultipleRowResults(t *testing.T) {
 		Id:   "13",
 		Name: "John",
 	})
-	res, err := cs.Where(Eq("Name", "John")).Query().Read()
+	res := &[]Customer{}
+	err = cs.Where(Eq("Name", "John")).Query().Read(res)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(res) != 2 {
-		t.Fatal(len(res), res)
+	if len(*res) != 2 {
+		t.Fatal(res)
 	}
 }
 
@@ -100,15 +102,16 @@ func TestIn(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	res, err := cs.Where(In("Id", "100", "200")).Query().Read()
-	if len(res) != 2 {
-		for _, v := range res {
-			fmt.Println(*(v.(*Customer)))
+	res := &[]Customer{}
+	err = cs.Where(In("Id", "100", "200")).Query().Read(res)
+	if len(*res) != 2 {
+		for _, v := range *res {
+			fmt.Println(v)
 		}
-		t.Fatal("Not found", len(res))
+		t.Fatal("Not found", res)
 	}
-	if res[0].(*Customer).Id != "100" || res[1].(*Customer).Id != "200" {
-		t.Fatal(res[0].(*Customer), res[1].(*Customer))
+	if (*res)[0].Id != "100" || (*res)[1].Id != "200" {
+		t.Fatal((*res)[0], (*res)[1])
 	}
 }
 
@@ -122,18 +125,20 @@ func TestAnd(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	res, err := cs.Where(Eq("Id", "100"), Eq("Name", "Joe")).Query().Read()
+	res := &[]Customer{}
+	err = cs.Where(Eq("Id", "100"), Eq("Name", "Joe")).Query().Read(res)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(res) != 1 {
-		t.Fatal("Not found ", len(res))
+	if len(*res) != 1 {
+		t.Fatal("Not found ", res)
 	}
 }
 
 func TestQueryReturnError(t *testing.T) {
 	cs := ns.Table("customer2", Customer{}, Keys{})
-	_, err := cs.Where(Eq("Id", "100"), Eq("Name", "Joe")).Query().Read()
+	res := &[]Customer{}
+	err := cs.Where(Eq("Id", "100"), Eq("Name", "Joe")).Query().Read(res)
 	if err == nil {
 		t.Fatal("Table customer2 does not exist - should return error")
 	}
@@ -166,14 +171,15 @@ func TestTypesMarshal(t *testing.T) {
 	if err := tbl.Set(c); err != nil {
 		t.Fatal(err)
 	}
-	res, err := tbl.Where(Eq("Id", "1")).Query().Read()
+	res := &[]Customer3{}
+	err := tbl.Where(Eq("Id", "1")).Query().Read(res)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(res) != 1 {
+	if len(*res) != 1 {
 		t.Fatal(res)
 	}
-	if !reflect.DeepEqual(c, *res[0].(*Customer3)) {
-		t.Fatal(c, *res[0].(*Customer3))
+	if !reflect.DeepEqual(c, (*res)[0]) {
+		t.Fatal(c, (*res)[0])
 	}
 }
