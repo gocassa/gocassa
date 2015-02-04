@@ -47,11 +47,11 @@ func main() {
     if err != nil {
         panic(err)
     }
-    sale, err := sales.Where(Eq("Id", "sale-1")).Query().Read()
-    if err != nil {
+    result := &Sale{}
+    if err := sales.Where(Eq("Id", "sale-1")).Query().ReadOne(result); err != nil {
         panic(err)
     }
-    fmt.Println(sale.(*Sale))
+    fmt.Println(*result)
 }
 ```
 
@@ -62,7 +62,8 @@ func main() {
 ```go
     sales := keySpace.OneToOneTable("sale", "Id", Sale{})
     // …
-    sale, err := sales.Read("sale-1")
+    result := &Sale{}
+    err := sales.Read("sale-1", result)
 }
 ```
 
@@ -71,9 +72,10 @@ func main() {
 `OneToManyTable` can list rows filtered by equality of a single field (eg. list sales based on their `sellerId`):
 
 ```go
-    saleTables := keySpace.OneToOneTable("sale", "SellerId", "Id", Sale{})
+    saleTables := keySpace.OneToManyTable("sale", "SellerId", "Id", Sale{})
     // …
-    sale, err := sales.List("seller-1", nil, nil)
+    results := &[]Sale{}
+    err := sales.List("seller-1", nil, 0, results)
 ```
 
 ##### `TimeSeriesTable`
@@ -83,7 +85,8 @@ func main() {
 ```go
     salesTable := keySpace.TimeSeriesTable("sale", "Created", "Id", Sale{})
     //...
-    sales, err := sales.List(yesterdayTime, todayTime)
+    results := &[]Sale{}
+    err := sales.List(yesterdayTime, todayTime, results)
 ```
 
 ##### `TimeSeriesBTable`
@@ -93,5 +96,6 @@ func main() {
 ```go
     salesTable := keySpace.TimeSeriesBTable("sale", "SellerId", "Created", "Id", Sale{})
     //...
-    sales, err := sales.List("seller-1", yesterdayTime, todayTime)
+    results := &[]Sale{}
+    err := sales.List("seller-1", yesterdayTime, todayTime, results)
 ```
