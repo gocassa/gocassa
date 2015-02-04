@@ -3,7 +3,7 @@ gocassa
 
 Gocassa is a high-level library on top of [gocql](https://github.com/gocql/gocql).
 
-Compared to gocql it provides query building, adds data binding, and provides easy-to-use "recipe" tables for common query use-cases. Unlike [cqlc](https://github.com/relops/cqlc), it does not use code generation. Instead, it encourages the user to define types in the most natural way for them.
+Compared to gocql it provides query building, adds data binding, and provides easy-to-use "recipe" tables for common query use-cases. Unlike [cqlc](https://github.com/relops/cqlc), it does not use code generation.
 
 #### Table types
 
