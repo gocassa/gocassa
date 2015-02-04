@@ -1,11 +1,10 @@
 package gocassa
 
 import (
-	"fmt"
 )
 
 type oneToOneT struct {
-	*t
+	Table
 	idField string
 }
 
@@ -21,16 +20,10 @@ func (o *oneToOneT) Delete(id interface{}) error {
 	return o.Where(Eq(o.idField, id)).Delete()
 }
 
-func (o *oneToOneT) Read(id interface{}) (interface{}, error) {
-	if res, err := o.Where(Eq(o.idField, id)).Query().Read(); err != nil {
-		return nil, err
-	} else if len(res) == 0 {
-		return nil, fmt.Errorf("Row with id %v not found", id)
-	} else {
-		return res[0], nil
-	}
+func (o *oneToOneT) Read(id, pointer interface{}) error {
+	return o.Where(Eq(o.idField, id)).Query().ReadOne(pointer)
 }
 
-func (o *oneToOneT) MultiRead(ids ...interface{}) ([]interface{}, error) {
-	return o.Where(In(o.idField, ids...)).Query().Read()
+func (o *oneToOneT) MultiRead(ids []interface{}, pointerToASlice interface{}) error {
+	return o.Where(In(o.idField, ids...)).Query().Read(pointerToASlice)
 }

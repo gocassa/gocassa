@@ -1,11 +1,11 @@
 package gocassa
 
 import (
-	"fmt"
+
 )
 
 type oneToManyT struct {
-	*t
+	Table
 	fieldToIndexBy string
 	idField        string
 }
@@ -26,20 +26,14 @@ func (o *oneToManyT) DeleteAll(field interface{}) error {
 	return o.Where(Eq(o.fieldToIndexBy, field)).Delete()
 }
 
-func (o *oneToManyT) Read(field, id interface{}) (interface{}, error) {
-	if res, err := o.Where(Eq(o.fieldToIndexBy, field), Eq(o.idField, id)).Query().Read(); err != nil {
-		return nil, err
-	} else if len(res) == 0 {
-		return nil, fmt.Errorf("Row with id %v not found", id)
-	} else {
-		return res[0], nil
-	}
+func (o *oneToManyT) Read(field, id, pointer interface{}) error {
+	return o.Where(Eq(o.fieldToIndexBy, field), Eq(o.idField, id)).Query().ReadOne(pointer)
 }
 
-func (o *oneToManyT) MultiRead(field interface{}, ids ...interface{}) ([]interface{}, error) {
-	return o.Where(Eq(o.fieldToIndexBy, field), In(o.idField, ids...)).Query().Read()
+func (o *oneToManyT) MultiRead(field interface{}, ids []interface{}, pointerToASlice interface{}) error {
+	return o.Where(Eq(o.fieldToIndexBy, field), In(o.idField, ids...)).Query().Read(pointerToASlice)
 }
 
-func (o *oneToManyT) List(field, startId interface{}, limit int) ([]interface{}, error) {
-	return o.Where(Eq(o.fieldToIndexBy, field), GTE(o.idField, startId)).Query().Limit(limit).Read()
+func (o *oneToManyT) List(field, startId interface{}, limit int, pointerToASlice interface{}) error {
+	return o.Where(Eq(o.fieldToIndexBy, field), GTE(o.idField, startId)).Query().Limit(limit).Read(pointerToASlice)
 }

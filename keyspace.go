@@ -6,10 +6,15 @@ import (
 	"time"
 )
 
+type tableFactory interface {
+	NewTable(string, interface{}, Keys) Table
+}
+
 type k struct {
-	qe        QueryExecutor
-	name      string
-	debugMode bool
+	qe           QueryExecutor
+	name         string
+	debugMode    bool
+	tableFactory tableFactory
 }
 
 func ConnectToKeySpace(keySpace string, nodeIps []string, username, password string) (KeySpace, error) {
@@ -26,6 +31,10 @@ func (k *k) DebugMode(b bool) {
 
 // Table returns a new Table. A Table is analogous to column families in Cassandra or tables in RDBMSes.
 func (k *k) Table(name string, entity interface{}, keys Keys) Table {
+	return k.tableFactory.NewTable(name, entity, keys)
+}
+
+func (k *k) NewTable(name string, entity interface{}, keys Keys) Table {
 	m, ok := toMap(entity)
 	if !ok {
 		panic("Unrecognized row type")
@@ -43,9 +52,9 @@ func (k *k) table(name string, entity interface{}, fieldSource map[string]interf
 
 func (k *k) OneToOneTable(name, id string, row interface{}) OneToOneTable {
 	return &oneToOneT{
-		t: k.Table(fmt.Sprintf("%s_oneToOne_%s", name, id), row, Keys{
+		Table: k.Table(fmt.Sprintf("%s_oneToOne_%s", name, id), row, Keys{
 			PartitionKeys: []string{id},
-		}).(*t),
+		}),
 		idField: id,
 	}
 }
@@ -56,10 +65,10 @@ func (k *k) SetKeysSpaceName(name string) {
 
 func (k *k) OneToManyTable(name, fieldToIndexBy, id string, row interface{}) OneToManyTable {
 	return &oneToManyT{
-		t: k.Table(fmt.Sprintf("%s_oneToMany_%s_%s", name, fieldToIndexBy, id), row, Keys{
+		Table: k.Table(fmt.Sprintf("%s_oneToMany_%s_%s", name, fieldToIndexBy, id), row, Keys{
 			PartitionKeys:     []string{fieldToIndexBy},
 			ClusteringColumns: []string{id},
-		}).(*t),
+		}),
 		idField:        id,
 		fieldToIndexBy: fieldToIndexBy,
 	}
@@ -72,10 +81,10 @@ func (k *k) TimeSeriesTable(name, timeField, idField string, bucketSize time.Dur
 	}
 	m[bucketFieldName] = time.Now()
 	return &timeSeriesT{
-		t: k.table(fmt.Sprintf("%s_timeSeries_%s_%s_%s", name, timeField, idField, bucketSize.String()), row, m, Keys{
+		Table: k.Table(fmt.Sprintf("%s_timeSeries_%s_%s_%s", name, timeField, idField, bucketSize), row, Keys{
 			PartitionKeys:     []string{bucketFieldName},
 			ClusteringColumns: []string{timeField, idField},
-		}).(*t),
+		}),
 		timeField:  timeField,
 		idField:    idField,
 		bucketSize: bucketSize,
@@ -89,10 +98,10 @@ func (k *k) TimeSeriesBTable(name, indexField, timeField, idField string, bucket
 	}
 	m[bucketFieldName] = time.Now()
 	return &timeSeriesBT{
-		t: k.table(fmt.Sprintf("%s_timeSeries_%s_%s_%s_%s", name, indexField, timeField, idField, bucketSize.String()), row, m, Keys{
+		Table: k.Table(fmt.Sprintf("%s_timeSeries_%s_%s_%s_%s", name, indexField, timeField, idField, bucketSize), row, Keys{
 			PartitionKeys:     []string{indexField, bucketFieldName},
 			ClusteringColumns: []string{timeField, idField},
-		}).(*t),
+		}),
 		indexField: indexField,
 		timeField:  timeField,
 		idField:    idField,

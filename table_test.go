@@ -39,12 +39,13 @@ func TestCreateTable(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	res, err := cs.Where(Eq("Id", "1001"), Eq("Name", "Joe")).Query().Read()
+	res := &[]Customer{}
+	err = cs.Where(Eq("Id", "1001"), Eq("Name", "Joe")).Query().Read(res)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(res) != 1 {
-		t.Fatal("Not found ", len(res))
+	if len(*res) != 1 {
+		t.Fatal("Not found ", len(*res))
 	}
 	err = ns.(*k).DropTable(name)
 	if err != nil {

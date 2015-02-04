@@ -73,8 +73,10 @@ func (c *connection) DropKeySpace(name string) error {
 }
 
 func (c *connection) KeySpace(name string) KeySpace {
-	return &k{
+	k := &k{
 		qe:   c.q,
 		name: name,
 	}
+	k.tableFactory = k
+	return k
 }

@@ -29,7 +29,7 @@ func MapToStruct(m map[string]interface{}, struc interface{}) error {
 	val := r.Indirect(r.ValueOf(struc))
 	for k, v := range m {
 		structField := val.FieldByName(k)
-		if structField.Type().Name() == r.TypeOf(v).Name() {
+		if structField.IsValid() && structField.Type().Name() == r.TypeOf(v).Name() {
 			structField.Set(r.ValueOf(v))
 		}
 	}
