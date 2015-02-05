@@ -10,6 +10,7 @@ type Connection interface {
 	CreateKeySpace(name string) error
 	DropKeySpace(name string) error
 	KeySpace(name string) KeySpace
+	Batcher
 }
 
 type KeySpace interface {
@@ -19,6 +20,7 @@ type KeySpace interface {
 	TimeSeriesBTable(tableName, fieldToIndexByField, timeField, uniqueKey string, bucketSize time.Duration, row interface{}) TimeSeriesBTable
 	Table(tableName string, row interface{}, keys Keys) Table
 	DebugMode(bool)
+	Batcher
 }
 
 //
@@ -34,6 +36,7 @@ type OneToOneTable interface {
 	Delete(id interface{}) error
 	Read(id, pointer interface{}) error
 	MultiRead(ids []interface{}, pointerToASlice interface{}) error
+	Batcher
 	TableChanger
 }
 
@@ -52,6 +55,7 @@ type OneToManyTable interface {
 	List(v, startId interface{}, limit int, pointerToASlice interface{}) error
 	Read(v, id, pointer interface{}) error
 	MultiRead(id interface{}, ids []interface{}, pointerToASlice interface{}) error
+	Batcher
 	TableChanger
 }
 
@@ -69,6 +73,7 @@ type TimeSeriesTable interface {
 	List(start, end time.Time, pointerToASlice interface{}) error
 	Read(timeStamp time.Time, id, pointer interface{}) error
 	Delete(timeStamp time.Time, id interface{}) error
+	Batcher
 	TableChanger
 }
 
@@ -86,6 +91,7 @@ type TimeSeriesBTable interface {
 	List(v interface{}, start, end time.Time, pointerToASlice interface{}) error
 	Read(v interface{}, timeStamp time.Time, id, pointer interface{}) error
 	Delete(v interface{}, timeStamp time.Time, id interface{}) error
+	Batcher
 	TableChanger
 }
 
@@ -114,6 +120,11 @@ type Filter interface {
 type Keys struct {
 	PartitionKeys     []string
 	ClusteringColumns []string
+}
+
+type Batcher interface{
+	Start()
+	Commit() error
 }
 
 // Danger zone! Do not use this interface unless you really know what you are doing
