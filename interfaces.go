@@ -20,25 +20,40 @@ type KeySpace interface {
 	TimeSeriesBTable(tableName, fieldToIndexByField, timeField, uniqueKey string, bucketSize time.Duration, row interface{}) TimeSeriesBTable
 	Table(tableName string, row interface{}, keys Keys) Table
 	DebugMode(bool)
-	Batcher
 }
 
 //
 // OneToOne recipe
 //
 
-// Simple CRUD interface. You can do CRUD by Id.
-type OneToOneTable interface {
+type OneToOneWriter interface {
 	SetWithOptions(v interface{}, opts Options) error
 	Set(v interface{}) error
 	UpdateWithOptions(id interface{}, m map[string]interface{}, opts Options) error
 	Update(id interface{}, m map[string]interface{}) error
 	Delete(id interface{}) error
+}
+
+type OneToOneBatchWriter interface {
+	SetWithOptions(v interface{}, opts Options) WriteOp
+	Set(v interface{}) WriteOp
+	UpdateWithOptions(id interface{}, m map[string]interface{}, opts Options) WriteOp
+	Update(id interface{}, m map[string]interface{}) WriteOp
+	Delete(id interface{}) WriteOp
+}
+
+type OneToOneReader interface {
 	Read(id, pointer interface{}) error
 	MultiRead(ids []interface{}, pointerToASlice interface{}) error
-	Batcher
-	TableChanger
 }
+
+// Simple CRUD interface. You can do CRUD by Id.
+type OneToOneTable interface {
+	OneToOneReader
+	OneToOneWriter
+	Batched() OneToOneBatchWriter
+}
+
 
 //
 // OneToMany recipe
@@ -112,9 +127,9 @@ type Filter interface {
 	// Selection modifiers
 	Query() Query
 	// Partial update.
-	Update(m map[string]interface{}) error // Probably this is danger zone (can't be implemented efficiently) on a selectuinb with more than 1 document
-	UpdateWithOptions(m map[string]interface{}, opts Options) error
-	Delete() error
+	Update(m map[string]interface{}) WriteOp // Probably this is danger zone (can't be implemented efficiently) on a selection with more than 1 document
+	UpdateWithOptions(m map[string]interface{}, opts Options) WriteOp
+	Delete() WriteOp
 }
 
 type Keys struct {
@@ -127,11 +142,16 @@ type Batcher interface{
 	Commit() error
 }
 
+type WriteOp interface {
+	// Run this write operation alone
+	Commit() error
+}
+
 // Danger zone! Do not use this interface unless you really know what you are doing
 type TableChanger interface {
-	Create() error
+	Create() WriteOp
 	CreateStatement() (string, error)
-	Recreate() error
+	Recreate() WriteOp
 	//Drop() error
 	//CreateIfDoesNotExist() error
 }
@@ -139,8 +159,8 @@ type TableChanger interface {
 type Table interface {
 	// Set Inserts, or Replaces your row with the supplied struct. Be aware that what is not in your struct
 	// will be deleted. To only overwrite some of the fields, use Query.Update.
-	Set(v interface{}) error
-	SetWithOptions(v interface{}, opts Options) error
+	Set(v interface{}) WriteOp
+	SetWithOptions(v interface{}, opts Options) WriteOp
 	Where(relations ...Relation) Filter // Because we provide selections
 	TableChanger
 }
