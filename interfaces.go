@@ -20,6 +20,7 @@ type KeySpace interface {
 	TimeSeriesBTable(tableName, fieldToIndexByField, timeField, uniqueKey string, bucketSize time.Duration, row interface{}) TimeSeriesBTable
 	Table(tableName string, row interface{}, keys Keys) Table
 	DebugMode(bool)
+	Batcher
 }
 
 //
@@ -40,6 +41,7 @@ type OneToOneBatchWriter interface {
 	UpdateWithOptions(id interface{}, m map[string]interface{}, opts Options) WriteOp
 	Update(id interface{}, m map[string]interface{}) WriteOp
 	Delete(id interface{}) WriteOp
+	Batcher
 }
 
 type OneToOneReader interface {
@@ -52,8 +54,9 @@ type OneToOneTable interface {
 	OneToOneReader
 	OneToOneWriter
 	Batched() OneToOneBatchWriter
+	TableChanger
+	Batcher
 }
-
 
 //
 // OneToMany recipe
@@ -138,8 +141,10 @@ type Keys struct {
 }
 
 type Batcher interface{
-	Start()
-	Commit() error
+	// Send writes to Cassandra in one Go, to spare network trips
+	Together(...WriteOp) error
+	// Make these writes atomic - caution, might make your writes very slow!
+	Atomically(...WriteOp) error
 }
 
 type WriteOp interface {
