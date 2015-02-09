@@ -20,13 +20,18 @@ type KeySpace interface {
 	TimeSeriesBTable(tableName, fieldToIndexByField, timeField, uniqueKey string, bucketSize time.Duration, row interface{}) TimeSeriesBTable
 	Table(tableName string, row interface{}, keys Keys) Table
 	DebugMode(bool)
-	Batcher
+	Batched
+}
+
+type KeySpaceBatched interface {
+	
 }
 
 //
 // OneToOne recipe
 //
 
+// Simple CRUD interface. You can do CRUD by Id.
 type OneToOneWriter interface {
 	SetWithOptions(v interface{}, opts Options) error
 	Set(v interface{}) error
@@ -35,28 +40,21 @@ type OneToOneWriter interface {
 	Delete(id interface{}) error
 }
 
-type OneToOneBatchWriter interface {
-	SetWithOptions(v interface{}, opts Options) WriteOp
-	Set(v interface{}) WriteOp
-	UpdateWithOptions(id interface{}, m map[string]interface{}, opts Options) WriteOp
-	Update(id interface{}, m map[string]interface{}) WriteOp
-	Delete(id interface{}) WriteOp
-	Batcher
-}
-
 type OneToOneReader interface {
 	Read(id, pointer interface{}) error
 	MultiRead(ids []interface{}, pointerToASlice interface{}) error
 }
 
-// Simple CRUD interface. You can do CRUD by Id.
 type OneToOneTable interface {
 	OneToOneReader
+	Batched() OneToOneTableBatched
+}
+
+type OneToOneTableBatched interface {
 	OneToOneWriter
-	Batched() OneToOneBatchWriter
-	TableChanger
 	Batcher
 }
+
 
 //
 // OneToMany recipe
@@ -130,9 +128,9 @@ type Filter interface {
 	// Selection modifiers
 	Query() Query
 	// Partial update.
-	Update(m map[string]interface{}) WriteOp // Probably this is danger zone (can't be implemented efficiently) on a selection with more than 1 document
-	UpdateWithOptions(m map[string]interface{}, opts Options) WriteOp
-	Delete() WriteOp
+	Update(m map[string]interface{}) error // Probably this is danger zone (can't be implemented efficiently) on a selectuinb with more than 1 document
+	UpdateWithOptions(m map[string]interface{}, opts Options) error
+	Delete() error
 }
 
 type Keys struct {
@@ -141,22 +139,15 @@ type Keys struct {
 }
 
 type Batcher interface{
-	// Send writes to Cassandra in one Go, to spare network trips
-	Together(...WriteOp) error
-	// Make these writes atomic - caution, might make your writes very slow!
-	Atomically(...WriteOp) error
-}
-
-type WriteOp interface {
-	// Run this write operation alone
+	Start()
 	Commit() error
 }
 
 // Danger zone! Do not use this interface unless you really know what you are doing
 type TableChanger interface {
-	Create() WriteOp
+	Create() error
 	CreateStatement() (string, error)
-	Recreate() WriteOp
+	Recreate() error
 	//Drop() error
 	//CreateIfDoesNotExist() error
 }
@@ -164,8 +155,8 @@ type TableChanger interface {
 type Table interface {
 	// Set Inserts, or Replaces your row with the supplied struct. Be aware that what is not in your struct
 	// will be deleted. To only overwrite some of the fields, use Query.Update.
-	Set(v interface{}) WriteOp
-	SetWithOptions(v interface{}, opts Options) WriteOp
+	Set(v interface{}) error
+	SetWithOptions(v interface{}, opts Options) error
 	Where(relations ...Relation) Filter // Because we provide selections
 	TableChanger
 }
