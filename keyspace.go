@@ -39,11 +39,8 @@ func (k *k) NewTable(name string, entity interface{}, keys Keys) Table {
 	if !ok {
 		panic("Unrecognized row type")
 	}
-	return k.table(name, entity, m, keys)
-}
 
-func (k *k) table(name string, entity interface{}, fieldSource map[string]interface{}, keys Keys) Table {
-	ti := newTableInfo(k.name, name, keys, entity, fieldSource)
+	ti := newTableInfo(k.name, name, keys, m)
 	return &t{
 		keySpace: k,
 		info:     ti,
@@ -81,7 +78,7 @@ func (k *k) TimeSeriesTable(name, timeField, idField string, bucketSize time.Dur
 	}
 	m[bucketFieldName] = time.Now()
 	return &timeSeriesT{
-		Table: k.Table(fmt.Sprintf("%s_timeSeries_%s_%s_%s", name, timeField, idField, bucketSize), row, Keys{
+		Table: k.Table(fmt.Sprintf("%s_timeSeries_%s_%s_%s", name, timeField, idField, bucketSize), m, Keys{
 			PartitionKeys:     []string{bucketFieldName},
 			ClusteringColumns: []string{timeField, idField},
 		}),
@@ -98,7 +95,7 @@ func (k *k) TimeSeriesBTable(name, indexField, timeField, idField string, bucket
 	}
 	m[bucketFieldName] = time.Now()
 	return &timeSeriesBT{
-		Table: k.Table(fmt.Sprintf("%s_timeSeries_%s_%s_%s_%s", name, indexField, timeField, idField, bucketSize), row, Keys{
+		Table: k.Table(fmt.Sprintf("%s_timeSeries_%s_%s_%s_%s", name, indexField, timeField, idField, bucketSize), m, Keys{
 			PartitionKeys:     []string{indexField, bucketFieldName},
 			ClusteringColumns: []string{timeField, idField},
 		}),
