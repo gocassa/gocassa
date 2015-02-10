@@ -8,15 +8,15 @@ type oneToOneT struct {
 	idField string
 }
 
-func (o *oneToOneT) Update(id interface{}, m map[string]interface{}) error {
+func (o *oneToOneT) Update(id interface{}, m map[string]interface{}) WriteOp {
 	return o.Where(Eq(o.idField, id)).Update(m)
 }
 
-func (o *oneToOneT) UpdateWithOptions(id interface{}, m map[string]interface{}, opts Options) error {
+func (o *oneToOneT) UpdateWithOptions(id interface{}, m map[string]interface{}, opts Options) WriteOp {
 	return o.Where(Eq(o.idField, id)).UpdateWithOptions(m, opts)
 }
 
-func (o *oneToOneT) Delete(id interface{}) error {
+func (o *oneToOneT) Delete(id interface{}) WriteOp {
 	return o.Where(Eq(o.idField, id)).Delete()
 }
 

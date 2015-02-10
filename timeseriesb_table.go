@@ -1,7 +1,6 @@
 package gocassa
 
 import (
-	"errors"
 	"time"
 )
 
@@ -13,20 +12,20 @@ type timeSeriesBT struct {
 	bucketSize time.Duration
 }
 
-func (o *timeSeriesBT) SetWithOptions(v interface{}, opts Options) error {
+func (o *timeSeriesBT) SetWithOptions(v interface{}, opts Options) WriteOp {
 	m, ok := toMap(v)
 	if !ok {
-		return errors.New("Can't set: not able to convert")
+		panic("Can't set: not able to convert")
 	}
 	if tim, ok := m[o.timeField].(time.Time); !ok {
-		return errors.New("timeField is not actually a time.Time")
+		panic("timeField is not actually a time.Time")
 	} else {
 		m[bucketFieldName] = o.bucket(tim.Unix())
 	}
 	return o.t.SetWithOptions(m, opts)
 }
 
-func (o *timeSeriesBT) Set(v interface{}) error {
+func (o *timeSeriesBT) Set(v interface{}) WriteOp {
 	return o.SetWithOptions(v, Options{})
 }
 
@@ -34,17 +33,17 @@ func (o *timeSeriesBT) bucket(secs int64) int64 {
 	return (secs - secs%int64(o.bucketSize/time.Second)) * 1000
 }
 
-func (o *timeSeriesBT) Update(v interface{}, timeStamp time.Time, id interface{}, m map[string]interface{}) error {
+func (o *timeSeriesBT) Update(v interface{}, timeStamp time.Time, id interface{}, m map[string]interface{}) WriteOp {
 	bucket := o.bucket(timeStamp.Unix())
 	return o.Where(Eq(o.indexField, v), Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Update(m)
 }
 
-func (o *timeSeriesBT) UpdateWithOptions(v interface{}, timeStamp time.Time, id interface{}, m map[string]interface{}, opts Options) error {
+func (o *timeSeriesBT) UpdateWithOptions(v interface{}, timeStamp time.Time, id interface{}, m map[string]interface{}, opts Options) WriteOp {
 	bucket := o.bucket(timeStamp.Unix())
 	return o.Where(Eq(o.indexField, v), Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).UpdateWithOptions(m, opts)
 }
 
-func (o *timeSeriesBT) Delete(v interface{}, timeStamp time.Time, id interface{}) error {
+func (o *timeSeriesBT) Delete(v interface{}, timeStamp time.Time, id interface{}) WriteOp {
 	bucket := o.bucket(timeStamp.Unix())
 	return o.Where(Eq(o.indexField, v), Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Delete()
 }

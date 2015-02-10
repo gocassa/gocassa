@@ -23,10 +23,6 @@ func (f *filter) generateWhere() (string, []interface{}) {
 	return "WHERE " + strings.Join(strs, " AND "), vals
 }
 
-func (f filter) Replace(i interface{}) error {
-	return nil
-}
-
 // UPDATE keyspace.Movies SET col1 = val1, col2 = val2
 func updateStatement(kn, cfName string, fieldNames []string, opts Options) string {
 	buf := new(bytes.Buffer)
@@ -51,27 +47,27 @@ func updateStatement(kn, cfName string, fieldNames []string, opts Options) strin
 	return buf.String()
 }
 
-func (f filter) UpdateWithOptions(m map[string]interface{}, opts Options) error {
+func (f filter) UpdateWithOptions(m map[string]interface{}, opts Options) WriteOp {
 	fields, values := keyValues(m)
 	str, wvals := f.generateWhere()
 	stmt := updateStatement(f.t.keySpace.name, f.t.info.name, fields, opts)
 	if f.t.keySpace.debugMode {
 		fmt.Println(stmt+" "+str, append(values, wvals...))
 	}
-	return f.t.keySpace.qe.Execute(stmt+" "+str, append(values, wvals...)...)
+	return newWriteOp(f.t.keySpace.qe, stmt+" "+str, append(values, wvals...))
 }
 
-func (f filter) Update(m map[string]interface{}) error {
+func (f filter) Update(m map[string]interface{}) WriteOp {
 	return f.UpdateWithOptions(m, Options{})
 }
 
-func (f filter) Delete() error {
+func (f filter) Delete() WriteOp {
 	str, vals := f.generateWhere()
 	stmt := fmt.Sprintf("DELETE FROM %s.%s ", f.t.keySpace.name, f.t.info.name) + str
 	if f.t.keySpace.debugMode {
 		fmt.Println(stmt, vals)
 	}
-	return f.t.keySpace.qe.Execute(stmt, vals...)
+	return newWriteOp(f.t.keySpace.qe, stmt, vals)
 }
 
 func (f filter) Query() Query {

@@ -10,19 +10,19 @@ type oneToManyT struct {
 	idField        string
 }
 
-func (o *oneToManyT) Update(field, id interface{}, m map[string]interface{}) error {
+func (o *oneToManyT) Update(field, id interface{}, m map[string]interface{}) WriteOp {
 	return o.Where(Eq(o.fieldToIndexBy, field), Eq(o.idField, id)).Update(m)
 }
 
-func (o *oneToManyT) UpdateWithOptions(field, id interface{}, m map[string]interface{}, opts Options) error {
+func (o *oneToManyT) UpdateWithOptions(field, id interface{}, m map[string]interface{}, opts Options) WriteOp {
 	return o.Where(Eq(o.fieldToIndexBy, field), Eq(o.idField, id)).UpdateWithOptions(m, opts)
 }
 
-func (o *oneToManyT) Delete(field, id interface{}) error {
+func (o *oneToManyT) Delete(field, id interface{}) WriteOp {
 	return o.Where(Eq(o.fieldToIndexBy, field), Eq(o.idField, id)).Delete()
 }
 
-func (o *oneToManyT) DeleteAll(field interface{}) error {
+func (o *oneToManyT) DeleteAll(field interface{}) WriteOp {
 	return o.Where(Eq(o.fieldToIndexBy, field)).Delete()
 }
 

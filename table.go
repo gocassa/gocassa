@@ -2,7 +2,6 @@ package gocassa
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -122,20 +121,20 @@ func insert(keySpaceName, cfName string, fieldNames []string, opts Options) stri
 	return buf.String()
 }
 
-func (t t) SetWithOptions(i interface{}, opts Options) error {
+func (t t) SetWithOptions(i interface{}, opts Options) WriteOp {
 	m, ok := toMap(i)
 	if !ok {
-		return errors.New("Can't create: value not understood")
+		panic("SetWithOptions: Incompatible type")
 	}
 	fields, values := keyValues(m)
 	stmt := insert(t.keySpace.name, t.info.name, fields, opts)
 	if t.keySpace.debugMode {
 		fmt.Println(stmt, values)
 	}
-	return t.keySpace.qe.Execute(stmt, values...)
+	return newWriteOp(t.keySpace.qe, stmt, values)
 }
 
-func (t t) Set(i interface{}) error {
+func (t t) Set(i interface{}) WriteOp {
 	return t.SetWithOptions(i, Options{})
 }
 
