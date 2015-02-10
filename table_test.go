@@ -35,7 +35,7 @@ func TestCreateTable(t *testing.T) {
 	err := cs.Set(Customer{
 		Id:   "1001",
 		Name: "Joe",
-	})
+	}).Run()
 	if err != nil {
 		t.Fatal(err)
 	}

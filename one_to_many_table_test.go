@@ -19,7 +19,7 @@ func TestOneToManyTableInsertRead(t *testing.T) {
 		Name: "Joe",
 		Tag:  "A",
 	}
-	err := tbl.Set(joe)
+	err := tbl.Set(joe).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -37,7 +37,7 @@ func TestOneToManyTableInsertRead(t *testing.T) {
 	}
 	err = tbl.Update("A", "33", map[string]interface{}{
 		"Name": "John",
-	})
+	}).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -58,7 +58,7 @@ func TestOneToManyTableDelete(t *testing.T) {
 		Name: "Joe",
 		Tag:  "A",
 	}
-	err := tbl.Set(joe)
+	err := tbl.Set(joe).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -70,7 +70,7 @@ func TestOneToManyTableDelete(t *testing.T) {
 	if !reflect.DeepEqual(*res, joe) {
 		t.Fatal(*res, joe)
 	}
-	err = tbl.Delete("A", "33")
+	err = tbl.Delete("A", "33").Run()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -88,7 +88,7 @@ func TestOneToManyTableMultiRead(t *testing.T) {
 		Name: "Joe",
 		Tag:  "A",
 	}
-	err := tbl.Set(joe)
+	err := tbl.Set(joe).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -97,7 +97,7 @@ func TestOneToManyTableMultiRead(t *testing.T) {
 		Name: "Jane",
 		Tag:  "A",
 	}
-	err = tbl.Set(jane)
+	err = tbl.Set(jane).Run()
 	if err != nil {
 		t.Fatal(err)
 	}

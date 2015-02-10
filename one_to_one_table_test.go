@@ -12,7 +12,7 @@ func TestOneToOneTable(t *testing.T) {
 		Id:   "33",
 		Name: "Joe",
 	}
-	err := tbl.Set(joe)
+	err := tbl.Set(joe).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -24,7 +24,7 @@ func TestOneToOneTable(t *testing.T) {
 	if !reflect.DeepEqual(*res, joe) {
 		t.Fatal(*res, joe)
 	}
-	err = tbl.Delete("33")
+	err = tbl.Delete("33").Run()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -41,7 +41,7 @@ func TestOneToOneTableUpdate(t *testing.T) {
 		Id:   "33",
 		Name: "Joe",
 	}
-	err := tbl.Set(joe)
+	err := tbl.Set(joe).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -55,7 +55,7 @@ func TestOneToOneTableUpdate(t *testing.T) {
 	}
 	err = tbl.Update("33", map[string]interface{}{
 		"Name": "John",
-	})
+	}).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -75,7 +75,7 @@ func TestOneToOneTableMultiRead(t *testing.T) {
 		Id:   "33",
 		Name: "Joe",
 	}
-	err := tbl.Set(joe)
+	err := tbl.Set(joe).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -83,7 +83,7 @@ func TestOneToOneTableMultiRead(t *testing.T) {
 		Id:   "34",
 		Name: "Jane",
 	}
-	err = tbl.Set(jane)
+	err = tbl.Set(jane).Run()
 	if err != nil {
 		t.Fatal(err)
 	}

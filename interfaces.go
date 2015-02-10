@@ -124,7 +124,7 @@ type WriteOps interface {
 	// You do not need this in 95% of the use cases, use Run!
 	// Using Batched writes (logged batch) is very heavy on Cassandra!
 	RunBatched() error
-	//Add(...WriteOp) WriteOps
+	Add(...WriteOp) WriteOps
 }
 
 // Danger zone! Do not use this interface unless you really know what you are doing

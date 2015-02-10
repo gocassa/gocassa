@@ -24,28 +24,16 @@ func TestTimeSeriesT(t *testing.T) {
 	err := tbl.Set(Trip{
 		Id:   "1",
 		Time: parse("2006 Jan 2 15:03:59"),
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = tbl.Set(Trip{
+	}).Add(tbl.Set(Trip{
 		Id:   "2",
 		Time: parse("2006 Jan 2 15:04:00"),
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = tbl.Set(Trip{
+	})).Add(tbl.Set(Trip{
 		Id:   "3",
 		Time: parse("2006 Jan 2 15:04:01"),
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = tbl.Set(Trip{
+	})).Add(tbl.Set(Trip{
 		Id:   "4",
 		Time: parse("2006 Jan 2 15:05:01"),
-	})
+	})).Run()
 	if err != nil {
 		t.Fatal(err)
 	}

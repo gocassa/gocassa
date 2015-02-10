@@ -41,7 +41,7 @@ func TestEq(t *testing.T) {
 	err := cs.Set(Customer{
 		Id:   "50",
 		Name: "Joe",
-	})
+	}).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -68,14 +68,17 @@ func TestMultipleRowResults(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	cs.Set(Customer{
+	err = cs.Set(Customer{
 		Id:   "12",
 		Name: "John",
-	})
-	cs.Set(Customer{
+	}).Add(cs.Set(Customer{
 		Id:   "13",
 		Name: "John",
-	})
+	})).Run()
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	res := &[]Customer{}
 	err = cs.Where(Eq("Name", "John")).Query().Read(res)
 	if err != nil {
@@ -93,14 +96,10 @@ func TestIn(t *testing.T) {
 	err := cs.Set(Customer{
 		Id:   "100",
 		Name: "Joe",
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = cs.Set(Customer{
+	}).Add(cs.Set(Customer{
 		Id:   "200",
 		Name: "Jane",
-	})
+	})).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -123,7 +122,7 @@ func TestAnd(t *testing.T) {
 	err := cs.Set(Customer{
 		Id:   "100",
 		Name: "Joe",
-	})
+	}).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
