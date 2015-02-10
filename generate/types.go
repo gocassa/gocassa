@@ -2,8 +2,9 @@ package generate
 
 import (
 	"errors"
-	"github.com/gocql/gocql"
 	"time"
+
+	"github.com/gocql/gocql"
 )
 
 func cassaType(i interface{}) gocql.Type {
@@ -24,6 +25,8 @@ func cassaType(i interface{}) gocql.Type {
 		return gocql.TypeTimestamp
 	case gocql.UUID:
 		return gocql.TypeUUID
+	case []byte:
+		return gocql.TypeBlob
 	}
 	return gocql.TypeCustom
 }
@@ -47,6 +50,9 @@ func cassaTypeToString(t gocql.Type) (string, error) {
 		return "timestamp", nil
 	case gocql.TypeUUID:
 		return "uuid", nil
+	case gocql.TypeBlob:
+		return "blob", nil
+	default:
+		return "", errors.New("unkown cassandra type")
 	}
-	return "", errors.New("unkown cassandra type")
 }
