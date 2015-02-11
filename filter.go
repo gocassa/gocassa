@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"strconv"
-	"strings"
 )
 
 type filter struct {
@@ -13,14 +12,23 @@ type filter struct {
 }
 
 func (f *filter) generateWhere() (string, []interface{}) {
-	strs := []string{}
-	vals := []interface{}{}
-	for _, r := range f.rs {
-		s, v := r.cql()
-		strs = append(strs, s)
-		vals = append(vals, v...)
+	var (
+		vals []interface{}
+		buf  = new(bytes.Buffer)
+	)
+
+	if len(f.rs) > 0 {
+		buf.WriteString(" WHERE ")
+		for i, r := range f.rs {
+			if i > 0 {
+				buf.WriteString(" AND ")
+			}
+			s, v := r.cql()
+			buf.WriteString(s)
+			vals = append(vals, v...)
+		}
 	}
-	return "WHERE " + strings.Join(strs, " AND "), vals
+	return buf.String(), vals
 }
 
 func (f filter) Replace(i interface{}) error {
@@ -58,7 +66,7 @@ func (f filter) UpdateWithOptions(m map[string]interface{}, opts Options) error 
 	if f.t.keySpace.debugMode {
 		fmt.Println(stmt+" "+str, append(values, wvals...))
 	}
-	return f.t.keySpace.qe.Execute(stmt+" "+str, append(values, wvals...)...)
+	return f.t.keySpace.qe.Execute(stmt+str, append(values, wvals...)...)
 }
 
 func (f filter) Update(m map[string]interface{}) error {
@@ -67,7 +75,7 @@ func (f filter) Update(m map[string]interface{}) error {
 
 func (f filter) Delete() error {
 	str, vals := f.generateWhere()
-	stmt := fmt.Sprintf("DELETE FROM %s.%s ", f.t.keySpace.name, f.t.info.name) + str
+	stmt := fmt.Sprintf("DELETE FROM %s.%s%s", f.t.keySpace.name, f.t.info.name, str)
 	if f.t.keySpace.debugMode {
 		fmt.Println(stmt, vals)
 	}

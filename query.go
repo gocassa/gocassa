@@ -50,15 +50,15 @@ func (q *query) generateRead() (string, []interface{}) {
 	l, lv := q.generateLimit()
 	str := fmt.Sprintf("SELECT %s FROM %s.%s", q.f.t.generateFieldNames(), q.f.t.keySpace.name, q.f.t.info.name)
 	vals := []interface{}{}
-	if len(w) > 0 {
+	if w != "" {
 		str += " " + w
 		vals = append(vals, wv...)
 	}
-	if len(o) > 0 {
+	if o != "" {
 		str += " " + o
 		vals = append(vals, ov...)
 	}
-	if len(l) > 0 {
+	if l != "" {
 		str += " " + l
 		vals = append(vals, lv...)
 	}

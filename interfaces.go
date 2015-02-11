@@ -35,6 +35,7 @@ type OneToOneTable interface {
 	Read(id, pointer interface{}) error
 	MultiRead(ids []interface{}, pointerToASlice interface{}) error
 	TableChanger
+	Selectable
 }
 
 //
@@ -53,6 +54,7 @@ type OneToManyTable interface {
 	Read(v, id, pointer interface{}) error
 	MultiRead(id interface{}, ids []interface{}, pointerToASlice interface{}) error
 	TableChanger
+	Selectable
 }
 
 //
@@ -70,6 +72,7 @@ type TimeSeriesTable interface {
 	Read(timeStamp time.Time, id, pointer interface{}) error
 	Delete(timeStamp time.Time, id interface{}) error
 	TableChanger
+	Selectable
 }
 
 //
@@ -87,6 +90,7 @@ type TimeSeriesBTable interface {
 	Read(v interface{}, timeStamp time.Time, id, pointer interface{}) error
 	Delete(v interface{}, timeStamp time.Time, id interface{}) error
 	TableChanger
+	Selectable
 }
 
 //
@@ -125,13 +129,17 @@ type TableChanger interface {
 	//CreateIfDoesNotExist() error
 }
 
+type Selectable interface {
+	Where(relations ...Relation) Filter // Because we provide selections
+}
+
 type Table interface {
 	// Set Inserts, or Replaces your row with the supplied struct. Be aware that what is not in your struct
 	// will be deleted. To only overwrite some of the fields, use Query.Update.
 	Set(v interface{}) error
 	SetWithOptions(v interface{}, opts Options) error
-	Where(relations ...Relation) Filter // Because we provide selections
 	TableChanger
+	Selectable
 }
 
 type QueryExecutor interface {
