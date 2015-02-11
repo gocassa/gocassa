@@ -168,6 +168,10 @@ func (t t) CreateStatement() (string, error) {
 		t.info.fieldValues)
 }
 
+func (t t) Name() string {
+	return t.info.name
+}
+
 //const (
 //	asc	 = iota
 //	desc
