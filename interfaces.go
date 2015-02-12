@@ -131,6 +131,8 @@ type Table interface {
 	Set(v interface{}) error
 	SetWithOptions(v interface{}, opts Options) error
 	Where(relations ...Relation) Filter // Because we provide selections
+	// Name returns the underlying table name, as stored in C*
+	Name() string
 	TableChanger
 }
 
