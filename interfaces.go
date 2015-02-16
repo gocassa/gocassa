@@ -51,7 +51,7 @@ type OneToManyTable interface {
 	DeleteAll(v interface{}) error
 	List(v, startId interface{}, limit int, pointerToASlice interface{}) error
 	Read(v, id, pointer interface{}) error
-	MultiRead(id interface{}, ids []interface{}, pointerToASlice interface{}) error
+	MultiRead(v interface{}, ids []interface{}, pointerToASlice interface{}) error
 	TableChanger
 }
 
