@@ -1,8 +1,5 @@
 package gocassa
 
-import (
-)
-
 type oneToOneT struct {
 	*t
 	idField string

@@ -1,9 +1,5 @@
 package gocassa
 
-import (
-
-)
-
 type oneToManyT struct {
 	*t
 	fieldToIndexBy string
