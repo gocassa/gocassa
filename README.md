@@ -48,7 +48,7 @@ func main() {
         panic(err)
     }
     result := &Sale{}
-    if err := sales.Where(Eq("Id", "sale-1")).Query().ReadOne(result); err != nil {
+    if err := sales.Where(Eq("Id", "sale-1")).Query().ReadOne(result).Run(); err != nil {
         panic(err)
     }
     fmt.Println(*result)
@@ -63,7 +63,7 @@ func main() {
     sales := keySpace.OneToOneTable("sale", "Id", Sale{})
     // …
     result := &Sale{}
-    err := sales.Read("sale-1", result)
+    err := sales.Read("sale-1", result).Run()
 }
 ```
 
@@ -75,7 +75,7 @@ func main() {
     saleTables := keySpace.OneToManyTable("sale", "SellerId", "Id", Sale{})
     // …
     results := &[]Sale{}
-    err := sales.List("seller-1", nil, 0, results)
+    err := sales.List("seller-1", nil, 0, results).Run()
 ```
 
 ##### `TimeSeriesTable`
@@ -86,7 +86,7 @@ func main() {
     salesTable := keySpace.TimeSeriesTable("sale", "Created", "Id", Sale{})
     //...
     results := &[]Sale{}
-    err := sales.List(yesterdayTime, todayTime, results)
+    err := sales.List(yesterdayTime, todayTime, results).Run()
 ```
 
 ##### `TimeSeriesBTable`
@@ -97,5 +97,5 @@ func main() {
     salesTable := keySpace.TimeSeriesBTable("sale", "SellerId", "Created", "Id", Sale{})
     //...
     results := &[]Sale{}
-    err := sales.List("seller-1", yesterdayTime, todayTime, results)
+    err := sales.List("seller-1", yesterdayTime, todayTime, results).Run()
 ```
