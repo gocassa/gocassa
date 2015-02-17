@@ -145,6 +145,17 @@ func TestQueryReturnError(t *testing.T) {
 	}
 }
 
+func TestRowNotFoundError(t *testing.T) {
+	cs := ns.OneToOneTable("customer", "Id", Customer{})
+	createIf(cs.(TableChanger), t)
+	c := &Customer{}
+	err := cs.Read("8sad8as8ds8u34", c).Run()
+	_, ok := err.(RowNotFoundError)
+	if !ok {
+		t.Fatal(err)
+	}
+}
+
 type Customer3 struct {
 	Id     string
 	Field1 string

@@ -2,7 +2,6 @@ package gocassa
 
 import (
 	"encoding/json"
-	"fmt"
 )
 
 const (
@@ -54,7 +53,10 @@ func (w *singleOp) readOne(qe QueryExecutor) error {
 		return err
 	}
 	if len(maps) == 0 {
-		return fmt.Errorf("Can not read one: no results")
+		return RowNotFoundError{
+			stmt:   w.stmt,
+			params: w.params,
+		}
 	}
 	bytes, err := json.Marshal(maps[0])
 	if err != nil {
