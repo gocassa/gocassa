@@ -43,7 +43,7 @@ func main() {
         SellerId: "seller-1",
         Price: 42,
         Created: time.Now(),
-    })
+    }).Run()
     if err != nil {
         panic(err)
     }
