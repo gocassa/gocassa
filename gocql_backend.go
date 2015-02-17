@@ -25,7 +25,7 @@ func (cb goCQLBackend) Execute(stmt string, vals ...interface{}) error {
 	return cb.session.Query(stmt, vals...).Exec()
 }
 
-func (cb goCQLBackend) ExecuteBatched(stmts []string, vals [][]interface{}) error {
+func (cb goCQLBackend) ExecuteAtomically(stmts []string, vals [][]interface{}) error {
 	if len(stmts) != len(vals) {
 		return errors.New("executeBatched: stmts length != param length")
 	}

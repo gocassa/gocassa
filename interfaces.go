@@ -26,13 +26,13 @@ type KeySpace interface {
 //
 
 type OneToOneTable interface {
-	SetWithOptions(v interface{}, opts Options) WriteOp
-	Set(v interface{}) WriteOp
-	UpdateWithOptions(id interface{}, m map[string]interface{}, opts Options) WriteOp
-	Update(id interface{}, m map[string]interface{}) WriteOp
-	Delete(id interface{}) WriteOp
-	Read(id, pointer interface{}) error
-	MultiRead(ids []interface{}, pointerToASlice interface{}) error
+	SetWithOptions(v interface{}, opts Options) Op
+	Set(v interface{}) Op
+	UpdateWithOptions(id interface{}, m map[string]interface{}, opts Options) Op
+	Update(id interface{}, m map[string]interface{}) Op
+	Delete(id interface{}) Op
+	Read(id, pointer interface{}) Op
+	MultiRead(ids []interface{}, pointerToASlice interface{}) Op
 }
 
 //
@@ -41,15 +41,15 @@ type OneToOneTable interface {
 
 // OneToMany lets you list rows based on a field equality, eg. 'list all sales where seller id = v'.
 type OneToManyTable interface {
-	SetWithOptions(v interface{}, opts Options) WriteOp
-	Set(v interface{}) WriteOp
-	UpdateWithOptions(v, id interface{}, m map[string]interface{}, opts Options) WriteOp
-	Update(v, id interface{}, m map[string]interface{}) WriteOp
-	Delete(v, id interface{}) WriteOp
-	DeleteAll(v interface{}) WriteOp
-	List(v, startId interface{}, limit int, pointerToASlice interface{}) error
-	Read(v, id, pointer interface{}) error
-	MultiRead(id interface{}, ids []interface{}, pointerToASlice interface{}) error
+	SetWithOptions(v interface{}, opts Options) Op
+	Set(v interface{}) Op
+	UpdateWithOptions(v, id interface{}, m map[string]interface{}, opts Options) Op
+	Update(v, id interface{}, m map[string]interface{}) Op
+	Delete(v, id interface{}) Op
+	DeleteAll(v interface{}) Op
+	List(v, startId interface{}, limit int, pointerToASlice interface{}) Op
+	Read(v, id, pointer interface{}) Op
+	MultiRead(id interface{}, ids []interface{}, pointerToASlice interface{}) Op
 	TableChanger
 }
 
@@ -60,13 +60,13 @@ type OneToManyTable interface {
 // TimeSeries lets you list rows which have a field value between two date ranges.
 type TimeSeriesTable interface {
 	// timeField and idField must be present
-	SetWithOptions(v interface{}, opts Options) WriteOp
-	Set(v interface{}) WriteOp
-	UpdateWithOptions(timeStamp time.Time, id interface{}, m map[string]interface{}, opts Options) WriteOp
-	Update(timeStamp time.Time, id interface{}, m map[string]interface{}) WriteOp
-	Delete(timeStamp time.Time, id interface{}) WriteOp
-	Read(timeStamp time.Time, id, pointer interface{}) error
-	List(start, end time.Time, pointerToASlice interface{}) error
+	SetWithOptions(v interface{}, opts Options) Op
+	Set(v interface{}) Op
+	UpdateWithOptions(timeStamp time.Time, id interface{}, m map[string]interface{}, opts Options) Op
+	Update(timeStamp time.Time, id interface{}, m map[string]interface{}) Op
+	Delete(timeStamp time.Time, id interface{}) Op
+	Read(timeStamp time.Time, id, pointer interface{}) Op
+	List(start, end time.Time, pointerToASlice interface{}) Op
 	TableChanger
 }
 
@@ -77,13 +77,13 @@ type TimeSeriesTable interface {
 // TimeSeriesB is a cross between TimeSeries and OneToMany tables.
 type TimeSeriesBTable interface {
 	// timeField and idField must be present
-	SetWithOptions(v interface{}, opts Options) WriteOp
-	Set(v interface{}) WriteOp
-	UpdateWithOptions(v interface{}, timeStamp time.Time, id interface{}, m map[string]interface{}, opts Options) WriteOp
-	Update(v interface{}, timeStamp time.Time, id interface{}, m map[string]interface{}) WriteOp
-	Delete(v interface{}, timeStamp time.Time, id interface{}) WriteOp
-	Read(v interface{}, timeStamp time.Time, id, pointer interface{}) error
-	List(v interface{}, start, end time.Time, pointerToASlice interface{}) error
+	SetWithOptions(v interface{}, opts Options) Op
+	Set(v interface{}) Op
+	UpdateWithOptions(v interface{}, timeStamp time.Time, id interface{}, m map[string]interface{}, opts Options) Op
+	Update(v interface{}, timeStamp time.Time, id interface{}, m map[string]interface{}) Op
+	Delete(v interface{}, timeStamp time.Time, id interface{}) Op
+	Read(v interface{}, timeStamp time.Time, id, pointer interface{}) Op
+	List(v interface{}, start, end time.Time, pointerToASlice interface{}) Op
 	TableChanger
 }
 
@@ -93,8 +93,8 @@ type TimeSeriesBTable interface {
 
 // A Query is a subset of a Table intended to be read
 type Query interface {
-	Read(pointerToASlice interface{}) error
-	ReadOne(pointer interface{}) error
+	Read(pointerToASlice interface{}) Op
+	ReadOne(pointer interface{}) Op
 	Limit(int) Query
 }
 
@@ -104,9 +104,9 @@ type Filter interface {
 	// Selection modifiers
 	Query() Query
 	// Partial update.
-	Update(m map[string]interface{}) WriteOp // Probably this is danger zone (can't be implemented efficiently) on a selectuinb with more than 1 document
-	UpdateWithOptions(m map[string]interface{}, opts Options) WriteOp
-	Delete() WriteOp
+	Update(m map[string]interface{}) Op // Probably this is danger zone (can't be implemented efficiently) on a selectuinb with more than 1 document
+	UpdateWithOptions(m map[string]interface{}, opts Options) Op
+	Delete() Op
 }
 
 type Keys struct {
@@ -114,17 +114,17 @@ type Keys struct {
 	ClusteringColumns []string
 }
 
-type WriteOp interface{
+type Op interface{
 	Run() error
-	Add(...WriteOp) WriteOps
+	Add(...Op) Ops
 }
 
-type WriteOps interface {
+type Ops interface {
 	Run() error
 	// You do not need this in 95% of the use cases, use Run!
-	// Using Batched writes (logged batch) is very heavy on Cassandra!
-	RunBatched() error
-	Add(...WriteOp) WriteOps
+	// Using atmoic batched writes (logged batches in Cassandra terminolohu) comes at a high performance cost!
+	RunAtomically() error
+	Add(...Op) Ops
 }
 
 // Danger zone! Do not use this interface unless you really know what you are doing
@@ -139,8 +139,8 @@ type TableChanger interface {
 type Table interface {
 	// Set Inserts, or Replaces your row with the supplied struct. Be aware that what is not in your struct
 	// will be deleted. To only overwrite some of the fields, use Query.Update.
-	Set(v interface{}) WriteOp
-	SetWithOptions(v interface{}, opts Options) WriteOp
+	Set(v interface{}) Op
+	SetWithOptions(v interface{}, opts Options) Op
 	Where(relations ...Relation) Filter // Because we provide selections
 	TableChanger
 }
@@ -148,5 +148,5 @@ type Table interface {
 type QueryExecutor interface {
 	Query(stmt string, params ...interface{}) ([]map[string]interface{}, error)
 	Execute(stmt string, params ...interface{}) error
-	ExecuteBatched(stmt []string, params [][]interface{}) error
+	ExecuteAtomically(stmt []string, params [][]interface{}) error
 }

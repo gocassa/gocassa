@@ -47,7 +47,7 @@ func updateStatement(kn, cfName string, fieldNames []string, opts Options) strin
 	return buf.String()
 }
 
-func (f filter) UpdateWithOptions(m map[string]interface{}, opts Options) WriteOp {
+func (f filter) UpdateWithOptions(m map[string]interface{}, opts Options) Op {
 	fields, values := keyValues(m)
 	str, wvals := f.generateWhere()
 	stmt := updateStatement(f.t.keySpace.name, f.t.info.name, fields, opts)
@@ -57,11 +57,11 @@ func (f filter) UpdateWithOptions(m map[string]interface{}, opts Options) WriteO
 	return newWriteOp(f.t.keySpace.qe, stmt+" "+str, append(values, wvals...))
 }
 
-func (f filter) Update(m map[string]interface{}) WriteOp {
+func (f filter) Update(m map[string]interface{}) Op {
 	return f.UpdateWithOptions(m, Options{})
 }
 
-func (f filter) Delete() WriteOp {
+func (f filter) Delete() Op {
 	str, vals := f.generateWhere()
 	stmt := fmt.Sprintf("DELETE FROM %s.%s ", f.t.keySpace.name, f.t.info.name) + str
 	if f.t.keySpace.debugMode {

@@ -121,7 +121,7 @@ func insert(keySpaceName, cfName string, fieldNames []string, opts Options) stri
 	return buf.String()
 }
 
-func (t t) SetWithOptions(i interface{}, opts Options) WriteOp {
+func (t t) SetWithOptions(i interface{}, opts Options) Op {
 	m, ok := toMap(i)
 	if !ok {
 		panic("SetWithOptions: Incompatible type")
@@ -134,7 +134,7 @@ func (t t) SetWithOptions(i interface{}, opts Options) WriteOp {
 	return newWriteOp(t.keySpace.qe, stmt, values)
 }
 
-func (t t) Set(i interface{}) WriteOp {
+func (t t) Set(i interface{}) Op {
 	return t.SetWithOptions(i, Options{})
 }
 
