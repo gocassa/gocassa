@@ -17,22 +17,30 @@ func (q *query) Limit(i int) Query {
 func (q *query) Read(pointerToASlice interface{}) Op {
 	stmt, vals := q.generateRead()
 	return &op{
-		opType: read,
-		result: pointerToASlice, 
 		qe: q.f.t.keySpace.qe,
-		stmt: stmt,
-		params: vals,
+		ops: []singleOp{
+			{
+				opType: read,
+				result: pointerToASlice, 
+				stmt: stmt,
+				params: vals,
+			},
+		},
 	}
 }
 
 func (q *query) ReadOne(pointer interface{}) Op {
 	stmt, vals := q.generateRead()
 	return &op{
-		opType: singleRead,
-		result: pointer,
 		qe: q.f.t.keySpace.qe,
-		stmt: stmt,
-		params: vals,
+		ops: []singleOp{
+			{
+				opType: singleRead,
+				result: pointer,
+				stmt: stmt,
+				params: vals,
+			},
+		},
 	}
 }
 

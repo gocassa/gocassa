@@ -114,17 +114,12 @@ type Keys struct {
 	ClusteringColumns []string
 }
 
-type Op interface{
-	Run() error
-	Add(...Op) Ops
-}
-
-type Ops interface {
+type Op interface {
 	Run() error
 	// You do not need this in 95% of the use cases, use Run!
 	// Using atmoic batched writes (logged batches in Cassandra terminolohu) comes at a high performance cost!
 	RunAtomically() error
-	Add(...Op) Ops
+	Add(...Op) Op
 }
 
 // Danger zone! Do not use this interface unless you really know what you are doing
