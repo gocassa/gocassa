@@ -94,7 +94,7 @@ func (k *k) MultiTimeSeriesTable(name, indexField, timeField, idField string, bu
 	}
 	m[bucketFieldName] = time.Now()
 	return &multiTimeSeriesT{
-		t: k.table(fmt.Sprintf("%s_timeSeries_%s_%s_%s_%s", name, indexField, timeField, idField, bucketSize.String()), row, m, Keys{
+		t: k.table(fmt.Sprintf("%s_multiTimeSeries_%s_%s_%s_%s", name, indexField, timeField, idField, bucketSize.String()), row, m, Keys{
 			PartitionKeys:     []string{indexField, bucketFieldName},
 			ClusteringColumns: []string{timeField, idField},
 		}).(*t),
