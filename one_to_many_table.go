@@ -31,5 +31,9 @@ func (o *oneToManyT) MultiRead(field interface{}, ids []interface{}, pointerToAS
 }
 
 func (o *oneToManyT) List(field, startId interface{}, limit int, pointerToASlice interface{}) Op {
-	return o.Where(Eq(o.fieldToIndexBy, field), GTE(o.idField, startId)).Query().Limit(limit).Read(pointerToASlice)
+	rels := []Relation{Eq(o.fieldToIndexBy, field)}
+	if startId != nil {
+		rels = append(rels, GTE(o.idField, startId))
+	}
+	return o.Where(rels...).Query().Limit(limit).Read(pointerToASlice)
 }

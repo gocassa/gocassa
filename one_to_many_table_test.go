@@ -48,6 +48,14 @@ func TestOneToManyTableInsertRead(t *testing.T) {
 	if res.Name != "John" {
 		t.Fatal(*res)
 	}
+	list := &[]Customer{}
+	err = tbl.List("A", nil, 20, list).Run()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(*list) != 1 {
+		t.Fatal(*list)
+	}
 }
 
 func TestOneToManyTableDelete(t *testing.T) {
