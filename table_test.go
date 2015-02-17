@@ -35,12 +35,12 @@ func TestCreateTable(t *testing.T) {
 	err := cs.Set(Customer{
 		Id:   "1001",
 		Name: "Joe",
-	})
+	}).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
 	res := &[]Customer{}
-	err = cs.Where(Eq("Id", "1001"), Eq("Name", "Joe")).Query().Read(res)
+	err = cs.Where(Eq("Id", "1001"), Eq("Name", "Joe")).Query().Read(res).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
