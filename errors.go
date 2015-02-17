@@ -1,9 +1,17 @@
 package gocassa
 
+import (
+	"fmt"
+	"strings"
+)
+
 type RowNotFoundError struct {
-	err string
+	stmt   string
+	params []interface{}
 }
 
 func (r RowNotFoundError) Error() string {
-	return r.err
+	// This is not optimal at all
+	completCql := fmt.Sprintf(strings.Replace(r.stmt, "?", "%v", -1), r.params...)
+	return "The following query returned no results: " + completCql
 }
