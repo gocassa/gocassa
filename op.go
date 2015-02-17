@@ -54,7 +54,7 @@ func (w *singleOp) readOne(qe QueryExecutor) error {
 	}
 	if len(maps) == 0 {
 		return RowNotFoundError{
-			stmt: w.stmt,
+			stmt:   w.stmt,
 			params: w.params,
 		}
 	}

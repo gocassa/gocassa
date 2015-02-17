@@ -1,15 +1,14 @@
-package gocassa 
+package gocassa
 
-import(
-	"strings"
+import (
 	"fmt"
+	"strings"
 )
 
-type RowNotFoundError struct{
-	stmt string 
+type RowNotFoundError struct {
+	stmt   string
 	params []interface{}
 }
-
 
 func (r RowNotFoundError) Error() string {
 	// This is not optimal at all
