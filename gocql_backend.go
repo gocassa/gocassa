@@ -1,6 +1,6 @@
-package gocassa 
+package gocassa
 
-import(
+import (
 	"errors"
 	"github.com/gocql/gocql"
 )

@@ -1,25 +1,25 @@
 package gocassa
 
-import(
+import (
 	"encoding/json"
 	"fmt"
 )
 
-const(
+const (
 	write = iota
 	read
 	singleRead
 )
 
 type op struct {
-	qe QueryExecutor 
+	qe  QueryExecutor
 	ops []singleOp
 }
 
 type singleOp struct {
 	opType int
 	result interface{}
-	stmt string 
+	stmt   string
 	params []interface{}
 }
 
@@ -29,7 +29,7 @@ func newWriteOp(qe QueryExecutor, stmt string, params []interface{}) *op {
 		ops: []singleOp{
 			{
 				opType: write,
-				stmt: stmt,
+				stmt:   stmt,
 				params: params,
 			},
 		},

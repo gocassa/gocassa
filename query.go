@@ -21,8 +21,8 @@ func (q *query) Read(pointerToASlice interface{}) Op {
 		ops: []singleOp{
 			{
 				opType: read,
-				result: pointerToASlice, 
-				stmt: stmt,
+				result: pointerToASlice,
+				stmt:   stmt,
 				params: vals,
 			},
 		},
@@ -37,7 +37,7 @@ func (q *query) ReadOne(pointer interface{}) Op {
 			{
 				opType: singleRead,
 				result: pointer,
-				stmt: stmt,
+				stmt:   stmt,
 				params: vals,
 			},
 		},
