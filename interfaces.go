@@ -49,7 +49,7 @@ type OneToManyTable interface {
 	DeleteAll(v interface{}) Op
 	List(v, startId interface{}, limit int, pointerToASlice interface{}) Op
 	Read(v, id, pointer interface{}) Op
-	MultiRead(id interface{}, ids []interface{}, pointerToASlice interface{}) Op
+	MultiRead(v interface{}, ids []interface{}, pointerToASlice interface{}) Op
 	TableChanger
 }
 
@@ -137,6 +137,8 @@ type Table interface {
 	Set(v interface{}) Op
 	SetWithOptions(v interface{}, opts Options) Op
 	Where(relations ...Relation) Filter // Because we provide selections
+	// Name returns the underlying table name, as stored in C*
+	Name() string
 	TableChanger
 }
 

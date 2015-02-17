@@ -154,6 +154,7 @@ type Customer3 struct {
 	Field5 float32
 	Field6 float64
 	Field7 bool
+	Field8 []byte
 }
 
 func TestTypesMarshal(t *testing.T) {
@@ -166,6 +167,7 @@ func TestTypesMarshal(t *testing.T) {
 		Field5: 4.0,
 		Field6: 5.0,
 		Field7: true,
+		Field8: []byte{'a', 'b', 'c'},
 	}
 	tbl := ns.Table("customer3", Customer3{}, Keys{PartitionKeys: []string{"Id"}})
 	createIf(tbl.(TableChanger), t)
