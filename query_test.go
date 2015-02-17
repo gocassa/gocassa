@@ -146,7 +146,7 @@ func TestQueryReturnError(t *testing.T) {
 }
 
 func TestRowNotFoundError(t *testing.T) {
-	cs := ns.OneToOneTable("customer", "Id", Customer{})
+	cs := ns.MapTable("customer", "Id", Customer{})
 	createIf(cs.(TableChanger), t)
 	c := &Customer{}
 	err := cs.Read("8sad8as8ds8u34", c).Run()
