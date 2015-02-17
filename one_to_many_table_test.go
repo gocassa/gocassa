@@ -24,14 +24,14 @@ func TestOneToManyTableInsertRead(t *testing.T) {
 		t.Fatal(err)
 	}
 	res := &Customer2{}
-	err = tbl.Read("A", "33", res)
+	err = tbl.Read("A", "33", res).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !reflect.DeepEqual(*res, joe) {
 		t.Fatal(*res, joe)
 	}
-	err = tbl.Read("B", "33", res)
+	err = tbl.Read("B", "33", res).Run()
 	if err == nil {
 		t.Fatal(*res)
 	}
@@ -41,7 +41,7 @@ func TestOneToManyTableInsertRead(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = tbl.Read("A", "33", res)
+	err = tbl.Read("A", "33", res).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -63,7 +63,7 @@ func TestOneToManyTableDelete(t *testing.T) {
 		t.Fatal(err)
 	}
 	res := &Customer2{}
-	err = tbl.Read("A", "33", res)
+	err = tbl.Read("A", "33", res).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -74,7 +74,7 @@ func TestOneToManyTableDelete(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = tbl.Read("A", "33", res)
+	err = tbl.Read("A", "33", res).Run()
 	if err == nil {
 		t.Fatal(res)
 	}
@@ -102,7 +102,7 @@ func TestOneToManyTableMultiRead(t *testing.T) {
 		t.Fatal(err)
 	}
 	customers := &[]Customer2{}
-	err = tbl.MultiRead("A", []interface{}{"33", "34"}, customers)
+	err = tbl.MultiRead("A", []interface{}{"33", "34"}, customers).Run()
 	if err != nil {
 		t.Fatal(err)
 	}

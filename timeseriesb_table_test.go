@@ -35,7 +35,7 @@ func TestTimeSeriesBT(t *testing.T) {
 		t.Fatal(err)
 	}
 	ts := &[]TripB{}
-	err = tbl.List("A", parse("2006 Jan 2 15:03:58"), parse("2006 Jan 2 15:04:02"), ts)
+	err = tbl.List("A", parse("2006 Jan 2 15:03:58"), parse("2006 Jan 2 15:04:02"), ts).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -46,7 +46,7 @@ func TestTimeSeriesBT(t *testing.T) {
 	if ts1[0].Id != "1" || ts1[1].Id != "3" {
 		t.Fatal(ts1[0], ts1[1])
 	}
-	err = tbl.List("B", parse("2006 Jan 2 15:03:58"), parse("2006 Jan 2 15:04:02"), ts)
+	err = tbl.List("B", parse("2006 Jan 2 15:03:58"), parse("2006 Jan 2 15:04:02"), ts).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -57,14 +57,14 @@ func TestTimeSeriesBT(t *testing.T) {
 	if ts1[0].Id != "2" {
 		t.Fatal(ts1[0])
 	}
-	err = tbl.List("B", parse("2006 Jan 2 15:03:58"), parse("2006 Jan 2 15:05:02"), ts)
+	err = tbl.List("B", parse("2006 Jan 2 15:03:58"), parse("2006 Jan 2 15:05:02"), ts).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(*ts) != 2 {
 		t.Fatal(ts)
 	}
-	err = tbl.List("B", parse("2006 Jan 2 15:03:58"), parse("2006 Jan 2 15:05:00"), ts)
+	err = tbl.List("B", parse("2006 Jan 2 15:03:58"), parse("2006 Jan 2 15:05:00"), ts).Run()
 	if err != nil {
 		t.Fatal(err)
 	}

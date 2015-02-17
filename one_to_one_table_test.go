@@ -17,7 +17,7 @@ func TestOneToOneTable(t *testing.T) {
 		t.Fatal(err)
 	}
 	res := &Customer{}
-	err = tbl.Read("33", res)
+	err = tbl.Read("33", res).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -28,7 +28,7 @@ func TestOneToOneTable(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = tbl.Read("33", res)
+	err = tbl.Read("33", res).Run()
 	if err == nil {
 		t.Fatal(res)
 	}
@@ -46,7 +46,7 @@ func TestOneToOneTableUpdate(t *testing.T) {
 		t.Fatal(err)
 	}
 	res := &Customer{}
-	err = tbl.Read("33", res)
+	err = tbl.Read("33", res).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -59,7 +59,7 @@ func TestOneToOneTableUpdate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = tbl.Read("33", res)
+	err = tbl.Read("33", res).Run()
 	if err != nil {
 		t.Fatal(res, err)
 	}
@@ -88,7 +88,7 @@ func TestOneToOneTableMultiRead(t *testing.T) {
 		t.Fatal(err)
 	}
 	customers := &[]Customer{}
-	err = tbl.MultiRead([]interface{}{"33", "34"}, customers)
+	err = tbl.MultiRead([]interface{}{"33", "34"}, customers).Run()
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -46,7 +46,7 @@ func TestEq(t *testing.T) {
 		t.Fatal(err)
 	}
 	res := &[]Customer{}
-	err = cs.Where(Eq("Id", "50")).Query().Read(res)
+	err = cs.Where(Eq("Id", "50")).Query().Read(res).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -80,7 +80,7 @@ func TestMultipleRowResults(t *testing.T) {
 	}
 
 	res := &[]Customer{}
-	err = cs.Where(Eq("Name", "John")).Query().Read(res)
+	err = cs.Where(Eq("Name", "John")).Query().Read(res).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -104,7 +104,7 @@ func TestIn(t *testing.T) {
 		t.Fatal(err)
 	}
 	res := &[]Customer{}
-	err = cs.Where(In("Id", "100", "200")).Query().Read(res)
+	err = cs.Where(In("Id", "100", "200")).Query().Read(res).Run()
 	if len(*res) != 2 {
 		for _, v := range *res {
 			fmt.Println(v)
@@ -127,7 +127,7 @@ func TestAnd(t *testing.T) {
 		t.Fatal(err)
 	}
 	res := &[]Customer{}
-	err = cs.Where(Eq("Id", "100"), Eq("Name", "Joe")).Query().Read(res)
+	err = cs.Where(Eq("Id", "100"), Eq("Name", "Joe")).Query().Read(res).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -139,7 +139,7 @@ func TestAnd(t *testing.T) {
 func TestQueryReturnError(t *testing.T) {
 	cs := ns.Table("customer2", Customer{}, Keys{})
 	res := &[]Customer{}
-	err := cs.Where(Eq("Id", "100"), Eq("Name", "Joe")).Query().Read(res)
+	err := cs.Where(Eq("Id", "100"), Eq("Name", "Joe")).Query().Read(res).Run()
 	if err == nil {
 		t.Fatal("Table customer2 does not exist - should return error")
 	}
@@ -169,11 +169,11 @@ func TestTypesMarshal(t *testing.T) {
 	}
 	tbl := ns.Table("customer3", Customer3{}, Keys{PartitionKeys: []string{"Id"}})
 	createIf(tbl.(TableChanger), t)
-	if err := tbl.Set(c); err != nil {
+	if err := tbl.Set(c).Run(); err != nil {
 		t.Fatal(err)
 	}
 	res := &[]Customer3{}
-	err := tbl.Where(Eq("Id", "1")).Query().Read(res)
+	err := tbl.Where(Eq("Id", "1")).Query().Read(res).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
