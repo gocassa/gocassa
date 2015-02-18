@@ -11,8 +11,8 @@ type TripB struct {
 	Tag  string
 }
 
-func TestTimeSeriesBT(t *testing.T) {
-	tbl := ns.TimeSeriesBTable("tripTime6", "Tag", "Time", "Id", time.Minute, TripB{})
+func TestMultiTimeSeriesTable(t *testing.T) {
+	tbl := ns.MultiTimeSeriesTable("tripTime6", "Tag", "Time", "Id", time.Minute, TripB{})
 	createIf(tbl.(TableChanger), t)
 	err := tbl.Set(TripB{
 		Id:   "1",

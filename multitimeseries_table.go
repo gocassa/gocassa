@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-type timeSeriesBT struct {
+type multiTimeSeriesT struct {
 	*t
 	indexField string
 	timeField  string
@@ -12,7 +12,7 @@ type timeSeriesBT struct {
 	bucketSize time.Duration
 }
 
-func (o *timeSeriesBT) SetWithOptions(v interface{}, opts Options) Op {
+func (o *multiTimeSeriesT) SetWithOptions(v interface{}, opts Options) Op {
 	m, ok := toMap(v)
 	if !ok {
 		panic("Can't set: not able to convert")
@@ -25,36 +25,36 @@ func (o *timeSeriesBT) SetWithOptions(v interface{}, opts Options) Op {
 	return o.t.SetWithOptions(m, opts)
 }
 
-func (o *timeSeriesBT) Set(v interface{}) Op {
+func (o *multiTimeSeriesT) Set(v interface{}) Op {
 	return o.SetWithOptions(v, Options{})
 }
 
-func (o *timeSeriesBT) bucket(secs int64) int64 {
+func (o *multiTimeSeriesT) bucket(secs int64) int64 {
 	return (secs - secs%int64(o.bucketSize/time.Second)) * 1000
 }
 
-func (o *timeSeriesBT) Update(v interface{}, timeStamp time.Time, id interface{}, m map[string]interface{}) Op {
+func (o *multiTimeSeriesT) Update(v interface{}, timeStamp time.Time, id interface{}, m map[string]interface{}) Op {
 	bucket := o.bucket(timeStamp.Unix())
 	return o.Where(Eq(o.indexField, v), Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Update(m)
 }
 
-func (o *timeSeriesBT) UpdateWithOptions(v interface{}, timeStamp time.Time, id interface{}, m map[string]interface{}, opts Options) Op {
+func (o *multiTimeSeriesT) UpdateWithOptions(v interface{}, timeStamp time.Time, id interface{}, m map[string]interface{}, opts Options) Op {
 	bucket := o.bucket(timeStamp.Unix())
 	return o.Where(Eq(o.indexField, v), Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).UpdateWithOptions(m, opts)
 }
 
-func (o *timeSeriesBT) Delete(v interface{}, timeStamp time.Time, id interface{}) Op {
+func (o *multiTimeSeriesT) Delete(v interface{}, timeStamp time.Time, id interface{}) Op {
 	bucket := o.bucket(timeStamp.Unix())
 	return o.Where(Eq(o.indexField, v), Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Delete()
 }
 
-func (o *timeSeriesBT) Read(v interface{}, timeStamp time.Time, id, pointer interface{}) Op {
+func (o *multiTimeSeriesT) Read(v interface{}, timeStamp time.Time, id, pointer interface{}) Op {
 	bucket := o.bucket(timeStamp.Unix())
 	return o.Where(Eq(o.indexField, v), Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Query().ReadOne(pointer)
 
 }
 
-func (o *timeSeriesBT) List(v interface{}, startTime time.Time, endTime time.Time, pointerToASlice interface{}) Op {
+func (o *multiTimeSeriesT) List(v interface{}, startTime time.Time, endTime time.Time, pointerToASlice interface{}) Op {
 	buckets := []interface{}{}
 	start := o.bucket(startTime.Unix())
 	for i := start; ; i += int64(o.bucketSize/time.Second) * 1000 {

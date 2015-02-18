@@ -5,8 +5,8 @@ import (
 	"testing"
 )
 
-func TestOneToOneTable(t *testing.T) {
-	tbl := ns.OneToOneTable("customer81", "Id", Customer{})
+func TestMapTable(t *testing.T) {
+	tbl := ns.MapTable("customer81", "Id", Customer{})
 	createIf(tbl.(TableChanger), t)
 	joe := Customer{
 		Id:   "33",
@@ -34,8 +34,8 @@ func TestOneToOneTable(t *testing.T) {
 	}
 }
 
-func TestOneToOneTableUpdate(t *testing.T) {
-	tbl := ns.OneToOneTable("customer82", "Id", Customer{})
+func TestMapTableUpdate(t *testing.T) {
+	tbl := ns.MapTable("customer82", "Id", Customer{})
 	createIf(tbl.(TableChanger), t)
 	joe := Customer{
 		Id:   "33",
@@ -68,8 +68,8 @@ func TestOneToOneTableUpdate(t *testing.T) {
 	}
 }
 
-func TestOneToOneTableMultiRead(t *testing.T) {
-	tbl := ns.OneToOneTable("customer83", "Id", Customer{})
+func TestMapTableMultiRead(t *testing.T) {
+	tbl := ns.MapTable("customer83", "Id", Customer{})
 	createIf(tbl.(TableChanger), t)
 	joe := Customer{
 		Id:   "33",

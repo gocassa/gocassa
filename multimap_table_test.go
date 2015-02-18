@@ -11,8 +11,8 @@ type Customer2 struct {
 	Tag  string
 }
 
-func TestOneToManyTableInsertRead(t *testing.T) {
-	tbl := ns.OneToManyTable("customer91", "Tag", "Id", Customer2{})
+func TestMultimapTableInsertRead(t *testing.T) {
+	tbl := ns.MultimapTable("customer91", "Tag", "Id", Customer2{})
 	createIf(tbl.(TableChanger), t)
 	joe := Customer2{
 		Id:   "33",
@@ -58,8 +58,8 @@ func TestOneToManyTableInsertRead(t *testing.T) {
 	}
 }
 
-func TestOneToManyTableDelete(t *testing.T) {
-	tbl := ns.OneToManyTable("customer92", "Tag", "Id", Customer2{})
+func TestMultimapTableDelete(t *testing.T) {
+	tbl := ns.MultimapTable("customer92", "Tag", "Id", Customer2{})
 	createIf(tbl.(TableChanger), t)
 	joe := Customer2{
 		Id:   "33",
@@ -88,8 +88,8 @@ func TestOneToManyTableDelete(t *testing.T) {
 	}
 }
 
-func TestOneToManyTableMultiRead(t *testing.T) {
-	tbl := ns.OneToManyTable("customer93", "Tag", "Id", Customer2{})
+func TestMultimapTableMultiRead(t *testing.T) {
+	tbl := ns.MultimapTable("customer93", "Tag", "Id", Customer2{})
 	createIf(tbl.(TableChanger), t)
 	joe := Customer2{
 		Id:   "33",

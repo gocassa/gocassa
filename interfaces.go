@@ -13,19 +13,19 @@ type Connection interface {
 }
 
 type KeySpace interface {
-	OneToOneTable(tableName, id string, row interface{}) OneToOneTable
-	OneToManyTable(tableName, fieldToIndexBy, uniqueKey string, row interface{}) OneToManyTable
+	MapTable(tableName, id string, row interface{}) MapTable
+	MultimapTable(tableName, fieldToIndexBy, uniqueKey string, row interface{}) MultimapTable
 	TimeSeriesTable(tableName, timeField, uniqueKey string, bucketSize time.Duration, row interface{}) TimeSeriesTable
-	TimeSeriesBTable(tableName, fieldToIndexByField, timeField, uniqueKey string, bucketSize time.Duration, row interface{}) TimeSeriesBTable
+	MultiTimeSeriesTable(tableName, fieldToIndexByField, timeField, uniqueKey string, bucketSize time.Duration, row interface{}) MultiTimeSeriesTable
 	Table(tableName string, row interface{}, keys Keys) Table
 	DebugMode(bool)
 }
 
 //
-// OneToOne recipe
+// Map recipe
 //
 
-type OneToOneTable interface {
+type MapTable interface {
 	SetWithOptions(v interface{}, opts Options) Op
 	Set(v interface{}) Op
 	UpdateWithOptions(id interface{}, m map[string]interface{}, opts Options) Op
@@ -36,11 +36,11 @@ type OneToOneTable interface {
 }
 
 //
-// OneToMany recipe
+// Multimap recipe
 //
 
-// OneToMany lets you list rows based on a field equality, eg. 'list all sales where seller id = v'.
-type OneToManyTable interface {
+// Multimap lets you list rows based on a field equality, eg. 'list all sales where seller id = v'.
+type MultimapTable interface {
 	SetWithOptions(v interface{}, opts Options) Op
 	Set(v interface{}) Op
 	UpdateWithOptions(v, id interface{}, m map[string]interface{}, opts Options) Op
@@ -74,8 +74,8 @@ type TimeSeriesTable interface {
 // TimeSeries B recipe
 //
 
-// TimeSeriesB is a cross between TimeSeries and OneToMany tables.
-type TimeSeriesBTable interface {
+// MultiTimeSeries is a cross between TimeSeries and Multimap tables.
+type MultiTimeSeriesTable interface {
 	// timeField and idField must be present
 	SetWithOptions(v interface{}, opts Options) Op
 	Set(v interface{}) Op

@@ -55,24 +55,24 @@ func main() {
 }
 ```
 
-##### `OneToOneTable`
+##### `MapTable`
 
-`OneToOneTable` provides only very simple [CRUD](http://en.wikipedia.org/wiki/Create,_read,_update_and_delete) functionality:
+`MapTable` provides only very simple [CRUD](http://en.wikipedia.org/wiki/Create,_read,_update_and_delete) functionality:
 
 ```go
-    sales := keySpace.OneToOneTable("sale", "Id", Sale{})
+    sales := keySpace.MapTable("sale", "Id", Sale{})
     // …
     result := &Sale{}
     err := sales.Read("sale-1", result).Run()
 }
 ```
 
-##### `OneToManyTable`
+##### `MultimapTable`
 
-`OneToManyTable` can list rows filtered by equality of a single field (eg. list sales based on their `sellerId`):
+`MultimapTable` can list rows filtered by equality of a single field (eg. list sales based on their `sellerId`):
 
 ```go
-    saleTables := keySpace.OneToManyTable("sale", "SellerId", "Id", Sale{})
+    saleTables := keySpace.MultimapTable("sale", "SellerId", "Id", Sale{})
     // …
     results := &[]Sale{}
     err := sales.List("seller-1", nil, 0, results).Run()
@@ -89,12 +89,12 @@ func main() {
     err := sales.List(yesterdayTime, todayTime, results).Run()
 ```
 
-##### `TimeSeriesBTable`
+##### `MultiTimeSeriesTable`
 
-`TimeSeriesBTable` is like a cross between `OneToManyTable` and `TimeSeriesTable`. It can list rows within a time interval, and filtered by equality of a single field. The following lists sales in a time interval, by a certain seller:
+`MultiTimeSeriesTable` is like a cross between `MultimapTable` and `TimeSeriesTable`. It can list rows within a time interval, and filtered by equality of a single field. The following lists sales in a time interval, by a certain seller:
 
 ```go
-    salesTable := keySpace.TimeSeriesBTable("sale", "SellerId", "Created", "Id", Sale{})
+    salesTable := keySpace.MultiTimeSeriesTable("sale", "SellerId", "Created", "Id", Sale{})
     //...
     results := &[]Sale{}
     err := sales.List("seller-1", yesterdayTime, todayTime, results).Run()
