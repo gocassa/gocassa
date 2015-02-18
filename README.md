@@ -34,10 +34,10 @@ func main() {
     if err != nil {
         panic(err)
     }
-    sales := keySpace.Table("sale", Sale{}, gocassa.Keys{
+    salesTable := keySpace.Table("sale", Sale{}, gocassa.Keys{
         PartitionKeys: []string{"Id"},
     })
-    err = sales.Set(Sale{
+    err = salesTable.Set(Sale{
         Id: "sale-1",
         CustomerId: "customer-1",
         SellerId: "seller-1",
@@ -48,7 +48,7 @@ func main() {
         panic(err)
     }
     result := &Sale{}
-    if err := sales.Where(Eq("Id", "sale-1")).Query().ReadOne(result).Run(); err != nil {
+    if err := salesTable.Where(Eq("Id", "sale-1")).Query().ReadOne(result).Run(); err != nil {
         panic(err)
     }
     fmt.Println(*result)
@@ -60,10 +60,10 @@ func main() {
 `MapTable` provides only very simple [CRUD](http://en.wikipedia.org/wiki/Create,_read,_update_and_delete) functionality:
 
 ```go
-    sales := keySpace.MapTable("sale", "Id", Sale{})
+    salesTable := keySpace.MapTable("sale", "Id", Sale{})
     // …
     result := &Sale{}
-    err := sales.Read("sale-1", result).Run()
+    err := salesTable.Read("sale-1", result).Run()
 }
 ```
 
@@ -72,10 +72,10 @@ func main() {
 `MultimapTable` can list rows filtered by equality of a single field (eg. list sales based on their `sellerId`):
 
 ```go
-    saleTables := keySpace.MultimapTable("sale", "SellerId", "Id", Sale{})
+    salesTable := keySpace.MultimapTable("sale", "SellerId", "Id", Sale{})
     // …
     results := &[]Sale{}
-    err := sales.List("seller-1", nil, 0, results).Run()
+    err := salesTable.List("seller-1", nil, 0, results).Run()
 ```
 
 ##### `TimeSeriesTable`
@@ -86,7 +86,7 @@ func main() {
     salesTable := keySpace.TimeSeriesTable("sale", "Created", "Id", Sale{})
     //...
     results := &[]Sale{}
-    err := sales.List(yesterdayTime, todayTime, results).Run()
+    err := salesTable.List(yesterdayTime, todayTime, results).Run()
 ```
 
 ##### `MultiTimeSeriesTable`
@@ -97,5 +97,5 @@ func main() {
     salesTable := keySpace.MultiTimeSeriesTable("sale", "SellerId", "Created", "Id", Sale{})
     //...
     results := &[]Sale{}
-    err := sales.List("seller-1", yesterdayTime, todayTime, results).Run()
+    err := salesTable.List("seller-1", yesterdayTime, todayTime, results).Run()
 ```
