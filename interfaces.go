@@ -33,6 +33,7 @@ type MapTable interface {
 	Delete(id interface{}) Op
 	Read(id, pointer interface{}) Op
 	MultiRead(ids []interface{}, pointerToASlice interface{}) Op
+	TableChanger
 }
 
 //
