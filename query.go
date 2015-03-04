@@ -1,7 +1,6 @@
 package gocassa
 
 import (
-	"encoding/json"
 	"fmt"
 )
 
@@ -15,33 +14,34 @@ func (q *query) Limit(i int) Query {
 	return q
 }
 
-func (q *query) Read(pointerToASlice interface{}) error {
+func (q *query) Read(pointerToASlice interface{}) Op {
 	stmt, vals := q.generateRead()
-	maps, err := q.f.t.keySpace.qe.Query(stmt, vals...)
-	if err != nil {
-		return err
+	return &op{
+		qe: q.f.t.keySpace.qe,
+		ops: []singleOp{
+			{
+				opType: read,
+				result: pointerToASlice,
+				stmt:   stmt,
+				params: vals,
+			},
+		},
 	}
-	bytes, err := json.Marshal(maps)
-	if err != nil {
-		return err
-	}
-	return json.Unmarshal(bytes, pointerToASlice)
 }
 
-func (q *query) ReadOne(pointer interface{}) error {
+func (q *query) ReadOne(pointer interface{}) Op {
 	stmt, vals := q.generateRead()
-	maps, err := q.f.t.keySpace.qe.Query(stmt, vals...)
-	if err != nil {
-		return err
+	return &op{
+		qe: q.f.t.keySpace.qe,
+		ops: []singleOp{
+			{
+				opType: singleRead,
+				result: pointer,
+				stmt:   stmt,
+				params: vals,
+			},
+		},
 	}
-	if len(maps) == 0 {
-		return fmt.Errorf("Can not read one: no results")
-	}
-	bytes, err := json.Marshal(maps[0])
-	if err != nil {
-		return err
-	}
-	return json.Unmarshal(bytes, pointer)
 }
 
 func (q *query) generateRead() (string, []interface{}) {
@@ -50,15 +50,15 @@ func (q *query) generateRead() (string, []interface{}) {
 	l, lv := q.generateLimit()
 	str := fmt.Sprintf("SELECT %s FROM %s.%s", q.f.t.generateFieldNames(), q.f.t.keySpace.name, q.f.t.info.name)
 	vals := []interface{}{}
-	if len(w) > 0 {
+	if w != "" {
 		str += " " + w
 		vals = append(vals, wv...)
 	}
-	if len(o) > 0 {
+	if o != "" {
 		str += " " + o
 		vals = append(vals, ov...)
 	}
-	if len(l) > 0 {
+	if l != "" {
 		str += " " + l
 		vals = append(vals, lv...)
 	}

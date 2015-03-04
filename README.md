@@ -34,48 +34,48 @@ func main() {
     if err != nil {
         panic(err)
     }
-    sales := keySpace.Table("sale", Sale{}, gocassa.Keys{
+    salesTable := keySpace.Table("sale", Sale{}, gocassa.Keys{
         PartitionKeys: []string{"Id"},
     })
-    err = sales.Set(Sale{
+    err = salesTable.Set(Sale{
         Id: "sale-1",
         CustomerId: "customer-1",
         SellerId: "seller-1",
         Price: 42,
         Created: time.Now(),
-    })
+    }).Run()
     if err != nil {
         panic(err)
     }
     result := &Sale{}
-    if err := sales.Where(Eq("Id", "sale-1")).Query().ReadOne(result); err != nil {
+    if err := salesTable.Where(gocassa.Eq("Id", "sale-1")).Query().ReadOne(result).Run(); err != nil {
         panic(err)
     }
     fmt.Println(*result)
 }
 ```
 
-##### `OneToOneTable`
+##### `MapTable`
 
-`OneToOneTable` provides only very simple [CRUD](http://en.wikipedia.org/wiki/Create,_read,_update_and_delete) functionality:
+`MapTable` provides only very simple [CRUD](http://en.wikipedia.org/wiki/Create,_read,_update_and_delete) functionality:
 
 ```go
-    sales := keySpace.OneToOneTable("sale", "Id", Sale{})
+    salesTable := keySpace.MapTable("sale", "Id", Sale{})
     // …
     result := &Sale{}
-    err := sales.Read("sale-1", result)
+    err := salesTable.Read("sale-1", result).Run()
 }
 ```
 
-##### `OneToManyTable`
+##### `MultimapTable`
 
-`OneToManyTable` can list rows filtered by equality of a single field (eg. list sales based on their `sellerId`):
+`MultimapTable` can list rows filtered by equality of a single field (eg. list sales based on their `sellerId`):
 
 ```go
-    saleTables := keySpace.OneToManyTable("sale", "SellerId", "Id", Sale{})
+    salesTable := keySpace.MultimapTable("sale", "SellerId", "Id", Sale{})
     // …
     results := &[]Sale{}
-    err := sales.List("seller-1", nil, 0, results)
+    err := salesTable.List("seller-1", nil, 0, results).Run()
 ```
 
 ##### `TimeSeriesTable`
@@ -86,16 +86,16 @@ func main() {
     salesTable := keySpace.TimeSeriesTable("sale", "Created", "Id", Sale{})
     //...
     results := &[]Sale{}
-    err := sales.List(yesterdayTime, todayTime, results)
+    err := salesTable.List(yesterdayTime, todayTime, results).Run()
 ```
 
-##### `TimeSeriesBTable`
+##### `MultiTimeSeriesTable`
 
-`TimeSeriesBTable` is like a cross between `OneToManyTable` and `TimeSeriesTable`. It can list rows within a time interval, and filtered by equality of a single field. The following lists sales in a time interval, by a certain seller:
+`MultiTimeSeriesTable` is like a cross between `MultimapTable` and `TimeSeriesTable`. It can list rows within a time interval, and filtered by equality of a single field. The following lists sales in a time interval, by a certain seller:
 
 ```go
-    salesTable := keySpace.TimeSeriesBTable("sale", "SellerId", "Created", "Id", Sale{})
+    salesTable := keySpace.MultiTimeSeriesTable("sale", "SellerId", "Created", "Id", Sale{})
     //...
     results := &[]Sale{}
-    err := sales.List("seller-1", yesterdayTime, todayTime, results)
+    err := salesTable.List("seller-1", yesterdayTime, todayTime, results).Run()
 ```

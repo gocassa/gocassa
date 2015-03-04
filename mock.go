@@ -18,6 +18,10 @@ type mockKeySpace struct {
 	k
 }
 
+type mockOp struct {
+	
+}
+
 func (ks *mockKeySpace) NewTable(name string, entity interface{}, keys Keys) Table {
 	return &MockTable{
 		entity: entity,
@@ -117,6 +121,10 @@ func (t *MockTable) keyFromColumnValues(columns map[string]interface{}, keys []s
 	return key, nil
 }
 
+func (t *MockTable) Name() string {
+	return t.k.name
+}
+
 func (t *MockTable) getOrCreateRow(rowKey *keyPart) *btree.BTree {
 	row := t.rows[rowKey.RowKey()]
 	if row == nil {
@@ -139,7 +147,7 @@ func (t *MockTable) getOrCreateColumnGroup(rowKey, superColumnKey *keyPart) map[
 	return scol.Columns
 }
 
-func (t *MockTable) SetWithOptions(i interface{}, options Options) error {
+func (t *MockTable) SetWithOptions(i interface{}, options Options) Op {
 	columns, ok := toMap(i)
 	if !ok {
 		return errors.New("Can't create: value not understood")
