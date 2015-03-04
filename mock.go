@@ -19,11 +19,39 @@ type mockKeySpace struct {
 }
 
 type mockOp struct {
-	
+	funcs []func()error
 }
 
-func (ks *mockKeySpace) NewTable(name string, entity interface{}, keys Keys) Table {
+func newOp(f func()error) mockOp {
+	return mockOp{
+		funcs: []func()error{f},
+	}
+}
+
+func (m mockOp) Add(ops ...Op) Op {
+	for _, o := range ops {
+		m.funcs = append(m.funcs, o.(*mockOp).funcs...)
+	}
+	return m
+}
+
+func (m mockOp) Run() error {
+	for _, f := range m.funcs {
+		err := f()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (m mockOp) RunAtomically() error {
+	return m.Run()
+}
+
+func (ks *mockKeySpace) NewTable(name string, entity interface{}, fields map[string]interface{}, keys Keys) Table {
 	return &MockTable{
+		name:   name,
 		entity: entity,
 		keys:   keys,
 		rows:   map[rowKey]*btree.BTree{},
@@ -39,6 +67,7 @@ func NewMockKeySpace() KeySpace {
 // MockTable implements the Table interface and stores rows in-memory.
 type MockTable struct {
 	// rows is mapping from row key to column group key to column map
+	name   string
 	rows   map[rowKey]*btree.BTree
 	entity interface{}
 	keys   Keys
@@ -122,7 +151,7 @@ func (t *MockTable) keyFromColumnValues(columns map[string]interface{}, keys []s
 }
 
 func (t *MockTable) Name() string {
-	return t.k.name
+	return t.name
 }
 
 func (t *MockTable) getOrCreateRow(rowKey *keyPart) *btree.BTree {
@@ -148,31 +177,32 @@ func (t *MockTable) getOrCreateColumnGroup(rowKey, superColumnKey *keyPart) map[
 }
 
 func (t *MockTable) SetWithOptions(i interface{}, options Options) Op {
-	columns, ok := toMap(i)
-	if !ok {
-		return errors.New("Can't create: value not understood")
-	}
-
-	rowKey, err := t.keyFromColumnValues(columns, t.keys.PartitionKeys)
-	if err != nil {
-		return err
-	}
-
-	superColumnKey, err := t.keyFromColumnValues(columns, t.keys.ClusteringColumns)
-	if err != nil {
-		return err
-	}
-
-	superColumn := t.getOrCreateColumnGroup(rowKey, superColumnKey)
-
-	for k, v := range columns {
-		superColumn[k] = v
-	}
-
-	return nil
+	return newOp(func() error {
+		columns, ok := toMap(i)
+		if !ok {
+			return errors.New("Can't create: value not understood")
+		}
+	
+		rowKey, err := t.keyFromColumnValues(columns, t.keys.PartitionKeys)
+		if err != nil {
+			return err
+		}
+	
+		superColumnKey, err := t.keyFromColumnValues(columns, t.keys.ClusteringColumns)
+		if err != nil {
+			return err
+		}
+	
+		superColumn := t.getOrCreateColumnGroup(rowKey, superColumnKey)
+	
+		for k, v := range columns {
+			superColumn[k] = v
+		}
+		return nil
+	})
 }
 
-func (t *MockTable) Set(i interface{}) error {
+func (t *MockTable) Set(i interface{}) Op {
 	return t.SetWithOptions(i, Options{})
 }
 
@@ -256,63 +286,67 @@ func (f *MockFilter) keysFromRelations(keys []string) ([]*keyPart, error) {
 	return result, nil
 }
 
-func (f *MockFilter) UpdateWithOptions(m map[string]interface{}, options Options) error {
-	rowKeys, err := f.keysFromRelations(f.table.keys.PartitionKeys)
-	if err != nil {
-		return err
-	}
-
-	for _, rowKey := range rowKeys {
-		superColumnKeys, err := f.keysFromRelations(f.table.keys.ClusteringColumns)
+func (f *MockFilter) UpdateWithOptions(m map[string]interface{}, options Options) Op {
+	return newOp(func () error {
+		rowKeys, err := f.keysFromRelations(f.table.keys.PartitionKeys)
 		if err != nil {
 			return err
 		}
-
-		for _, superColumnKey := range superColumnKeys {
-			superColumn := f.table.getOrCreateColumnGroup(rowKey, superColumnKey)
-
-			for _, keyPart := range []*keyPart{rowKey, superColumnKey} {
-				for k := keyPart; k != nil; k = k.Tail {
-					superColumn[k.Key] = k.Value
+	
+		for _, rowKey := range rowKeys {
+			superColumnKeys, err := f.keysFromRelations(f.table.keys.ClusteringColumns)
+			if err != nil {
+				return err
+			}
+	
+			for _, superColumnKey := range superColumnKeys {
+				superColumn := f.table.getOrCreateColumnGroup(rowKey, superColumnKey)
+	
+				for _, keyPart := range []*keyPart{rowKey, superColumnKey} {
+					for k := keyPart; k != nil; k = k.Tail {
+						superColumn[k.Key] = k.Value
+					}
+				}
+	
+				for key, value := range m {
+					superColumn[key] = value
 				}
 			}
-
-			for key, value := range m {
-				superColumn[key] = value
-			}
 		}
-	}
-
-	return nil
+	
+		return nil
+	})
 }
 
-func (f *MockFilter) Update(m map[string]interface{}) error {
+func (f *MockFilter) Update(m map[string]interface{}) Op {
 	return f.UpdateWithOptions(m, Options{})
 }
 
-func (f *MockFilter) Delete() error {
-	rowKeys, err := f.keysFromRelations(f.table.keys.PartitionKeys)
-	if err != nil {
-		return err
-	}
-
-	for _, rowKey := range rowKeys {
-		row := f.table.rows[rowKey.RowKey()]
-		if row == nil {
-			return nil
-		}
-
-		superColumnKeys, err := f.keysFromRelations(f.table.keys.ClusteringColumns)
+func (f *MockFilter) Delete() Op {
+	return newOp(func()error{
+		rowKeys, err := f.keysFromRelations(f.table.keys.PartitionKeys)
 		if err != nil {
 			return err
 		}
-
-		for _, superColumnKey := range superColumnKeys {
-			row.Delete(superColumnKey.ToSuperColumn())
+	
+		for _, rowKey := range rowKeys {
+			row := f.table.rows[rowKey.RowKey()]
+			if row == nil {
+				return nil
+			}
+	
+			superColumnKeys, err := f.keysFromRelations(f.table.keys.ClusteringColumns)
+			if err != nil {
+				return err
+			}
+	
+			for _, superColumnKey := range superColumnKeys {
+				row.Delete(superColumnKey.ToSuperColumn())
+			}
 		}
-	}
-
-	return nil
+	
+		return nil
+	})
 }
 
 // MockQuery implements the Query interface and works with MockFilter.
@@ -321,34 +355,36 @@ type MockQuery struct {
 	limit  int
 }
 
-func (q *MockQuery) Read(out interface{}) error {
-	rowKeys, err := q.filter.keysFromRelations(q.filter.table.keys.PartitionKeys)
-	if err != nil {
-		return err
-	}
-
-	var result []map[string]interface{}
-	for _, rowKey := range rowKeys {
-		row := q.filter.table.rows[rowKey.RowKey()]
-		if row == nil {
-			continue
+func (q *MockQuery) Read(out interface{}) Op {
+	return newOp(func() error {
+		rowKeys, err := q.filter.keysFromRelations(q.filter.table.keys.PartitionKeys)
+		if err != nil {
+			return err
 		}
-
-		row.Ascend(func(item btree.Item) bool {
-			columns := item.(*superColumn).Columns
-			if q.filter.rowMatch(columns) {
-				result = append(result, columns)
+	
+		var result []map[string]interface{}
+		for _, rowKey := range rowKeys {
+			row := q.filter.table.rows[rowKey.RowKey()]
+			if row == nil {
+				continue
 			}
-
-			return true
-		})
-	}
-
-	if q.limit > 0 {
-		result = result[:q.limit]
-	}
-
-	return q.assignResult(result, out)
+	
+			row.Ascend(func(item btree.Item) bool {
+				columns := item.(*superColumn).Columns
+				if q.filter.rowMatch(columns) {
+					result = append(result, columns)
+				}
+	
+				return true
+			})
+		}
+	
+		if q.limit > 0 {
+			result = result[:q.limit]
+		}
+	
+		return q.assignResult(result, out)
+	})
 }
 
 func (q *MockQuery) assignResult(records interface{}, out interface{}) error {
@@ -359,20 +395,22 @@ func (q *MockQuery) assignResult(records interface{}, out interface{}) error {
 	return json.Unmarshal(bytes, out)
 }
 
-func (q *MockQuery) ReadOne(out interface{}) error {
-	slicePtrVal := reflect.New(reflect.SliceOf(reflect.ValueOf(out).Elem().Type()))
-
-	err := q.Read(slicePtrVal.Interface())
-	if err != nil {
-		return err
-	}
-
-	sliceVal := slicePtrVal.Elem()
-	if sliceVal.Len() < 1 {
-		return fmt.Errorf("Not found")
-	}
-	q.assignResult(sliceVal.Index(0).Interface(), out)
-	return nil
+func (q *MockQuery) ReadOne(out interface{}) Op {
+	return newOp(func() error {
+		slicePtrVal := reflect.New(reflect.SliceOf(reflect.ValueOf(out).Elem().Type()))
+	
+		err := q.Read(slicePtrVal.Interface()).Run()
+		if err != nil {
+			return err
+		}
+	
+		sliceVal := slicePtrVal.Elem()
+		if sliceVal.Len() < 1 {
+			return fmt.Errorf("Not found")
+		}
+		q.assignResult(sliceVal.Index(0).Interface(), out)
+		return nil
+	})
 }
 
 func (q *MockQuery) Limit(limit int) Query {

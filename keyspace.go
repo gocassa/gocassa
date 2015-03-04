@@ -36,7 +36,7 @@ func (k *k) Table(name string, entity interface{}, keys Keys) Table {
 	if !ok {
 		panic("Unrecognized row type")
 	}
-	return k.tableFactory.NewTable(name, entity, m, keys)
+	return k.tableFactory.NewTable(n, entity, m, keys)
 }
 
 func (k *k) NewTable(name string, entity interface{}, fields map[string]interface{}, keys Keys) Table {
