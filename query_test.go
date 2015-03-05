@@ -157,28 +157,40 @@ func TestRowNotFoundError(t *testing.T) {
 }
 
 type Customer3 struct {
-	Id     string
-	Field1 string
-	Field2 int
-	Field3 int32
-	Field4 int64
-	Field5 float32
-	Field6 float64
-	Field7 bool
-	Field8 []byte
+	Id      string
+	Field1  string
+	Field2  int
+	Field3  int32
+	Field4  int64
+	Field5  float32
+	Field6  float64
+	Field7  bool
+	Field8  []byte
+	Field9  []string
+	Field10 []int
+	Field11 []int32
+	Field12 []float32
+	Field13 []float64
+	Field14 []bool
 }
 
 func TestTypesMarshal(t *testing.T) {
 	c := Customer3{
-		Id:     "1",
-		Field1: "A",
-		Field2: 1,
-		Field3: 2,
-		Field4: 3,
-		Field5: 4.0,
-		Field6: 5.0,
-		Field7: true,
-		Field8: []byte{'a', 'b', 'c'},
+		Id:      "1",
+		Field1:  "A",
+		Field2:  1,
+		Field3:  2,
+		Field4:  3,
+		Field5:  4.0,
+		Field6:  5.0,
+		Field7:  true,
+		Field8:  []byte{'a', 'b', 'c'},
+		Field9:  []string{"a", "b", "c"},
+		Field10: []int{1, 2, 3},
+		Field11: []int32{1, 2, 3},
+		Field12: []float32{1.0, 2.0, 3.33},
+		Field13: []float64{1.0, 2.0, 3.33},
+		Field14: []bool{false, true},
 	}
 	tbl := ns.Table("customer3", Customer3{}, Keys{PartitionKeys: []string{"Id"}})
 	createIf(tbl.(TableChanger), t)

@@ -2,9 +2,10 @@ package generate
 
 import (
 	"errors"
-	"time"
-
+	"fmt"
 	"github.com/gocql/gocql"
+	"reflect"
+	"time"
 )
 
 func cassaType(i interface{}) gocql.Type {
@@ -31,7 +32,26 @@ func cassaType(i interface{}) gocql.Type {
 	return gocql.TypeCustom
 }
 
-// Why is this here?
+func stringTypeOf(i interface{}) (string, error) {
+	_, isByteSlice := i.([]byte)
+	if !isByteSlice {
+		switch reflect.ValueOf(i).Kind() {
+		case reflect.Slice:
+			elemVal := reflect.Indirect(reflect.New(reflect.TypeOf(i).Elem())).Interface()
+			ct := cassaType(elemVal)
+			if ct == gocql.TypeCustom {
+				return "", fmt.Errorf("Unsupported type %T", i)
+			}
+			return fmt.Sprintf("list<%v>", ct), nil
+		}
+	}
+	ct := cassaType(i)
+	if ct == gocql.TypeCustom {
+		return "", fmt.Errorf("Unsupported type %T", i)
+	}
+	return cassaTypeToString(ct)
+}
+
 func cassaTypeToString(t gocql.Type) (string, error) {
 	switch t {
 	case gocql.TypeInt:

@@ -4,8 +4,6 @@ package generate
 import (
 	"fmt"
 	"strings"
-
-	"github.com/gocql/gocql"
 )
 
 // CREATE TABLE users (
@@ -29,15 +27,11 @@ func CreateTable(keySpace, cf string, partitionKeys, colKeys []string, fields []
 	firstLine := fmt.Sprintf("CREATE TABLE %v.%v (", keySpace, cf)
 	fieldLines := []string{}
 	for i, _ := range fields {
-		ct := cassaType(values[i])
-		if ct == gocql.TypeCustom {
-			return "", fmt.Errorf("Unsupported type %T", values[i])
-		}
-		typ, err := cassaTypeToString(ct)
+		typeStr, err := stringTypeOf(values[i])
 		if err != nil {
-			return "", nil
+			return "", err
 		}
-		l := "    " + strings.ToLower(fields[i]) + " " + typ
+		l := "    " + strings.ToLower(fields[i]) + " " + typeStr
 		fieldLines = append(fieldLines, l)
 	}
 	str := "    PRIMARY KEY ((%v) %v)"
