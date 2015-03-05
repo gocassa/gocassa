@@ -107,8 +107,8 @@ func (k *k) MultiTimeSeriesTable(name, indexField, timeField, idField string, bu
 
 // Returns table names in a keyspace
 func (k *k) Tables() ([]string, error) {
-	stmt := fmt.Sprintf("SELECT columnfamily_name FROM system.schema_columnfamilies WHERE keyspace_name='%s'", k.name)
-	maps, err := k.qe.Query(stmt)
+	const stmt = "SELECT columnfamily_name FROM system.schema_columnfamilies WHERE keyspace_name = ?"
+	maps, err := k.qe.Query(stmt, k.name)
 	if err != nil {
 		return nil, err
 	}
@@ -135,6 +135,14 @@ func (k *k) Exists(cf string) (bool, error) {
 func (k *k) DropTable(cf string) error {
 	stmt := fmt.Sprintf("DROP TABLE IF EXISTS %s.%s", k.name, cf)
 	return k.qe.Execute(stmt)
+}
+
+func (k *k) QueryExecutor() QueryExecutor {
+	return k.qe
+}
+
+func (k *k) Name() string {
+	return k.name
 }
 
 // Translate errors returned by cassandra
