@@ -2,7 +2,9 @@ package gocassa
 
 import (
 	"fmt"
+	"os"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -13,10 +15,19 @@ type Customer struct {
 
 var ns KeySpace
 
+func getTestHosts() []string {
+	if h := os.Getenv("GOCASSA_TEST_HOSTS"); h != "" {
+		return strings.Split(h, ",")
+	} else {
+		return []string{"127.0.0.1"}
+	}
+}
+
 func init() {
 	kname := "test_ihopeudonthaveakeyspacenamedlikedthis"
 	var err error
-	c, err := Connect([]string{"127.0.0.1"}, "", "")
+
+	c, err := Connect(getTestHosts(), "", "")
 	if err != nil {
 		panic(err)
 	}
@@ -28,7 +39,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	ns, err = ConnectToKeySpace(kname, []string{"127.0.0.1"}, "", "")
+	ns, err = ConnectToKeySpace(kname, getTestHosts(), "", "")
 	if err != nil {
 		panic(err)
 	}
