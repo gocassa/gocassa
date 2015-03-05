@@ -32,7 +32,7 @@ func (f *filter) generateWhere() (string, []interface{}) {
 }
 
 // UPDATE keyspace.Movies SET col1 = val1, col2 = val2
-func updateStatement(kn, cfName string, fieldNames []string, opts Options) string {
+func updateStatement(kn, cfName string, fields map[string]interface{}, opts Options) (string, []interface{}) {
 	buf := new(bytes.Buffer)
 	buf.WriteString(fmt.Sprintf("UPDATE %s.%s ", kn, cfName))
 
@@ -44,25 +44,36 @@ func updateStatement(kn, cfName string, fieldNames []string, opts Options) strin
 	}
 
 	buf.WriteString("SET ")
-	for i, v := range fieldNames {
+	i := 0
+	ret := []interface{}{}
+	for k, v := range fields {
 		if i > 0 {
 			buf.WriteString(", ")
 		}
-		buf.WriteString(v)
-		buf.WriteString(" = ?")
+		buf.WriteString(k)
+		buf.WriteString(" = ")
+		if mod, ok := v.(Modifier); ok {
+			stmt, vals := mod.cql()
+			buf.WriteString(fmt.Sprintf(stmt, k))
+			ret = append(ret, vals...)
+		} else {
+			buf.WriteString("?")
+			ret = append(ret, v)
+		}
+		i++
 	}
 
-	return buf.String()
+	return buf.String(), ret
 }
 
 func (f filter) UpdateWithOptions(m map[string]interface{}, opts Options) Op {
-	fields, values := keyValues(m)
 	str, wvals := f.generateWhere()
-	stmt := updateStatement(f.t.keySpace.name, f.t.info.name, fields, opts)
+	stmt, uvals := updateStatement(f.t.keySpace.name, f.t.info.name, m, opts)
+	vs := append(uvals, wvals...)
 	if f.t.keySpace.debugMode {
-		fmt.Println(stmt+" "+str, append(values, wvals...))
+		fmt.Println(stmt+" "+str, vs)
 	}
-	return newWriteOp(f.t.keySpace.qe, stmt+str, append(values, wvals...))
+	return newWriteOp(f.t.keySpace.qe, stmt+str, vs)
 }
 
 func (f filter) Update(m map[string]interface{}) Op {

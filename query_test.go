@@ -209,3 +209,33 @@ func TestTypesMarshal(t *testing.T) {
 		t.Fatal(c, (*res)[0])
 	}
 }
+
+type Customer4 struct {
+	Id string 
+	FavNums []int
+}
+
+func TestUpdateList(t *testing.T) {
+	tbl := ns.Table("customer4", Customer4{}, Keys{PartitionKeys: []string{"Id"}})
+	createIf(tbl.(TableChanger), t)
+	c := Customer4{
+		Id: "99",
+		FavNums: []int{1,2,3},
+	}
+	if err := tbl.Set(c).Run(); err != nil {
+		t.Fatal(err)
+	}
+	err := tbl.Where(Eq("Id", "99")).Update(map[string]interface{}{
+		"FavNums": ListRemove("2"),
+	}).Run()
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = tbl.Where(Eq("Id", "99")).Query().Read(&c).Run()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(c.FavNums) != 2 {
+		t.Fatal(c)
+	}
+}
