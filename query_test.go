@@ -213,6 +213,7 @@ func TestTypesMarshal(t *testing.T) {
 type Customer4 struct {
 	Id string 
 	FavNums []int
+	FavStrings []string
 }
 
 func TestUpdateList(t *testing.T) {
@@ -221,17 +222,20 @@ func TestUpdateList(t *testing.T) {
 	c := Customer4{
 		Id: "99",
 		FavNums: []int{1,2,3},
+		FavStrings: []string{"yo", "boop", "woot"},
 	}
 	if err := tbl.Set(c).Run(); err != nil {
 		t.Fatal(err)
 	}
 	err := tbl.Where(Eq("Id", "99")).Update(map[string]interface{}{
-		"FavNums": ListRemove("2"),
-	}).Run()
+		"FavNums": ListRemove(2),
+	}).Add(tbl.Where(Eq("Id", "99")).Update(map[string]interface{}{
+		"FavStrings": ListRemove("2"),
+	})).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = tbl.Where(Eq("Id", "99")).Query().Read(&c).Run()
+	err = tbl.Where(Eq("Id", "99")).Query().ReadOne(&c).Run()
 	if err != nil {
 		t.Fatal(err)
 	}

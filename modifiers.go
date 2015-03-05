@@ -1,5 +1,9 @@
 package gocassa
 
+import(
+	"fmt"
+)
+
 // Modifiers are used with update statements.
 
 const (
@@ -46,13 +50,23 @@ func ListRemove(value interface{}) Modifier {
 // returns a string with a %v placeholder for field name
 func (m Modifier) cql() (string, []interface{}) {
 	switch m.op {
+	// Can not use bind variables here due to "bind variables are not supported inside collection literals" :(
 	case ModifierListPrepend:
 		return "[?] + %v", m.args
 	case ModifierListAppend:
 		return "%v + [?]", m.args
 	//case ModifierListSetAtIndex:
 	case ModifierListRemove:
-		return "%v - [?]", m.args
+		return "%v - " + fmt.Sprintf("[%v]", printElem(m.args[0])), []interface{}{}
 	}
 	return "", []interface{}{}
+}
+
+// we do the best we can here :(
+func printElem(i interface{}) string {
+	switch v := i.(type) {
+	case string:
+		return fmt.Sprintf("'%v'", v)
+	}
+	return fmt.Sprintf("%v", i)
 }
