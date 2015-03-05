@@ -136,7 +136,7 @@ type TableChanger interface {
 	Create() error
 	CreateStatement() (string, error)
 	Recreate() error
-	// Name returns the name of the keyspace, as in C*
+	// Name returns the name of the table, as in C*
 	Name() string
 	//Drop() error
 	//CreateIfDoesNotExist() error
