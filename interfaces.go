@@ -41,6 +41,7 @@ type MapTable interface {
 	Delete(id interface{}) Op
 	Read(id, pointer interface{}) Op
 	MultiRead(ids []interface{}, pointerToASlice interface{}) Op
+	Name() string
 	TableChanger
 }
 
@@ -59,6 +60,7 @@ type MultimapTable interface {
 	List(v, startId interface{}, limit int, pointerToASlice interface{}) Op
 	Read(v, id, pointer interface{}) Op
 	MultiRead(v interface{}, ids []interface{}, pointerToASlice interface{}) Op
+	Name() string
 	TableChanger
 }
 
@@ -76,6 +78,7 @@ type TimeSeriesTable interface {
 	Delete(timeStamp time.Time, id interface{}) Op
 	Read(timeStamp time.Time, id, pointer interface{}) Op
 	List(start, end time.Time, pointerToASlice interface{}) Op
+	Name() string
 	TableChanger
 }
 
@@ -93,6 +96,7 @@ type MultiTimeSeriesTable interface {
 	Delete(v interface{}, timeStamp time.Time, id interface{}) Op
 	Read(v interface{}, timeStamp time.Time, id, pointer interface{}) Op
 	List(v interface{}, start, end time.Time, pointerToASlice interface{}) Op
+	Name() string
 	TableChanger
 }
 
