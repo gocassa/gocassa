@@ -19,6 +19,8 @@ type KeySpace interface {
 	MultiTimeSeriesTable(tableName, fieldToIndexByField, timeField, uniqueKey string, bucketSize time.Duration, row interface{}) MultiTimeSeriesTable
 	Table(tableName string, row interface{}, keys Keys) Table
 	DebugMode(bool)
+	// Name returns the keyspace name as in C*
+	Name() string
 	// QueryExecutor returns the configured executor for this KeySpace
 	QueryExecutor() QueryExecutor
 	// Tables returns the name of all configured column families in this keyspace
