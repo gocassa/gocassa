@@ -126,7 +126,7 @@ type Keys struct {
 type Op interface {
 	Run() error
 	// You do not need this in 95% of the use cases, use Run!
-	// Using atmoic batched writes (logged batches in Cassandra terminolohu) comes at a high performance cost!
+	// Using atomic batched writes (logged batches in Cassandra terminolohu) comes at a high performance cost!
 	RunAtomically() error
 	Add(...Op) Op
 }
