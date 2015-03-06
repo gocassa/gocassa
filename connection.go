@@ -28,19 +28,19 @@ func NewConnection(q QueryExecutor) Connection {
 	}
 }
 
-// Creates a keyspace with the given name. Only used to create test keyspaces.
+// CreateKeySpace creates a keyspace with the given name. Only used to create test keyspaces.
 func (c *connection) CreateKeySpace(name string) error {
 	stmt := fmt.Sprintf("CREATE KEYSPACE %s WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1 };", name)
 	return c.q.Execute(stmt)
 }
 
-// Drops the keyspace having the given name.
+// DropKeySpace drops the keyspace having the given name.
 func (c *connection) DropKeySpace(name string) error {
 	stmt := fmt.Sprintf("DROP KEYSPACE IF EXISTS %s", name)
 	return c.q.Execute(stmt)
 }
 
-// Returns the keyspace having the given name.
+// KeySpace returns the keyspace having the given name.
 func (c *connection) KeySpace(name string) KeySpace {
 	return &k{
 		qe:   c.q,

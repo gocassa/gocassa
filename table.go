@@ -76,7 +76,6 @@ func toMap(i interface{}) (map[string]interface{}, bool) {
 	return r.StructToMap(i)
 }
 
-// Where accepts a bunch of realtions and returns a filter. See the documentation for Relation and Filter to understand what that means.
 func (t t) Where(rs ...Relation) Filter {
 	return filter{
 		t:  t,
@@ -122,7 +121,6 @@ func insert(keySpaceName, cfName string, fieldNames []string, opts Options) stri
 	return buf.String()
 }
 
-// Same as set, but with Options, like TTL, see the Options type for details
 func (t t) SetWithOptions(i interface{}, opts Options) Op {
 	m, ok := toMap(i)
 	if !ok {
@@ -136,12 +134,10 @@ func (t t) SetWithOptions(i interface{}, opts Options) Op {
 	return newWriteOp(t.keySpace.qe, stmt, values)
 }
 
-// Set completely overwrites your whole row matching the ids in the supplied row.
 func (t t) Set(row interface{}) Op {
-	return t.SetWithOptions(i, Options{})
+	return t.SetWithOptions(row, Options{})
 }
 
-// Creates the table. Will fail if the table already exists.
 func (t t) Create() error {
 	if stmt, err := t.CreateStatement(); err != nil {
 		return err
@@ -150,7 +146,6 @@ func (t t) Create() error {
 	}
 }
 
-// Drop table if exists and create it again
 func (t t) Recreate() error {
 	if ex, err := t.keySpace.Exists(t.info.name); ex && err == nil {
 		if err := t.keySpace.DropTable(t.info.name); err != nil {
@@ -174,27 +169,3 @@ func (t t) CreateStatement() (string, error) {
 func (t t) Name() string {
 	return t.info.name
 }
-
-//const (
-//	asc	 = iota
-//	desc
-//)
-//
-//type Ordering struct {
-//	fieldName string
-//	order int
-//}
-//
-//func ASC(fieldName string) Ordering {
-//	return Ordering{
-//		fieldName: fieldName,
-//		order: asc,
-//	}
-//}
-//
-//func DESC(fieldName string) Ordering {
-//	return Ordering{
-//		fieldName: fieldName,
-//		order: asc,
-//	}
-//}
