@@ -55,6 +55,8 @@ func main() {
 }
 ```
 
+Use the following
+
 ##### `MapTable`
 
 `MapTable` provides only very simple [CRUD](http://en.wikipedia.org/wiki/Create,_read,_update_and_delete) functionality:
@@ -62,8 +64,8 @@ func main() {
 ```go
     salesTable := keySpace.MapTable("sale", "Id", Sale{})
     // …
-    result := &Sale{}
-    err := salesTable.Read("sale-1", result).Run()
+    result := Sale{}
+    err := salesTable.Read("sale-1", &result).Run()
 }
 ```
 
@@ -74,8 +76,8 @@ func main() {
 ```go
     salesTable := keySpace.MultimapTable("sale", "SellerId", "Id", Sale{})
     // …
-    results := &[]Sale{}
-    err := salesTable.List("seller-1", nil, 0, results).Run()
+    results := []Sale{}
+    err := salesTable.List("seller-1", nil, 0, &results).Run()
 ```
 
 ##### `TimeSeriesTable`
@@ -85,8 +87,8 @@ func main() {
 ```go
     salesTable := keySpace.TimeSeriesTable("sale", "Created", "Id", Sale{})
     //...
-    results := &[]Sale{}
-    err := salesTable.List(yesterdayTime, todayTime, results).Run()
+    results := []Sale{}
+    err := salesTable.List(yesterdayTime, todayTime, &results).Run()
 ```
 
 ##### `MultiTimeSeriesTable`
@@ -96,6 +98,6 @@ func main() {
 ```go
     salesTable := keySpace.MultiTimeSeriesTable("sale", "SellerId", "Created", "Id", Sale{})
     //...
-    results := &[]Sale{}
-    err := salesTable.List("seller-1", yesterdayTime, todayTime, results).Run()
+    results := []Sale{}
+    err := salesTable.List("seller-1", yesterdayTime, todayTime, &results).Run()
 ```
