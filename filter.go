@@ -50,14 +50,12 @@ func updateStatement(kn, cfName string, fields map[string]interface{}, opts Opti
 		if i > 0 {
 			buf.WriteString(", ")
 		}
-		buf.WriteString(k)
-		buf.WriteString(" = ")
 		if mod, ok := v.(Modifier); ok {
-			stmt, vals := mod.cql()
-			buf.WriteString(fmt.Sprintf(stmt, k))
+			stmt, vals := mod.cql(k)
+			buf.WriteString(stmt)
 			ret = append(ret, vals...)
 		} else {
-			buf.WriteString("?")
+			buf.WriteString(k + " = ?")
 			ret = append(ret, v)
 		}
 		i++

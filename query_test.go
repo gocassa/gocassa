@@ -211,8 +211,8 @@ func TestTypesMarshal(t *testing.T) {
 }
 
 type Customer4 struct {
-	Id string 
-	FavNums []int
+	Id         string
+	FavNums    []int
 	FavStrings []string
 }
 
@@ -220,8 +220,8 @@ func TestUpdateList(t *testing.T) {
 	tbl := ns.Table("customer4", Customer4{}, Keys{PartitionKeys: []string{"Id"}})
 	createIf(tbl.(TableChanger), t)
 	c := Customer4{
-		Id: "99",
-		FavNums: []int{1,2,3},
+		Id:         "99",
+		FavNums:    []int{1, 2, 3},
 		FavStrings: []string{"yo", "boop", "woot"},
 	}
 	if err := tbl.Set(c).Run(); err != nil {
@@ -241,5 +241,25 @@ func TestUpdateList(t *testing.T) {
 	}
 	if len(c.FavNums) != 2 {
 		t.Fatal(c)
+	}
+}
+
+func TestCQLInjection(t *testing.T) {
+	tbl := ns.Table("customer45", Customer4{}, Keys{PartitionKeys: []string{"Id"}})
+	createIf(tbl.(TableChanger), t)
+	c := Customer4{
+		Id:         "99",
+		FavStrings: []string{"yo", "boop", "woot"},
+	}
+	if err := tbl.Set(c).Run(); err != nil {
+		t.Fatal(err)
+	}
+	// At the moment we don't have batch so we just try to mess up the CQL query with a single quote - if
+	// it can be messed up then we are vulnerable
+	err := tbl.Where(Eq("Id", "99")).Update(map[string]interface{}{
+		"FavStrings": ListRemove("'"),
+	}).Run()
+	if err != nil {
+		t.Fatal(err)
 	}
 }
