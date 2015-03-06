@@ -47,15 +47,15 @@ func main() {
     if err != nil {
         panic(err)
     }
-    result := &Sale{}
-    if err := salesTable.Where(gocassa.Eq("Id", "sale-1")).Query().ReadOne(result).Run(); err != nil {
+    result := Sale{}
+    if err := salesTable.Where(gocassa.Eq("Id", "sale-1")).Query().ReadOne(&result).Run(); err != nil {
         panic(err)
     }
-    fmt.Println(*result)
+    fmt.Println(result)
 }
 ```
 
-Use the following
+The following 'recipe' tables were designed to "guide" the user in terms of what queries can they make on a certain partition key - clustering column combination:
 
 ##### `MapTable`
 
