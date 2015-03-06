@@ -5,13 +5,14 @@ import (
 )
 
 // The Connection interface only exists because one can not connect to a keyspace if it does not exist, thus having a Create on KeySpace is not possible.
-// Use ConnectToKeySpace to acquire an instance of KeySpace.
+// Use ConnectToKeySpace to acquire an instance of KeySpace without getting a Connection.
 type Connection interface {
 	CreateKeySpace(name string) error
 	DropKeySpace(name string) error
 	KeySpace(name string) KeySpace
 }
 
+// KeySpace is used to obtain tables from.
 type KeySpace interface {
 	MapTable(tableName, id string, row interface{}) MapTable
 	MultimapTable(tableName, fieldToIndexBy, uniqueKey string, row interface{}) MultimapTable
@@ -25,6 +26,7 @@ type KeySpace interface {
 // Map recipe
 //
 
+// Map gives you basic CRUD functionality. If you need fancier ways to query your data set have a look at the other tables.
 type MapTable interface {
 	SetWithOptions(v interface{}, opts Options) Op
 	Set(v interface{}) Op
@@ -110,11 +112,13 @@ type Filter interface {
 	Delete() Op
 }
 
+// Keys is used with the raw CQL Table type. It is implicit when using recipe tables.
 type Keys struct {
 	PartitionKeys     []string
 	ClusteringColumns []string
 }
 
+// Op is returned by both read and write methods, you have to run them explicitly to take effect.
 type Op interface {
 	Run() error
 	// You do not need this in 95% of the use cases, use Run!
@@ -132,6 +136,9 @@ type TableChanger interface {
 	//CreateIfDoesNotExist() error
 }
 
+// Table is the only non-recipe table, it is the "raw CQL table", it lets you do pretty much whatever you want
+// with the downside that you have to know what you are doing - eg. you have to know what queries can you make
+// on a certain partition key - clustering column combination.
 type Table interface {
 	// Set Inserts, or Replaces your row with the supplied struct. Be aware that what is not in your struct
 	// will be deleted. To only overwrite some of the fields, use Query.Update.

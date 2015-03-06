@@ -12,6 +12,7 @@ type k struct {
 	debugMode bool
 }
 
+// Connect to a certain keyspace directly. Same as using Connect().KeySpace(keySpaceName)
 func ConnectToKeySpace(keySpace string, nodeIps []string, username, password string) (KeySpace, error) {
 	c, err := Connect(nodeIps, username, password)
 	if err != nil {

@@ -76,6 +76,7 @@ func toMap(i interface{}) (map[string]interface{}, bool) {
 	return r.StructToMap(i)
 }
 
+// Where accepts a bunch of realtions and returns a filter. See the documentation for Relation and Filter to understand what that means.
 func (t t) Where(rs ...Relation) Filter {
 	return filter{
 		t:  t,
@@ -121,6 +122,7 @@ func insert(keySpaceName, cfName string, fieldNames []string, opts Options) stri
 	return buf.String()
 }
 
+// Same as set, but with Options, like TTL, see the Options type for details
 func (t t) SetWithOptions(i interface{}, opts Options) Op {
 	m, ok := toMap(i)
 	if !ok {
@@ -134,10 +136,12 @@ func (t t) SetWithOptions(i interface{}, opts Options) Op {
 	return newWriteOp(t.keySpace.qe, stmt, values)
 }
 
-func (t t) Set(i interface{}) Op {
+// Set completely overwrites your whole row matching the ids in the supplied row.
+func (t t) Set(row interface{}) Op {
 	return t.SetWithOptions(i, Options{})
 }
 
+// Creates the table. Will fail if the table already exists.
 func (t t) Create() error {
 	if stmt, err := t.CreateStatement(); err != nil {
 		return err

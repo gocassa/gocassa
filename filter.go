@@ -65,10 +65,12 @@ func (f filter) UpdateWithOptions(m map[string]interface{}, opts Options) Op {
 	return newWriteOp(f.t.keySpace.qe, stmt+str, append(values, wvals...))
 }
 
+// Do a partial update on the filter.
 func (f filter) Update(m map[string]interface{}) Op {
 	return f.UpdateWithOptions(m, Options{})
 }
 
+// Delete all rows matching the filter.
 func (f filter) Delete() Op {
 	str, vals := f.generateWhere()
 	stmt := fmt.Sprintf("DELETE FROM %s.%s%s", f.t.keySpace.name, f.t.info.name, str)
@@ -78,6 +80,7 @@ func (f filter) Delete() Op {
 	return newWriteOp(f.t.keySpace.qe, stmt, vals)
 }
 
+// Return the query from the filter so you can read the rows matching the filter.
 func (f filter) Query() Query {
 	return &query{
 		f: f,
