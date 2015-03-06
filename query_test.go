@@ -227,19 +227,59 @@ func TestUpdateList(t *testing.T) {
 	if err := tbl.Set(c).Run(); err != nil {
 		t.Fatal(err)
 	}
-	err := tbl.Where(Eq("Id", "99")).Update(map[string]interface{}{
+	f := tbl.Where(Eq("Id", "99"))
+	err := f.Update(map[string]interface{}{
 		"FavNums": ListRemove(2),
-	}).Add(tbl.Where(Eq("Id", "99")).Update(map[string]interface{}{
+	}).Add(f.Update(map[string]interface{}{
 		"FavStrings": ListRemove("2"),
 	})).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = tbl.Where(Eq("Id", "99")).Query().ReadOne(&c).Run()
+	err = f.Query().ReadOne(&c).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(c.FavNums) != 2 {
+	if !reflect.DeepEqual(c.FavStrings, []string{"yo", "boop", "woot"}) || !reflect.DeepEqual(c.FavNums, []int{1, 3}) {
+		t.Fatal(c)
+	}
+	err = f.Update(map[string]interface{}{
+		"FavStrings": ListSetAtIndex(1, "changedBoop"),
+	}).Run()
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = f.Query().ReadOne(&c).Run()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(c.FavStrings, []string{"yo", "changedBoop", "woot"}) {
+		t.Fatal(c)
+	}
+	err = f.Update(map[string]interface{}{
+		"FavStrings": ListAppend("last"),
+	}).Run()
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = f.Query().ReadOne(&c).Run()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(c.FavStrings, []string{"yo", "changedBoop", "woot", "last"}) {
+		t.Fatal(c)
+	}
+	err = f.Update(map[string]interface{}{
+		"FavStrings": ListPrepend("first"),
+	}).Run()
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = f.Query().ReadOne(&c).Run()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(c.FavStrings, []string{"first", "yo", "changedBoop", "woot", "last"}) {
 		t.Fatal(c)
 	}
 }

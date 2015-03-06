@@ -12,6 +12,7 @@ const (
 	ModifierListAppend
 	ModifierListSetAtIndex
 	ModifierListRemove
+	// ModifierListRemoveAtIndex
 )
 
 type Modifier struct {
@@ -19,6 +20,7 @@ type Modifier struct {
 	args []interface{}
 }
 
+// Prepend a value to the front of the list
 func ListPrepend(value interface{}) Modifier {
 	return Modifier{
 		op:   ModifierListPrepend,
@@ -26,6 +28,7 @@ func ListPrepend(value interface{}) Modifier {
 	}
 }
 
+// Append a value to the end of the list
 func ListAppend(value interface{}) Modifier {
 	return Modifier{
 		op:   ModifierListAppend,
@@ -33,19 +36,29 @@ func ListAppend(value interface{}) Modifier {
 	}
 }
 
+// Sets list element at index to value
 func ListSetAtIndex(index int, value interface{}) Modifier {
 	return Modifier{
-		op:   ModifierListAppend,
+		op:   ModifierListSetAtIndex,
 		args: []interface{}{index, value},
 	}
 }
 
+// Remove all elements having a particular value
 func ListRemove(value interface{}) Modifier {
 	return Modifier{
 		op:   ModifierListRemove,
 		args: []interface{}{value},
 	}
 }
+
+// Removes an element at a specific index from the list
+// func ListRemoveAtIndex(index int, value interface{}) Modifier {
+// 	return Modifier{
+// 		op:   ModifierListRemove,
+// 		args: []interface{}{index, value},
+// 	}
+// }
 
 // returns a string with a %v placeholder for field name
 func (m Modifier) cql(name string) (string, []interface{}) {
@@ -58,7 +71,7 @@ func (m Modifier) cql(name string) (string, []interface{}) {
 	case ModifierListAppend:
 		str = fmt.Sprintf("%v = %v + [%v]", name, name, printElem(m.args[0]))
 	case ModifierListSetAtIndex:
-		str = fmt.Sprintf("%v[%v] = %v", name, m.args[0], m.args[1])
+		str = fmt.Sprintf("%v[%v] = %v", name, m.args[0], printElem(m.args[1]))
 	case ModifierListRemove:
 		str = fmt.Sprintf("%v = %v - [%v]", name, name, printElem(m.args[0]))
 	}
