@@ -19,6 +19,8 @@ type KeySpace interface {
 	TimeSeriesTable(tableName, timeField, uniqueKey string, bucketSize time.Duration, row interface{}) TimeSeriesTable
 	MultiTimeSeriesTable(tableName, fieldToIndexByField, timeField, uniqueKey string, bucketSize time.Duration, row interface{}) MultiTimeSeriesTable
 	Table(tableName string, row interface{}, keys Keys) Table
+	// DebugMode enables/disables debug mode depending on the value of the input boolean.
+	// When DebugMode is enabled, all built CQL statements are printe to stdout.
 	DebugMode(bool)
 }
 
@@ -137,11 +139,13 @@ type Op interface {
 
 // Danger zone! Do not use this interface unless you really know what you are doing
 type TableChanger interface {
-	// Create creates the table. Will fail if the table already exists.
+	// Create creates the table in the keySpace, but only if it does not exist already.
+	// If the table already exists, it returns an error.
 	Create() error
 	// CreateStatement returns you the CQL query which can be used to create the tably manually in cqlsh
 	CreateStatement() (string, error)
-	// Recreate drops the table if exists and create it again
+	// Recreate drops the table if exists and creates it again.
+	// This is useful for test purposes only.
 	Recreate() error
 }
 
