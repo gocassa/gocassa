@@ -20,7 +20,7 @@ import (
 //   Field int
 //
 //   // Field appears in the resulting map as key "myName"
-//   // Field int "myName"
+//   Field int "myName"
 func StructToMap(val interface{}) (map[string]interface{}, bool) {
 	// indirect so function works with both structs and pointers to them
 	structVal := r.Indirect(r.ValueOf(val))
