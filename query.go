@@ -5,8 +5,9 @@ import (
 )
 
 type query struct {
-	f     filter
-	limit int
+	f       filter
+	limit   int
+	isBatch bool
 }
 
 func (q *query) Limit(i int) Query {
@@ -16,32 +17,12 @@ func (q *query) Limit(i int) Query {
 
 func (q *query) Read(pointerToASlice interface{}) Op {
 	stmt, vals := q.generateRead()
-	return &op{
-		qe: q.f.t.keySpace.qe,
-		ops: []singleOp{
-			{
-				opType: read,
-				result: pointerToASlice,
-				stmt:   stmt,
-				params: vals,
-			},
-		},
-	}
+	return newOp(q.f.t.keySpace.qe, read, pointerToASlice, stmt, vals, q.isBatch)
 }
 
 func (q *query) ReadOne(pointer interface{}) Op {
 	stmt, vals := q.generateRead()
-	return &op{
-		qe: q.f.t.keySpace.qe,
-		ops: []singleOp{
-			{
-				opType: singleRead,
-				result: pointer,
-				stmt:   stmt,
-				params: vals,
-			},
-		},
-	}
+	return newOp(q.f.t.keySpace.qe, singleRead, pointer, stmt, vals, q.isBatch)
 }
 
 func (q *query) generateRead() (string, []interface{}) {

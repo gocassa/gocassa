@@ -6,6 +6,14 @@ type multimapT struct {
 	idField        string
 }
 
+func (o *multimapT) Batch() MultimapTable {
+	return &multimapT{
+		o.t.batch(true),
+		o.fieldToIndexBy,
+		o.idField,
+	}
+}
+
 func (o *multimapT) Update(field, id interface{}, m map[string]interface{}) Op {
 	return o.Where(Eq(o.fieldToIndexBy, field), Eq(o.idField, id)).Update(m)
 }

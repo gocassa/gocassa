@@ -5,6 +5,13 @@ type mapT struct {
 	idField string
 }
 
+func (o *mapT) Batch() MapTable {
+	return &mapT{
+		o.t.batch(true),
+		o.idField,
+	}
+}
+
 func (o *mapT) Update(id interface{}, m map[string]interface{}) Op {
 	return o.Where(Eq(o.idField, id)).Update(m)
 }

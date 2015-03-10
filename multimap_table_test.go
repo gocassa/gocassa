@@ -19,29 +19,29 @@ func TestMultimapTableInsertRead(t *testing.T) {
 		Name: "Joe",
 		Tag:  "A",
 	}
-	err := tbl.Set(joe).Run()
+	err := tbl.Set(joe)
 	if err != nil {
 		t.Fatal(err)
 	}
 	res := &Customer2{}
-	err = tbl.Read("A", "33", res).Run()
+	err = tbl.Read("A", "33", res)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !reflect.DeepEqual(*res, joe) {
 		t.Fatal(*res, joe)
 	}
-	err = tbl.Read("B", "33", res).Run()
+	err = tbl.Read("B", "33", res)
 	if err == nil {
 		t.Fatal(*res)
 	}
 	err = tbl.Update("A", "33", map[string]interface{}{
 		"Name": "John",
-	}).Run()
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = tbl.Read("A", "33", res).Run()
+	err = tbl.Read("A", "33", res)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -49,7 +49,7 @@ func TestMultimapTableInsertRead(t *testing.T) {
 		t.Fatal(*res)
 	}
 	list := &[]Customer{}
-	err = tbl.List("A", nil, 20, list).Run()
+	err = tbl.List("A", nil, 20, list)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -66,23 +66,23 @@ func TestMultimapTableDelete(t *testing.T) {
 		Name: "Joe",
 		Tag:  "A",
 	}
-	err := tbl.Set(joe).Run()
+	err := tbl.Set(joe)
 	if err != nil {
 		t.Fatal(err)
 	}
 	res := &Customer2{}
-	err = tbl.Read("A", "33", res).Run()
+	err = tbl.Read("A", "33", res)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !reflect.DeepEqual(*res, joe) {
 		t.Fatal(*res, joe)
 	}
-	err = tbl.Delete("A", "33").Run()
+	err = tbl.Delete("A", "33")
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = tbl.Read("A", "33", res).Run()
+	err = tbl.Read("A", "33", res)
 	if err == nil {
 		t.Fatal(res)
 	}
@@ -96,7 +96,7 @@ func TestMultimapTableMultiRead(t *testing.T) {
 		Name: "Joe",
 		Tag:  "A",
 	}
-	err := tbl.Set(joe).Run()
+	err := tbl.Set(joe)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -105,12 +105,12 @@ func TestMultimapTableMultiRead(t *testing.T) {
 		Name: "Jane",
 		Tag:  "A",
 	}
-	err = tbl.Set(jane).Run()
+	err = tbl.Set(jane)
 	if err != nil {
 		t.Fatal(err)
 	}
 	customers := &[]Customer2{}
-	err = tbl.MultiRead("A", []interface{}{"33", "34"}, customers).Run()
+	err = tbl.MultiRead("A", []interface{}{"33", "34"}, customers)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -12,23 +12,23 @@ func TestMapTable(t *testing.T) {
 		Id:   "33",
 		Name: "Joe",
 	}
-	err := tbl.Set(joe).Run()
+	err := tbl.Set(joe)
 	if err != nil {
 		t.Fatal(err)
 	}
 	res := &Customer{}
-	err = tbl.Read("33", res).Run()
+	err = tbl.Read("33", res)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !reflect.DeepEqual(*res, joe) {
 		t.Fatal(*res, joe)
 	}
-	err = tbl.Delete("33").Run()
+	err = tbl.Delete("33")
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = tbl.Read("33", res).Run()
+	err = tbl.Read("33", res)
 	if err == nil {
 		t.Fatal(res)
 	}
@@ -41,12 +41,12 @@ func TestMapTableUpdate(t *testing.T) {
 		Id:   "33",
 		Name: "Joe",
 	}
-	err := tbl.Set(joe).Run()
+	err := tbl.Set(joe)
 	if err != nil {
 		t.Fatal(err)
 	}
 	res := &Customer{}
-	err = tbl.Read("33", res).Run()
+	err = tbl.Read("33", res)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -55,11 +55,11 @@ func TestMapTableUpdate(t *testing.T) {
 	}
 	err = tbl.Update("33", map[string]interface{}{
 		"Name": "John",
-	}).Run()
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = tbl.Read("33", res).Run()
+	err = tbl.Read("33", res)
 	if err != nil {
 		t.Fatal(res, err)
 	}
@@ -75,7 +75,7 @@ func TestMapTableMultiRead(t *testing.T) {
 		Id:   "33",
 		Name: "Joe",
 	}
-	err := tbl.Set(joe).Run()
+	err := tbl.Set(joe)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -83,12 +83,12 @@ func TestMapTableMultiRead(t *testing.T) {
 		Id:   "34",
 		Name: "Jane",
 	}
-	err = tbl.Set(jane).Run()
+	err = tbl.Set(jane)
 	if err != nil {
 		t.Fatal(err)
 	}
 	customers := &[]Customer{}
-	err = tbl.MultiRead([]interface{}{"33", "34"}, customers).Run()
+	err = tbl.MultiRead([]interface{}{"33", "34"}, customers)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -100,5 +100,26 @@ func TestMapTableMultiRead(t *testing.T) {
 	}
 	if !reflect.DeepEqual((*customers)[1], jane) {
 		t.Fatalf("Expected to find jane, got %v", (*customers)[1])
+	}
+}
+
+func TestRunAtomically(t *testing.T) {
+	tbl := ns.MapTable("customer84", "Id", Customer{})
+	createIf(tbl.(TableChanger), t)
+	joe := Customer{
+		Id:   "33",
+		Name: "Joe",
+	}
+	jane := Customer{
+		Id:   "34",
+		Name: "Jane",
+	}
+
+	err := RunAtomically(
+		tbl.Batch().Set(joe),
+		tbl.Batch().Set(jane),
+	)
+	if err != nil {
+		t.Fatal("Error : %v", err)
 	}
 }

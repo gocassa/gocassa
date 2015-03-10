@@ -7,8 +7,9 @@ import (
 )
 
 type filter struct {
-	t  t
-	rs []Relation
+	t       t
+	rs      []Relation
+	isBatch bool
 }
 
 func (f *filter) generateWhere() (string, []interface{}) {
@@ -62,7 +63,7 @@ func (f filter) UpdateWithOptions(m map[string]interface{}, opts Options) Op {
 	if f.t.keySpace.debugMode {
 		fmt.Println(stmt+" "+str, append(values, wvals...))
 	}
-	return newWriteOp(f.t.keySpace.qe, stmt+str, append(values, wvals...))
+	return newWriteOp(f.t.keySpace.qe, stmt+str, append(values, wvals...), f.isBatch)
 }
 
 // Update does a partial update on the filter.
@@ -76,12 +77,13 @@ func (f filter) Delete() Op {
 	if f.t.keySpace.debugMode {
 		fmt.Println(stmt, vals)
 	}
-	return newWriteOp(f.t.keySpace.qe, stmt, vals)
+	return newWriteOp(f.t.keySpace.qe, stmt, vals, f.isBatch)
 }
 
 // Query returns the query from the filter so you can read the rows matching the filter.
 func (f filter) Query() Query {
 	return &query{
-		f: f,
+		f:       f,
+		isBatch: f.isBatch,
 	}
 }

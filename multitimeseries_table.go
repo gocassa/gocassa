@@ -12,6 +12,16 @@ type multiTimeSeriesT struct {
 	bucketSize time.Duration
 }
 
+func (o *multiTimeSeriesT) Batch() MultiTimeSeriesTable {
+	return &multiTimeSeriesT{
+		o.t.batch(true),
+		o.indexField,
+		o.timeField,
+		o.idField,
+		o.bucketSize,
+	}
+}
+
 func (o *multiTimeSeriesT) SetWithOptions(v interface{}, opts Options) Op {
 	m, ok := toMap(v)
 	if !ok {
