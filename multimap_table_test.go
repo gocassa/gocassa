@@ -115,12 +115,12 @@ func TestMultimapTableMultiRead(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(*customers) != 2 {
-		t.Fatal("Expected to multiread 2 records, got %d", len(*customers))
+		t.Fatalf("Expected to multiread 2 records, got %d", len(*customers))
 	}
 	if !reflect.DeepEqual((*customers)[0], joe) {
-		t.Fatal("Expected to find joe, got %v", (*customers)[0])
+		t.Fatalf("Expected to find joe, got %v", (*customers)[0])
 	}
 	if !reflect.DeepEqual((*customers)[1], jane) {
-		t.Fatal("Expected to find jane, got %v", (*customers)[1])
+		t.Fatalf("Expected to find jane, got %v", (*customers)[1])
 	}
 }
