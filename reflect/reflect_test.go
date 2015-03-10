@@ -9,7 +9,7 @@ import (
 type Tweet struct {
 	Timeline      string
 	ID            gocql.UUID  `cql:"id"`
-	Text          string      "teXt"
+	Text          string      `teXt`
 	OriginalTweet *gocql.UUID `json:"origin"`
 }
 
