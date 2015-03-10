@@ -36,7 +36,7 @@ func main() {
 		SellerId:   "seller-1",
 		Price:      42,
 		Created:    time.Now(),
-	}).Run()
+	})
 	if err != nil {
 		panic(err)
 	}
@@ -45,7 +45,7 @@ func main() {
 	// One thing we have to notice here is that to read a single row,
 	// we have to know the SellerId and SaleId as well. This is due to how
 	// data is structured in cassandra .
-	if err := salesTable.Read("seller-1", "sale-1", &result).Run(); err != nil {
+	if err := salesTable.Read("seller-1", "sale-1", &result); err != nil {
 		panic(err)
 	}
 	fmt.Println(result)
@@ -58,13 +58,13 @@ func main() {
 		SellerId:   "seller-1",
 		Price:      55,
 		Created:    time.Now(),
-	}).Run()
+	})
 	if err != nil {
 		panic(err)
 	}
 
 	resultList := []Sale{}
-	if err := salesTable.List("seller-1", nil, 0, &resultList).Run(); err != nil {
+	if err := salesTable.List("seller-1", nil, 0, &resultList); err != nil {
 		panic(err)
 	}
 	fmt.Println("Our result list now has 2 rows. Amazing!!!", resultList)
@@ -73,14 +73,14 @@ func main() {
 	fmt.Printf("Updating sales with SellerId %v and Id %v \"sale-1\" with Price = 110\n", "seller-1", "sale-1")
 	err = salesTable.Update("seller-1", "sale-1", map[string]interface{}{
 		"Price": 110,
-	}).Run()
+	})
 	if err != nil {
 		panic(err)
 	}
 
 	fmt.Println("Reading sales record again: ")
 	// Read the row again:
-	if err := salesTable.Read("seller-1", "sale-1", &result).Run(); err != nil {
+	if err := salesTable.Read("seller-1", "sale-1", &result); err != nil {
 		panic(err)
 	}
 	fmt.Println(result)
@@ -99,20 +99,20 @@ func main() {
 			SellerId:   "seller-1",
 			Price:      55,
 			Created:    time.Now(),
-		}).Run()
+		})
 		if err != nil {
 			panic(err)
 		}
 	}
 
 	fmt.Println("First 10 sales of seller-1:")
-	err = salesTable.List("seller-1", nil, 11, &resultList).Run()
+	err = salesTable.List("seller-1", nil, 11, &resultList)
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println(resultList)
 	if len(resultList) > 10 {
-		err = salesTable.List("seller-1", resultList[10].Id, 11, &resultList).Run()
+		err = salesTable.List("seller-1", resultList[10].Id, 11, &resultList)
 		if err != nil {
 			panic(err)
 		}

@@ -13,6 +13,14 @@ const (
 type op struct {
 	qe  QueryExecutor
 	ops []singleOp
+	err error
+}
+
+func (op *op) Error() string {
+	if op.err != nil {
+		return op.err.Error()
+	}
+	return ""
 }
 
 type singleOp struct {
@@ -22,16 +30,33 @@ type singleOp struct {
 	params []interface{}
 }
 
-func newWriteOp(qe QueryExecutor, stmt string, params []interface{}) *op {
-	return &op{
+func newWriteOp(qe QueryExecutor, stmt string, params []interface{}, isBatch bool) *op {
+	return newOp(qe, write, nil, stmt, params, isBatch)
+}
+
+func newOp(qe QueryExecutor, opType int, result interface{}, stmt string, params []interface{}, isBatch bool) *op {
+	o := &op{
 		qe: qe,
 		ops: []singleOp{
 			{
-				opType: write,
+				opType: opType,
+				result: result,
 				stmt:   stmt,
 				params: params,
 			},
 		},
+	}
+	if isBatch {
+		return o
+	}
+
+	err := o.runAll()
+	if err == nil {
+		return nil
+	}
+
+	return &op{
+		err: err,
 	}
 }
 
@@ -77,14 +102,14 @@ func (w *singleOp) run(qe QueryExecutor) error {
 	return nil
 }
 
-func (w *op) Add(wo ...Op) Op {
+func (w *op) add(wo ...Op) Op {
 	for _, v := range wo {
 		w.ops = append(w.ops, v.(*op).ops...)
 	}
 	return w
 }
 
-func (w op) Run() error {
+func (w op) runAll() error {
 	for _, v := range w.ops {
 		err := v.run(w.qe)
 		if err != nil {
@@ -92,17 +117,4 @@ func (w op) Run() error {
 		}
 	}
 	return nil
-}
-
-func (w op) RunAtomically() error {
-	stmts := []string{}
-	params := [][]interface{}{}
-	for _, vop := range w.ops {
-		// We are pushing the limits of the type system here...
-		if vop.opType == write {
-			stmts = append(stmts, vop.stmt)
-			params = append(params, vop.params)
-		}
-	}
-	return w.qe.ExecuteAtomically(stmts, params)
 }

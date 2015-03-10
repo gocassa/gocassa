@@ -48,13 +48,13 @@ func main() {
         SellerId: "seller-1",
         Price: 42,
         Created: time.Now(),
-    }).Run()
+    })
     if err != nil {
         panic(err)
     }
 
     result := Sale{}
-    if err := salesTable.Where(gocassa.Eq("Id", "sale-1")).Query().ReadOne(&result).Run(); err != nil {
+    if err := salesTable.Where(gocassa.Eq("Id", "sale-1")).Query().ReadOne(&result); err != nil {
         panic(err)
     }
     fmt.Println(result)
@@ -70,7 +70,7 @@ func main() {
     // …
     salesTable := keySpace.MapTable("sale", "Id", Sale{})
     result := Sale{}
-    salesTable.Read("sale-1", &result).Run()
+    salesTable.Read("sale-1", &result)
 }
 ```
 [link to this example](https://github.com/hailocab/gocassa/blob/master/examples/map_table1.go)
@@ -85,7 +85,7 @@ Read, Set, Update, and Delete all happen by "Id".
     salesTable := keySpace.MultimapTable("sale", "SellerId", "Id", Sale{})
     // …
     results := []Sale{}
-    err := salesTable.List("seller-1", nil, 0, &results).Run()
+    err := salesTable.List("seller-1", nil, 0, &results)
 ```
 [link to this example](https://github.com/hailocab/gocassa/blob/master/examples/multimap_table1.go)
 
@@ -99,7 +99,7 @@ For examples on how to do pagination or Update with this table, refer to the exa
     salesTable := keySpace.TimeSeriesTable("sale", "Created", "Id", Sale{})
     //...
     results := []Sale{}
-    err := salesTable.List(yesterdayTime, todayTime, &results).Run()
+    err := salesTable.List(yesterdayTime, todayTime, &results)
 ```
 
 ##### `MultiTimeSeriesTable`
@@ -110,5 +110,5 @@ For examples on how to do pagination or Update with this table, refer to the exa
     salesTable := keySpace.MultiTimeSeriesTable("sale", "SellerId", "Created", "Id", Sale{})
     //...
     results := []Sale{}
-    err := salesTable.List("seller-1", yesterdayTime, todayTime, &results).Run()
+    err := salesTable.List("seller-1", yesterdayTime, todayTime, &results)
 ```

@@ -41,12 +41,12 @@ func TestEq(t *testing.T) {
 	err := cs.Set(Customer{
 		Id:   "50",
 		Name: "Joe",
-	}).Run()
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
 	res := &[]Customer{}
-	err = cs.Where(Eq("Id", "50")).Query().Read(res).Run()
+	err = cs.Where(Eq("Id", "50")).Query().Read(res)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -68,19 +68,22 @@ func TestMultipleRowResults(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = cs.Set(Customer{
-		Id:   "12",
-		Name: "John",
-	}).Add(cs.Set(Customer{
-		Id:   "13",
-		Name: "John",
-	})).Run()
+	err = Check(
+		cs.Set(Customer{
+			Id:   "12",
+			Name: "John",
+		}),
+		cs.Set(Customer{
+			Id:   "13",
+			Name: "John",
+		}),
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	res := &[]Customer{}
-	err = cs.Where(Eq("Name", "John")).Query().Read(res).Run()
+	err = cs.Where(Eq("Name", "John")).Query().Read(res)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -93,18 +96,21 @@ func TestIn(t *testing.T) {
 	cs := ns.Table("customer", Customer{}, Keys{
 		PartitionKeys: []string{"Id"},
 	})
-	err := cs.Set(Customer{
-		Id:   "100",
-		Name: "Joe",
-	}).Add(cs.Set(Customer{
-		Id:   "200",
-		Name: "Jane",
-	})).Run()
+	err := Check(
+		cs.Set(Customer{
+			Id:   "100",
+			Name: "Joe",
+		}),
+		cs.Set(Customer{
+			Id:   "200",
+			Name: "Jane",
+		}),
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
 	res := &[]Customer{}
-	err = cs.Where(In("Id", "100", "200")).Query().Read(res).Run()
+	err = cs.Where(In("Id", "100", "200")).Query().Read(res)
 	if len(*res) != 2 {
 		for _, v := range *res {
 			fmt.Println(v)
@@ -122,12 +128,12 @@ func TestAnd(t *testing.T) {
 	err := cs.Set(Customer{
 		Id:   "100",
 		Name: "Joe",
-	}).Run()
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
 	res := &[]Customer{}
-	err = cs.Where(Eq("Id", "100"), Eq("Name", "Joe")).Query().Read(res).Run()
+	err = cs.Where(Eq("Id", "100"), Eq("Name", "Joe")).Query().Read(res)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -139,7 +145,7 @@ func TestAnd(t *testing.T) {
 func TestQueryReturnError(t *testing.T) {
 	cs := ns.Table("customer2", Customer{}, Keys{})
 	res := &[]Customer{}
-	err := cs.Where(Eq("Id", "100"), Eq("Name", "Joe")).Query().Read(res).Run()
+	err := cs.Where(Eq("Id", "100"), Eq("Name", "Joe")).Query().Read(res)
 	if err == nil {
 		t.Fatal("Table customer2 does not exist - should return error")
 	}
@@ -149,7 +155,7 @@ func TestRowNotFoundError(t *testing.T) {
 	cs := ns.MapTable("customer", "Id", Customer{})
 	createIf(cs.(TableChanger), t)
 	c := &Customer{}
-	err := cs.Read("8sad8as8ds8u34", c).Run()
+	err := cs.Read("8sad8as8ds8u34", c)
 	_, ok := err.(RowNotFoundError)
 	if !ok {
 		t.Fatal(err)
@@ -182,11 +188,11 @@ func TestTypesMarshal(t *testing.T) {
 	}
 	tbl := ns.Table("customer3", Customer3{}, Keys{PartitionKeys: []string{"Id"}})
 	createIf(tbl.(TableChanger), t)
-	if err := tbl.Set(c).Run(); err != nil {
+	if err := tbl.Set(c); err != nil {
 		t.Fatal(err)
 	}
 	res := &[]Customer3{}
-	err := tbl.Where(Eq("Id", "1")).Query().Read(res).Run()
+	err := tbl.Where(Eq("Id", "1")).Query().Read(res)
 	if err != nil {
 		t.Fatal(err)
 	}

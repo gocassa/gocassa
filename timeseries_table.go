@@ -13,6 +13,15 @@ type timeSeriesT struct {
 	bucketSize time.Duration
 }
 
+func (o *timeSeriesT) Batch() TimeSeriesTable {
+	return &timeSeriesT{
+		o.t.batch(true),
+		o.timeField,
+		o.idField,
+		o.bucketSize,
+	}
+}
+
 func (o *timeSeriesT) SetWithOptions(v interface{}, opts Options) Op {
 	m, ok := toMap(v)
 	if !ok {

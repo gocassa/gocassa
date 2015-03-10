@@ -12,6 +12,15 @@ type k struct {
 	debugMode bool
 }
 
+func Check(errors ...error) error {
+	for _, err := range errors {
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // Connect to a certain keyspace directly. Same as using Connect().KeySpace(keySpaceName)
 func ConnectToKeySpace(keySpace string, nodeIps []string, username, password string) (KeySpace, error) {
 	c, err := Connect(nodeIps, username, password)
@@ -135,6 +144,23 @@ func (k *k) Exists(cf string) (bool, error) {
 func (k *k) DropTable(cf string) error {
 	stmt := fmt.Sprintf("DROP TABLE IF EXISTS %s.%s", k.name, cf)
 	return k.qe.Execute(stmt)
+}
+
+func (k *k) RunAtomically(ops ...Op) error {
+	stmts := []string{}
+	params := [][]interface{}{}
+
+	for _, o := range ops {
+		for _, vop := range o.(*op).ops {
+			// We are pushing the limits of the type system here...
+			if vop.opType == write {
+				stmts = append(stmts, vop.stmt)
+				params = append(params, vop.params)
+			}
+		}
+	}
+
+	return k.qe.ExecuteAtomically(stmts, params)
 }
 
 // Translate errors returned by cassandra

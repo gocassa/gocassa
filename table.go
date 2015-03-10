@@ -14,6 +14,7 @@ import (
 type t struct {
 	keySpace *k
 	info     *tableInfo
+	isBatch  bool
 }
 
 // Contains mostly analyzed information about the entity
@@ -78,8 +79,9 @@ func toMap(i interface{}) (map[string]interface{}, bool) {
 
 func (t t) Where(rs ...Relation) Filter {
 	return filter{
-		t:  t,
-		rs: rs,
+		t:       t,
+		rs:      rs,
+		isBatch: t.isBatch,
 	}
 }
 
@@ -131,7 +133,7 @@ func (t t) SetWithOptions(i interface{}, opts Options) Op {
 	if t.keySpace.debugMode {
 		fmt.Println(stmt, values)
 	}
-	return newWriteOp(t.keySpace.qe, stmt, values)
+	return newWriteOp(t.keySpace.qe, stmt, values, t.isBatch)
 }
 
 func (t t) Set(row interface{}) Op {
@@ -168,4 +170,16 @@ func (t t) CreateStatement() (string, error) {
 
 func (t t) Name() string {
 	return t.info.name
+}
+
+func (t t) Batch() Table {
+	return *t.batch(true)
+}
+
+func (table *t) batch(isBatch bool) *t {
+	return &t{
+		table.keySpace,
+		table.info,
+		isBatch,
+	}
 }

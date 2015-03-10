@@ -21,24 +21,29 @@ func parse(value string) time.Time {
 func TestTimeSeriesT(t *testing.T) {
 	tbl := ns.TimeSeriesTable("tripTime5", "Time", "Id", time.Minute, Trip{})
 	createIf(tbl.(TableChanger), t)
-	err := tbl.Set(Trip{
-		Id:   "1",
-		Time: parse("2006 Jan 2 15:03:59"),
-	}).Add(tbl.Set(Trip{
-		Id:   "2",
-		Time: parse("2006 Jan 2 15:04:00"),
-	})).Add(tbl.Set(Trip{
-		Id:   "3",
-		Time: parse("2006 Jan 2 15:04:01"),
-	})).Add(tbl.Set(Trip{
-		Id:   "4",
-		Time: parse("2006 Jan 2 15:05:01"),
-	})).Run()
+	err := Check(
+		tbl.Set(Trip{
+			Id:   "1",
+			Time: parse("2006 Jan 2 15:03:59"),
+		}),
+		tbl.Set(Trip{
+			Id:   "2",
+			Time: parse("2006 Jan 2 15:04:00"),
+		}),
+		tbl.Set(Trip{
+			Id:   "3",
+			Time: parse("2006 Jan 2 15:04:01"),
+		}),
+		tbl.Set(Trip{
+			Id:   "4",
+			Time: parse("2006 Jan 2 15:05:01"),
+		}),
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
 	ts := &[]Trip{}
-	err = tbl.List(parse("2006 Jan 2 15:03:58"), parse("2006 Jan 2 15:04:02"), ts).Run()
+	err = tbl.List(parse("2006 Jan 2 15:03:58"), parse("2006 Jan 2 15:04:02"), ts)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -49,7 +54,7 @@ func TestTimeSeriesT(t *testing.T) {
 	if ts1[0].Id != "1" || ts1[1].Id != "2" || ts1[2].Id != "3" {
 		t.Fatal(ts1[0], ts1[1], ts1[2])
 	}
-	err = tbl.List(parse("2006 Jan 2 15:03:58"), parse("2006 Jan 2 15:05:02"), ts).Run()
+	err = tbl.List(parse("2006 Jan 2 15:03:58"), parse("2006 Jan 2 15:05:02"), ts)
 	if err != nil {
 		t.Fatal(err)
 	}

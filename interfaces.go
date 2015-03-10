@@ -22,6 +22,7 @@ type KeySpace interface {
 	// DebugMode enables/disables debug mode depending on the value of the input boolean.
 	// When DebugMode is enabled, all built CQL statements are printe to stdout.
 	DebugMode(bool)
+	RunAtomically(ops ...Op) error
 }
 
 //
@@ -37,6 +38,7 @@ type MapTable interface {
 	Delete(id interface{}) Op
 	Read(id, pointer interface{}) Op
 	MultiRead(ids []interface{}, pointerToASlice interface{}) Op
+	Batch() MapTable
 	TableChanger
 }
 
@@ -55,6 +57,7 @@ type MultimapTable interface {
 	List(v, startId interface{}, limit int, pointerToASlice interface{}) Op
 	Read(v, id, pointer interface{}) Op
 	MultiRead(v interface{}, ids []interface{}, pointerToASlice interface{}) Op
+	Batch() MultimapTable
 	TableChanger
 }
 
@@ -72,6 +75,7 @@ type TimeSeriesTable interface {
 	Delete(timeStamp time.Time, id interface{}) Op
 	Read(timeStamp time.Time, id, pointer interface{}) Op
 	List(start, end time.Time, pointerToASlice interface{}) Op
+	Batch() TimeSeriesTable
 	TableChanger
 }
 
@@ -89,6 +93,7 @@ type MultiTimeSeriesTable interface {
 	Delete(v interface{}, timeStamp time.Time, id interface{}) Op
 	Read(v interface{}, timeStamp time.Time, id, pointer interface{}) Op
 	List(v interface{}, start, end time.Time, pointerToASlice interface{}) Op
+	Batch() MultiTimeSeriesTable
 	TableChanger
 }
 
@@ -128,13 +133,7 @@ type Keys struct {
 // Op is returned by both read and write methods, you have to run them explicitly to take effect.
 // It represents one or more operations.
 type Op interface {
-	// Run the operation.
-	Run() error
-	// You do not need this in 95% of the use cases, use Run!
-	// Using atmoic batched writes (logged batches in Cassandra terminolohu) comes at a high performance cost!
-	RunAtomically() error
-	// Add an other Op to this one.
-	Add(...Op) Op
+	Error() string
 }
 
 // Danger zone! Do not use this interface unless you really know what you are doing
@@ -162,6 +161,8 @@ type Table interface {
 	Where(relations ...Relation) Filter // Because we provide selections
 	// Name returns the underlying table name, as stored in C*
 	Name() string
+	// Returns
+	Batch() Table
 	TableChanger
 }
 
