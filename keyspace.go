@@ -12,6 +12,7 @@ type k struct {
 	debugMode bool
 }
 
+// Connect to a certain keyspace directly. Same as using Connect().KeySpace(keySpaceName)
 func ConnectToKeySpace(keySpace string, nodeIps []string, username, password string) (KeySpace, error) {
 	c, err := Connect(nodeIps, username, password)
 	if err != nil {
@@ -24,7 +25,6 @@ func (k *k) DebugMode(b bool) {
 	k.debugMode = true
 }
 
-// Table returns a new Table. A Table is analogous to column families in Cassandra or tables in RDBMSes.
 func (k *k) Table(name string, entity interface{}, keys Keys) Table {
 	n := name + "__" + strings.Join(keys.PartitionKeys, "_") + "__" + strings.Join(keys.ClusteringColumns, "_")
 	return k.rawTable(n, entity, keys)
