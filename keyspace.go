@@ -146,23 +146,6 @@ func (k *k) DropTable(cf string) error {
 	return k.qe.Execute(stmt)
 }
 
-func (k *k) RunAtomically(ops ...Op) error {
-	stmts := []string{}
-	params := [][]interface{}{}
-
-	for _, o := range ops {
-		for _, vop := range o.(*op).ops {
-			// We are pushing the limits of the type system here...
-			if vop.opType == write {
-				stmts = append(stmts, vop.stmt)
-				params = append(params, vop.params)
-			}
-		}
-	}
-
-	return k.qe.ExecuteAtomically(stmts, params)
-}
-
 // Translate errors returned by cassandra
 // Most of these should be checked after the appropriate commands only
 // or otherwise may give false positive results.

@@ -115,7 +115,7 @@ func TestRunAtomically(t *testing.T) {
 		Name: "Jane",
 	}
 
-	err := ns.RunAtomically(
+	err := RunAtomically(
 		tbl.Batch().Set(joe),
 		tbl.Batch().Set(jane),
 	)

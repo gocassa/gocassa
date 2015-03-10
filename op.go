@@ -118,3 +118,22 @@ func (w op) runAll() error {
 	}
 	return nil
 }
+
+func RunAtomically(ops ...Op) error {
+	stmts := []string{}
+	params := [][]interface{}{}
+	var qe QueryExecutor
+
+	for _, o := range ops {
+		qe = o.(*op).qe
+		for _, vop := range o.(*op).ops {
+			// We are pushing the limits of the type system here...
+			if vop.opType == write {
+				stmts = append(stmts, vop.stmt)
+				params = append(params, vop.params)
+			}
+		}
+	}
+
+	return qe.ExecuteAtomically(stmts, params)
+}

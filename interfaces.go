@@ -22,7 +22,6 @@ type KeySpace interface {
 	// DebugMode enables/disables debug mode depending on the value of the input boolean.
 	// When DebugMode is enabled, all built CQL statements are printe to stdout.
 	DebugMode(bool)
-	RunAtomically(ops ...Op) error
 }
 
 //
