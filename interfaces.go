@@ -22,6 +22,12 @@ type KeySpace interface {
 	// DebugMode enables/disables debug mode depending on the value of the input boolean.
 	// When DebugMode is enabled, all built CQL statements are printe to stdout.
 	DebugMode(bool)
+	// Name returns the keyspace name as in C*
+	Name() string
+	// Tables returns the name of all configured column families in this keyspace
+	Tables() ([]string, error)
+	// Exists returns whether the specified column family exists within the keyspace
+	Exists(string) (bool, error)
 }
 
 //
@@ -131,7 +137,7 @@ type Op interface {
 	// Run the operation.
 	Run() error
 	// You do not need this in 95% of the use cases, use Run!
-	// Using atmoic batched writes (logged batches in Cassandra terminolohu) comes at a high performance cost!
+	// Using atomic batched writes (logged batches in Cassandra terminolohu) comes at a high performance cost!
 	RunAtomically() error
 	// Add an other Op to this one.
 	Add(...Op) Op
@@ -147,6 +153,10 @@ type TableChanger interface {
 	// Recreate drops the table if exists and creates it again.
 	// This is useful for test purposes only.
 	Recreate() error
+	// Name returns the name of the table, as in C*
+	Name() string
+	//Drop() error
+	//CreateIfDoesNotExist() error
 }
 
 // Table is the only non-recipe table, it is the "raw CQL table", it lets you do pretty much whatever you want
@@ -161,7 +171,6 @@ type Table interface {
 	// Where accepts a bunch of realtions and returns a filter. See the documentation for Relation and Filter to understand what that means.
 	Where(relations ...Relation) Filter // Because we provide selections
 	// Name returns the underlying table name, as stored in C*
-	Name() string
 	TableChanger
 }
 
