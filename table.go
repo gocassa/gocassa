@@ -111,6 +111,15 @@ func removeFields(m map[string]interface{}, s []string) map[string]interface{} {
 	return ret
 }
 
+func transformFields(m map[string]interface{}) {
+	for k, v := range m {
+		switch t := v.(type) {
+		case Counter:
+			m[k] = CounterAdd(int(t))
+		}
+	}
+}
+
 // INSERT INTO Hollywood.NerdMovies (user_uuid, fan)
 //   VALUES ('cfd66ccc-d857-4e90-b1e5-df98a3d40cd6', 'johndoe')
 //
@@ -156,6 +165,7 @@ func (t t) SetWithOptions(i interface{}, opts Options) Op {
 		}
 		return newWriteOp(t.keySpace.qe, insertStmt, insertVals)
 	}
+	transformFields(updFields)
 	updStmt, updVals := updateStatement(t.keySpace.name, t.info.name, updFields, opts)
 	whereStmt, whereVals := generateWhere(relations(t.info.keys, m))
 	if t.keySpace.debugMode {
