@@ -137,31 +137,6 @@ func (k *k) DropTable(cf string) error {
 	return k.qe.Execute(stmt)
 }
 
-func (k *k) QueryExecutor() QueryExecutor {
-	return k.qe
-}
-
 func (k *k) Name() string {
 	return k.name
-}
-
-// Translate errors returned by cassandra
-// Most of these should be checked after the appropriate commands only
-// or otherwise may give false positive results.
-//
-// PS: we shouldn't do this, really
-
-// Example: Cannot add existing keyspace "randKeyspace01"
-func isKeyspaceExistsError(s string) bool {
-	return strings.Contains(s, "exist")
-}
-
-func isTableExistsError(s string) bool {
-	return strings.Contains(s, "exist")
-}
-
-// unavailable
-// unconfigured columnfamily updtest1
-func isMissingKeyspaceOrTableError(s string) bool {
-	return strings.Contains(s, "unavailable") || strings.Contains(s, "unconfigured")
 }

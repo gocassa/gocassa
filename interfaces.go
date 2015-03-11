@@ -24,8 +24,6 @@ type KeySpace interface {
 	DebugMode(bool)
 	// Name returns the keyspace name as in C*
 	Name() string
-	// QueryExecutor returns the configured executor for this KeySpace
-	QueryExecutor() QueryExecutor
 	// Tables returns the name of all configured column families in this keyspace
 	Tables() ([]string, error)
 	// Exists returns whether the specified column family exists within the keyspace
