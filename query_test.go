@@ -309,3 +309,48 @@ func TestCQLInjection(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+type CustomerWithMap struct {
+	Id string 
+	Map map[string]string
+}
+
+func TestMaps(t *testing.T) {
+	tbl := ns.MapTable("customer34213", "Id", CustomerWithMap{})
+	createIf(tbl.(TableChanger), t)
+	c := CustomerWithMap{
+		Id: "1",
+		Map: map[string]string{
+			"3": "Is Odd",
+			"6": "Is Even",
+		},
+	}
+	if err := tbl.Set(c).Run(); err != nil {
+		t.Fatal(err)
+	}
+	if err := tbl.Update("1", map[string]interface{}{
+		"Map": MapSetFields(map[string]interface{}{
+			"2": "Two",
+			"4": "Four",
+		}),
+	}).Add(tbl.Update("1", map[string]interface{}{
+		"Map": MapSetField("5", "Five!"),
+	})).Run(); err != nil {
+		t.Fatal(err)
+	}
+	if err := tbl.Read("1", &c).Run(); err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(c, CustomerWithMap{
+		Id: "1",
+		Map: map[string]string{
+			"2": "Two",
+			"3": "Is Odd",
+			"4": "Four",
+			"5": "Five!",
+			"6": "Is Even",
+		},
+	}) {
+		t.Fatal(c)
+	}
+}

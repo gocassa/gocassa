@@ -35,6 +35,7 @@ func cassaType(i interface{}) gocql.Type {
 func stringTypeOf(i interface{}) (string, error) {
 	_, isByteSlice := i.([]byte)
 	if !isByteSlice {
+		// Check if we found a higher kinded type
 		switch reflect.ValueOf(i).Kind() {
 		case reflect.Slice:
 			elemVal := reflect.Indirect(reflect.New(reflect.TypeOf(i).Elem())).Interface()
@@ -43,6 +44,15 @@ func stringTypeOf(i interface{}) (string, error) {
 				return "", fmt.Errorf("Unsupported type %T", i)
 			}
 			return fmt.Sprintf("list<%v>", ct), nil
+		case reflect.Map:
+			keyVal :=reflect.Indirect(reflect.New(reflect.TypeOf(i).Key())).Interface()
+			elemVal := reflect.Indirect(reflect.New(reflect.TypeOf(i).Elem())).Interface()
+			keyCt := cassaType(keyVal)
+			elemCt := cassaType(elemVal)
+			if keyCt == gocql.TypeCustom || elemCt == gocql.TypeCustom {
+				return "", fmt.Errorf("Unsupported map key or value type %T", i)
+			}
+			return fmt.Sprintf("map<%v, %v>", keyCt, elemCt), nil
 		}
 	}
 	ct := cassaType(i)
