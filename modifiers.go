@@ -1,9 +1,9 @@
 package gocassa
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
-	"bytes"
 )
 
 // Modifiers are used with update statements.
@@ -92,7 +92,7 @@ func CounterAdd(value int) Modifier {
 }
 
 // returns a string with a %v placeholder for field name
-func (m Modifier) cql(name string) (string,  []interface{}) {
+func (m Modifier) cql(name string) (string, []interface{}) {
 	str := ""
 	vals := []interface{}{}
 	switch m.op {

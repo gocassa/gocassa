@@ -1,10 +1,11 @@
 package gocassa
+
 import (
-	"fmt"
-	"strings"
 	"errors"
+	"fmt"
 	"github.com/gocql/gocql"
 	"reflect"
+	"strings"
 	"time"
 )
 
@@ -97,7 +98,7 @@ func stringTypeOf(i interface{}) (string, error) {
 			}
 			return fmt.Sprintf("list<%v>", ct), nil
 		case reflect.Map:
-			keyVal :=reflect.Indirect(reflect.New(reflect.TypeOf(i).Key())).Interface()
+			keyVal := reflect.Indirect(reflect.New(reflect.TypeOf(i).Key())).Interface()
 			elemVal := reflect.Indirect(reflect.New(reflect.TypeOf(i).Elem())).Interface()
 			keyCt := cassaType(keyVal)
 			elemCt := cassaType(elemVal)

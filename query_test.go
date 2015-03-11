@@ -311,7 +311,7 @@ func TestCQLInjection(t *testing.T) {
 }
 
 type CustomerWithMap struct {
-	Id string 
+	Id  string
 	Map map[string]string
 }
 
@@ -356,7 +356,7 @@ func TestMaps(t *testing.T) {
 }
 
 type CustomerWithCounter struct {
-	Id string 
+	Id      string
 	Counter Counter
 }
 
@@ -365,7 +365,7 @@ func TestCounters(t *testing.T) {
 	createIf(tbl.(TableChanger), t)
 	c := CustomerWithCounter{}
 	if err := tbl.Set(map[string]interface{}{
-		"Id": "1",
+		"Id":      "1",
 		"Counter": CounterAdd(3),
 	}).Run(); err != nil {
 		t.Fatal(err)

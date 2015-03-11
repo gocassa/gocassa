@@ -1,12 +1,12 @@
 package gocassa
 
 import (
-	"fmt"
-	"reflect"
-	"strings"
 	"bytes"
-	"strconv"
+	"fmt"
 	r "github.com/hailocab/gocassa/reflect"
+	"reflect"
+	"strconv"
+	"strings"
 )
 
 type t struct {
@@ -158,7 +158,7 @@ func (t t) SetWithOptions(i interface{}, opts Options) Op {
 	}
 	updStmt, updVals := updateStatement(t.keySpace.name, t.info.name, updFields, opts)
 	whereStmt, whereVals := generateWhere(relations(t.info.keys, m))
-		if t.keySpace.debugMode {
+	if t.keySpace.debugMode {
 		fmt.Println(updStmt+whereStmt, append(updVals, whereVals...))
 	}
 	return newWriteOp(t.keySpace.qe, updStmt+whereStmt, append(updVals, whereVals...))
