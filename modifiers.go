@@ -125,6 +125,8 @@ func (m Modifier) cql(name string) (string,  []interface{}) {
 		str = buf.String()
 	case modifierMapSetField:
 		str = fmt.Sprintf("%v[%v] = %v", name, printElem(m.args[0]), printElem(m.args[1]))
+	case modifierCounterAdd:
+		str = fmt.Sprintf("%v = %v + %v", name, name, printElem(m.args[0]))
 	}
 
 	return str, vals

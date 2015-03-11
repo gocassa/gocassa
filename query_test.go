@@ -354,3 +354,31 @@ func TestMaps(t *testing.T) {
 		t.Fatal(c)
 	}
 }
+
+type CustomerWithCounter struct {
+	Id string 
+	Counter Counter
+}
+
+func TestCounters(t *testing.T) {
+	tbl := ns.MapTable("customer4985", "Id", CustomerWithCounter{})
+	createIf(tbl.(TableChanger), t)
+	c := CustomerWithCounter{}
+	if err := tbl.Set(map[string]interface{}{
+		"Id": "1",
+		"Counter": CounterAdd(3),
+	}).Run(); err != nil {
+		t.Fatal(err)
+	}
+	if err := tbl.Update("1", map[string]interface{}{
+		"Counter": CounterAdd(6),
+	}).Run(); err != nil {
+		t.Fatal(err)
+	}
+	if err := tbl.Read("1", &c).Run(); err != nil {
+		t.Fatal(err)
+	}
+	if c.Counter != Counter(9) {
+		t.Fatal(c)
+	}
+}

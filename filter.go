@@ -11,15 +11,15 @@ type filter struct {
 	rs []Relation
 }
 
-func (f *filter) generateWhere() (string, []interface{}) {
+func generateWhere(rs []Relation) (string, []interface{}) {
 	var (
 		vals []interface{}
 		buf  = new(bytes.Buffer)
 	)
 
-	if len(f.rs) > 0 {
+	if len(rs) > 0 {
 		buf.WriteString(" WHERE ")
-		for i, r := range f.rs {
+		for i, r := range rs {
 			if i > 0 {
 				buf.WriteString(" AND ")
 			}
@@ -65,7 +65,7 @@ func updateStatement(kn, cfName string, fields map[string]interface{}, opts Opti
 }
 
 func (f filter) UpdateWithOptions(m map[string]interface{}, opts Options) Op {
-	str, wvals := f.generateWhere()
+	str, wvals := generateWhere(f.rs)
 	stmt, uvals := updateStatement(f.t.keySpace.name, f.t.info.name, m, opts)
 	vs := append(uvals, wvals...)
 	if f.t.keySpace.debugMode {
@@ -79,7 +79,7 @@ func (f filter) Update(m map[string]interface{}) Op {
 }
 
 func (f filter) Delete() Op {
-	str, vals := f.generateWhere()
+	str, vals := generateWhere(f.rs)
 	stmt := fmt.Sprintf("DELETE FROM %s.%s%s", f.t.keySpace.name, f.t.info.name, str)
 	if f.t.keySpace.debugMode {
 		fmt.Println(stmt, vals)

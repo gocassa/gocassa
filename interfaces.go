@@ -148,3 +148,5 @@ type QueryExecutor interface {
 	Execute(stmt string, params ...interface{}) error
 	ExecuteAtomically(stmt []string, params [][]interface{}) error
 }
+
+type Counter int

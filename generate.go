@@ -1,12 +1,62 @@
-package generate
-
+package gocassa
 import (
-	"errors"
 	"fmt"
+	"strings"
+	"errors"
 	"github.com/gocql/gocql"
 	"reflect"
 	"time"
 )
+
+// CREATE TABLE users (
+//   user_name varchar PRIMARY KEY,
+//   password varchar,
+//   gender varchar,
+//   session_token varchar,
+//   state varchar,
+//   birth_year bigint
+// );
+//
+// CREATE TABLE emp (
+//   empID int,
+//   deptID int,
+//   first_name varchar,
+//   last_name varchar,
+//   PRIMARY KEY (empID, deptID)
+// );
+//
+func createTable(keySpace, cf string, partitionKeys, colKeys []string, fields []string, values []interface{}) (string, error) {
+	firstLine := fmt.Sprintf("CREATE TABLE %v.%v (", keySpace, cf)
+	fieldLines := []string{}
+	for i, _ := range fields {
+		typeStr, err := stringTypeOf(values[i])
+		if err != nil {
+			return "", err
+		}
+		l := "    " + strings.ToLower(fields[i]) + " " + typeStr
+		fieldLines = append(fieldLines, l)
+	}
+	str := "    PRIMARY KEY ((%v) %v)"
+	if len(colKeys) > 0 {
+		str = "    PRIMARY KEY ((%v), %v)"
+	}
+	fieldLines = append(fieldLines, fmt.Sprintf(str, j(partitionKeys), j(colKeys)))
+	stmt := strings.Join([]string{firstLine, strings.Join(fieldLines, ",\n"), ");"}, "\n")
+	return stmt, nil
+}
+
+func j(s []string) string {
+	s1 := []string{}
+	for _, v := range s {
+		s1 = append(s1, strings.ToLower(v))
+	}
+	return strings.Join(s1, ", ")
+}
+
+func createKeyspace(keyspaceName string) string {
+	// This must come from the go-service layer
+	return fmt.Sprintf("CREATE KEYSPACE \"%v\" WITH REPLICATION = {'class' : 'NetworkTopologyStrategy', 'eu-west-1' : 3}", keyspaceName)
+}
 
 func cassaType(i interface{}) gocql.Type {
 	switch i.(type) {
@@ -28,6 +78,8 @@ func cassaType(i interface{}) gocql.Type {
 		return gocql.TypeUUID
 	case []byte:
 		return gocql.TypeBlob
+	case Counter:
+		return gocql.TypeCounter
 	}
 	return gocql.TypeCustom
 }
@@ -82,6 +134,8 @@ func cassaTypeToString(t gocql.Type) (string, error) {
 		return "uuid", nil
 	case gocql.TypeBlob:
 		return "blob", nil
+	case gocql.TypeCounter:
+		return "counter", nil
 	default:
 		return "", errors.New("unkown cassandra type")
 	}
