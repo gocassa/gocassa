@@ -55,7 +55,6 @@ func j(s []string) string {
 }
 
 func createKeyspace(keyspaceName string) string {
-	// This must come from the go-service layer
 	return fmt.Sprintf("CREATE KEYSPACE \"%v\" WITH REPLICATION = {'class' : 'NetworkTopologyStrategy', 'eu-west-1' : 3}", keyspaceName)
 }
 
