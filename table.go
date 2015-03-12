@@ -3,10 +3,11 @@ package gocassa
 import (
 	"bytes"
 	"fmt"
-	r "github.com/hailocab/gocassa/reflect"
 	"reflect"
 	"strconv"
 	"strings"
+
+	r "github.com/hailocab/gocassa/reflect"
 )
 
 type t struct {
@@ -115,7 +116,7 @@ func transformFields(m map[string]interface{}) {
 	for k, v := range m {
 		switch t := v.(type) {
 		case Counter:
-			m[k] = CounterAdd(int(t))
+			m[k] = CounterIncrement(int(t))
 		}
 	}
 }
@@ -210,27 +211,3 @@ func (t t) CreateStatement() (string, error) {
 func (t t) Name() string {
 	return t.info.name
 }
-
-//const (
-//	asc	 = iota
-//	desc
-//)
-//
-//type Ordering struct {
-//	fieldName string
-//	order int
-//}
-//
-//func ASC(fieldName string) Ordering {
-//	return Ordering{
-//		fieldName: fieldName,
-//		order: asc,
-//	}
-//}
-//
-//func DESC(fieldName string) Ordering {
-//	return Ordering{
-//		fieldName: fieldName,
-//		order: asc,
-//	}
-//}

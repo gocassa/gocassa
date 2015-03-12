@@ -18,7 +18,7 @@ const (
 	modifierMapSetField
 	modifierMapReplace
 	modifierMapDeleteField
-	modifierCounterAdd
+	modifierCounterIncrement
 )
 
 type Modifier struct {
@@ -26,7 +26,7 @@ type Modifier struct {
 	args []interface{}
 }
 
-// Prepend a value to the front of the list
+// ListPrepend prepends a value to the front of the list
 func ListPrepend(value interface{}) Modifier {
 	return Modifier{
 		op:   modifierListPrepend,
@@ -34,7 +34,7 @@ func ListPrepend(value interface{}) Modifier {
 	}
 }
 
-// Append a value to the end of the list
+// ListAppend appends a value to the end of the list
 func ListAppend(value interface{}) Modifier {
 	return Modifier{
 		op:   modifierListAppend,
@@ -42,7 +42,7 @@ func ListAppend(value interface{}) Modifier {
 	}
 }
 
-// Sets list element at index to value
+// ListSetAtIndex sets the list element at a given index to a given value
 func ListSetAtIndex(index int, value interface{}) Modifier {
 	return Modifier{
 		op:   modifierListSetAtIndex,
@@ -50,7 +50,7 @@ func ListSetAtIndex(index int, value interface{}) Modifier {
 	}
 }
 
-// Remove all elements having a particular value
+// ListRemove removes all elements from a list having a particular value 
 func ListRemove(value interface{}) Modifier {
 	return Modifier{
 		op:   modifierListRemove,
@@ -67,6 +67,7 @@ func ListRemove(value interface{}) Modifier {
 // 	}
 // }
 
+// MapSetFields updates the map with keys and values in the given map
 func MapSetFields(fields map[string]interface{}) Modifier {
 	return Modifier{
 		op:   modifierMapSetFields,
@@ -77,6 +78,7 @@ func MapSetFields(fields map[string]interface{}) Modifier {
 // @todo MapReplace
 // @todo MapDelete
 
+// MapSetField updates the map with the given key and value
 func MapSetField(key, value interface{}) Modifier {
 	return Modifier{
 		op:   modifierMapSetField,
@@ -84,14 +86,15 @@ func MapSetField(key, value interface{}) Modifier {
 	}
 }
 
-func CounterAdd(value int) Modifier {
+// CounterIncrement increments the value of the counter with the given value.
+// Negative value results in decrementing.
+func CounterIncrement(value int) Modifier {
 	return Modifier{
-		op:   modifierCounterAdd,
+		op:   modifierCounterIncrement,
 		args: []interface{}{value},
 	}
 }
 
-// returns a string with a %v placeholder for field name
 func (m Modifier) cql(name string) (string, []interface{}) {
 	str := ""
 	vals := []interface{}{}
@@ -125,10 +128,14 @@ func (m Modifier) cql(name string) (string, []interface{}) {
 		str = buf.String()
 	case modifierMapSetField:
 		str = fmt.Sprintf("%v[%v] = %v", name, printElem(m.args[0]), printElem(m.args[1]))
-	case modifierCounterAdd:
-		str = fmt.Sprintf("%v = %v + %v", name, name, printElem(m.args[0]))
+	case modifierCounterIncrement:
+		val := m.args[0].(int)
+		if val > 0 {
+			str = fmt.Sprintf("%v = %v + %v", name, name, printElem(val))
+		} else {
+			str = fmt.Sprintf("%v = %v - %v", name, name, printElem(val * -1))
+		}
 	}
-
 	return str, vals
 }
 

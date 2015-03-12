@@ -371,7 +371,7 @@ func TestCounters(t *testing.T) {
 		t.Fatal(err)
 	}
 	if err := tbl.Update("1", map[string]interface{}{
-		"Counter": CounterAdd(6),
+		"Counter": CounterIncrement(6),
 	}).Run(); err != nil {
 		t.Fatal(err)
 	}
@@ -379,6 +379,17 @@ func TestCounters(t *testing.T) {
 		t.Fatal(err)
 	}
 	if c.Counter != Counter(6) {
+		t.Fatal(c)
+	}
+	if err := tbl.Update("1", map[string]interface{}{
+		"Counter": CounterIncrement(-2),
+	}).Run(); err != nil {
+		t.Fatal(err)
+	}
+	if err := tbl.Read("1", &c).Run(); err != nil {
+		t.Fatal(err)
+	}
+	if c.Counter != Counter(4) {
 		t.Fatal(c)
 	}
 }
