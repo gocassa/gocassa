@@ -5,11 +5,15 @@ Gocassa is a high-level library on top of [gocql](https://github.com/gocql/gocql
 
 Compared to gocql it provides query building, adds data binding, and provides easy-to-use "recipe" tables for common query use-cases. Unlike [cqlc](https://github.com/relops/cqlc), it does not use code generation.
 
+For docs, see: [https://godoc.org/github.com/hailocab/gocassa](https://godoc.org/github.com/hailocab/gocassa)
+
 #### Table types
 
-##### Raw CQL Table
+Gocassa provides multiple table types with their own unique interfaces:
+- a raw CQL table called simply `Table` - this lets you do pretty much any query imaginable
+- and a number of single purpose 'recipe' tables (`Map`, `Multimap`, `TimeSeries`, `MultiTimeSeries`), which aims to help the user by having a simplified interface tailored to a given common query use case
 
-The raw CQL table pretty much lets you write any CQL query. Here is an example:
+##### `Table`
 
 ```go
 package main
@@ -37,6 +41,7 @@ func main() {
     salesTable := keySpace.Table("sale", Sale{}, gocassa.Keys{
         PartitionKeys: []string{"Id"},
     })
+
     err = salesTable.Set(Sale{
         Id: "sale-1",
         CustomerId: "customer-1",
@@ -47,25 +52,30 @@ func main() {
     if err != nil {
         panic(err)
     }
-    result := &Sale{}
-    if err := salesTable.Where(gocassa.Eq("Id", "sale-1")).Query().ReadOne(result).Run(); err != nil {
+
+    result := Sale{}
+    if err := salesTable.Where(gocassa.Eq("Id", "sale-1")).Query().ReadOne(&result).Run(); err != nil {
         panic(err)
     }
-    fmt.Println(*result)
+    fmt.Println(result)
 }
 ```
+[link to this example](https://github.com/hailocab/gocassa/blob/master/examples/table1.go)
 
 ##### `MapTable`
 
 `MapTable` provides only very simple [CRUD](http://en.wikipedia.org/wiki/Create,_read,_update_and_delete) functionality:
 
 ```go
-    salesTable := keySpace.MapTable("sale", "Id", Sale{})
     // …
-    result := &Sale{}
-    err := salesTable.Read("sale-1", result).Run()
+    salesTable := keySpace.MapTable("sale", "Id", Sale{})
+    result := Sale{}
+    salesTable.Read("sale-1", &result).Run()
 }
 ```
+[link to this example](https://github.com/hailocab/gocassa/blob/master/examples/map_table1.go)
+
+Read, Set, Update, and Delete all happen by "Id".
 
 ##### `MultimapTable`
 
@@ -74,9 +84,12 @@ func main() {
 ```go
     salesTable := keySpace.MultimapTable("sale", "SellerId", "Id", Sale{})
     // …
-    results := &[]Sale{}
-    err := salesTable.List("seller-1", nil, 0, results).Run()
+    results := []Sale{}
+    err := salesTable.List("seller-1", nil, 0, &results).Run()
 ```
+[link to this example](https://github.com/hailocab/gocassa/blob/master/examples/multimap_table1.go)
+
+For examples on how to do pagination or Update with this table, refer to the example (linked under code snippet). 
 
 ##### `TimeSeriesTable`
 
@@ -85,8 +98,8 @@ func main() {
 ```go
     salesTable := keySpace.TimeSeriesTable("sale", "Created", "Id", Sale{})
     //...
-    results := &[]Sale{}
-    err := salesTable.List(yesterdayTime, todayTime, results).Run()
+    results := []Sale{}
+    err := salesTable.List(yesterdayTime, todayTime, &results).Run()
 ```
 
 ##### `MultiTimeSeriesTable`
@@ -96,6 +109,6 @@ func main() {
 ```go
     salesTable := keySpace.MultiTimeSeriesTable("sale", "SellerId", "Created", "Id", Sale{})
     //...
-    results := &[]Sale{}
-    err := salesTable.List("seller-1", yesterdayTime, todayTime, results).Run()
+    results := []Sale{}
+    err := salesTable.List("seller-1", yesterdayTime, todayTime, &results).Run()
 ```

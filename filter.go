@@ -74,6 +74,7 @@ func (f filter) UpdateWithOptions(m map[string]interface{}, opts Options) Op {
 	return newWriteOp(f.t.keySpace.qe, stmt+str, vs)
 }
 
+// Update does a partial update on the filter.
 func (f filter) Update(m map[string]interface{}) Op {
 	return f.UpdateWithOptions(m, Options{})
 }
@@ -87,6 +88,7 @@ func (f filter) Delete() Op {
 	return newWriteOp(f.t.keySpace.qe, stmt, vals)
 }
 
+// Query returns the query from the filter so you can read the rows matching the filter.
 func (f filter) Query() Query {
 	return &query{
 		f: f,

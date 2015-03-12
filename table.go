@@ -174,8 +174,8 @@ func (t t) SetWithOptions(i interface{}, opts Options) Op {
 	return newWriteOp(t.keySpace.qe, updStmt+whereStmt, append(updVals, whereVals...))
 }
 
-func (t t) Set(i interface{}) Op {
-	return t.SetWithOptions(i, Options{})
+func (t t) Set(row interface{}) Op {
+	return t.SetWithOptions(row, Options{})
 }
 
 func (t t) Create() error {
@@ -186,7 +186,6 @@ func (t t) Create() error {
 	}
 }
 
-// Drop table if exists and create it again
 func (t t) Recreate() error {
 	if ex, err := t.keySpace.Exists(t.info.name); ex && err == nil {
 		if err := t.keySpace.DropTable(t.info.name); err != nil {
@@ -210,27 +209,3 @@ func (t t) CreateStatement() (string, error) {
 func (t t) Name() string {
 	return t.info.name
 }
-
-//const (
-//	asc	 = iota
-//	desc
-//)
-//
-//type Ordering struct {
-//	fieldName string
-//	order int
-//}
-//
-//func ASC(fieldName string) Ordering {
-//	return Ordering{
-//		fieldName: fieldName,
-//		order: asc,
-//	}
-//}
-//
-//func DESC(fieldName string) Ordering {
-//	return Ordering{
-//		fieldName: fieldName,
-//		order: asc,
-//	}
-//}
