@@ -11,15 +11,15 @@ type filter struct {
 	rs []Relation
 }
 
-func (f *filter) generateWhere() (string, []interface{}) {
+func generateWhere(rs []Relation) (string, []interface{}) {
 	var (
 		vals []interface{}
 		buf  = new(bytes.Buffer)
 	)
 
-	if len(f.rs) > 0 {
+	if len(rs) > 0 {
 		buf.WriteString(" WHERE ")
-		for i, r := range f.rs {
+		for i, r := range rs {
 			if i > 0 {
 				buf.WriteString(" AND ")
 			}
@@ -32,7 +32,7 @@ func (f *filter) generateWhere() (string, []interface{}) {
 }
 
 // UPDATE keyspace.Movies SET col1 = val1, col2 = val2
-func updateStatement(kn, cfName string, fieldNames []string, opts Options) string {
+func updateStatement(kn, cfName string, fields map[string]interface{}, opts Options) (string, []interface{}) {
 	buf := new(bytes.Buffer)
 	buf.WriteString(fmt.Sprintf("UPDATE %s.%s ", kn, cfName))
 
@@ -44,25 +44,34 @@ func updateStatement(kn, cfName string, fieldNames []string, opts Options) strin
 	}
 
 	buf.WriteString("SET ")
-	for i, v := range fieldNames {
+	i := 0
+	ret := []interface{}{}
+	for k, v := range fields {
 		if i > 0 {
 			buf.WriteString(", ")
 		}
-		buf.WriteString(v)
-		buf.WriteString(" = ?")
+		if mod, ok := v.(Modifier); ok {
+			stmt, vals := mod.cql(k)
+			buf.WriteString(stmt)
+			ret = append(ret, vals...)
+		} else {
+			buf.WriteString(k + " = ?")
+			ret = append(ret, v)
+		}
+		i++
 	}
 
-	return buf.String()
+	return buf.String(), ret
 }
 
 func (f filter) UpdateWithOptions(m map[string]interface{}, opts Options) Op {
-	fields, values := keyValues(m)
-	str, wvals := f.generateWhere()
-	stmt := updateStatement(f.t.keySpace.name, f.t.info.name, fields, opts)
+	str, wvals := generateWhere(f.rs)
+	stmt, uvals := updateStatement(f.t.keySpace.name, f.t.info.name, m, opts)
+	vs := append(uvals, wvals...)
 	if f.t.keySpace.debugMode {
-		fmt.Println(stmt+" "+str, append(values, wvals...))
+		fmt.Println(stmt+" "+str, vs)
 	}
-	return newWriteOp(f.t.keySpace.qe, stmt+str, append(values, wvals...))
+	return newWriteOp(f.t.keySpace.qe, stmt+str, vs)
 }
 
 // Update does a partial update on the filter.
@@ -71,7 +80,7 @@ func (f filter) Update(m map[string]interface{}) Op {
 }
 
 func (f filter) Delete() Op {
-	str, vals := f.generateWhere()
+	str, vals := generateWhere(f.rs)
 	stmt := fmt.Sprintf("DELETE FROM %s.%s%s", f.t.keySpace.name, f.t.info.name, str)
 	if f.t.keySpace.debugMode {
 		fmt.Println(stmt, vals)

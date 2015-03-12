@@ -45,7 +45,7 @@ func (q *query) ReadOne(pointer interface{}) Op {
 }
 
 func (q *query) generateRead() (string, []interface{}) {
-	w, wv := q.f.generateWhere()
+	w, wv := generateWhere(q.f.rs)
 	o, ov := q.generateOrderBy()
 	l, lv := q.generateLimit()
 	str := fmt.Sprintf("SELECT %s FROM %s.%s", q.f.t.generateFieldNames(), q.f.t.keySpace.name, q.f.t.info.name)

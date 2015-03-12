@@ -184,3 +184,5 @@ type QueryExecutor interface {
 	// ExecuteAtomically executs multiple DML queries with a logged batch
 	ExecuteAtomically(stmt []string, params [][]interface{}) error
 }
+
+type Counter int
