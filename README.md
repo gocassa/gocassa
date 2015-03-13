@@ -63,7 +63,7 @@ func main() {
     fmt.Println(result)
 }
 ```
-[link to this example](https://github.com/hailocab/gocassa/blob/master/examples/table1.go)
+[link to this example](https://github.com/hailocab/gocassa/blob/master/examples/table1/table1.go)
 
 ##### `MapTable`
 
@@ -76,7 +76,7 @@ func main() {
     salesTable.Read("sale-1", &result).Run()
 }
 ```
-[link to this example](https://github.com/hailocab/gocassa/blob/master/examples/map_table1.go)
+[link to this example](https://github.com/hailocab/gocassa/blob/master/examples/map_table1/map_table1.go)
 
 Read, Set, Update, and Delete all happen by "Id".
 
@@ -90,7 +90,7 @@ Read, Set, Update, and Delete all happen by "Id".
     results := []Sale{}
     err := salesTable.List("seller-1", nil, 0, &results).Run()
 ```
-[link to this example](https://github.com/hailocab/gocassa/blob/master/examples/multimap_table1.go)
+[link to this example](https://github.com/hailocab/gocassa/blob/master/examples/multimap_table1/multimap_table1.go)
 
 For examples on how to do pagination or Update with this table, refer to the example (linked under code snippet). 
 
