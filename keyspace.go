@@ -87,6 +87,28 @@ func (k *k) TimeSeriesTable(name, timeField, idField string, bucketSize time.Dur
 	}
 }
 
+// TimeSeriesTableWithName creates a TimeSeriesTable with an overridden table name
+//
+// This is needed as the current generator creates names which can exceed
+// the 48 character table name limit.
+// See https://github.com/hailocab/gocassa/issues/79
+func (k *k) TimeSeriesTableWithName(tableName, timeField, idField string, bucketSize time.Duration, row interface{}) TimeSeriesTable {
+	m, ok := toMap(row)
+	if !ok {
+		panic("Unrecognized row type")
+	}
+	m[bucketFieldName] = time.Now()
+	return &timeSeriesT{
+		t: k.table(tableName, row, m, Keys{
+			PartitionKeys:     []string{bucketFieldName},
+			ClusteringColumns: []string{timeField, idField},
+		}).(*t),
+		timeField:  timeField,
+		idField:    idField,
+		bucketSize: bucketSize,
+	}
+}
+
 func (k *k) MultiTimeSeriesTable(name, indexField, timeField, idField string, bucketSize time.Duration, row interface{}) MultiTimeSeriesTable {
 	m, ok := toMap(row)
 	if !ok {
@@ -95,6 +117,29 @@ func (k *k) MultiTimeSeriesTable(name, indexField, timeField, idField string, bu
 	m[bucketFieldName] = time.Now()
 	return &multiTimeSeriesT{
 		t: k.table(fmt.Sprintf("%s_multiTimeSeries_%s_%s_%s_%s", name, indexField, timeField, idField, bucketSize.String()), row, m, Keys{
+			PartitionKeys:     []string{indexField, bucketFieldName},
+			ClusteringColumns: []string{timeField, idField},
+		}).(*t),
+		indexField: indexField,
+		timeField:  timeField,
+		idField:    idField,
+		bucketSize: bucketSize,
+	}
+}
+
+// MultiTimeSeriesTableWithName creates a MultiTimeSeriesTable with an overridden table name
+//
+// This is needed as the current generator creates names which can exceed
+// the 48 character table name limit.
+// See https://github.com/hailocab/gocassa/issues/79
+func (k *k) MultiTimeSeriesTableWithName(tableName, indexField, timeField, idField string, bucketSize time.Duration, row interface{}) MultiTimeSeriesTable {
+	m, ok := toMap(row)
+	if !ok {
+		panic("Unrecognized row type")
+	}
+	m[bucketFieldName] = time.Now()
+	return &multiTimeSeriesT{
+		t: k.table(tableName, row, m, Keys{
 			PartitionKeys:     []string{indexField, bucketFieldName},
 			ClusteringColumns: []string{timeField, idField},
 		}).(*t),
