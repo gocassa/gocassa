@@ -71,20 +71,9 @@ func (k *k) MultimapTable(name, fieldToIndexBy, id string, row interface{}) Mult
 }
 
 func (k *k) TimeSeriesTable(name, timeField, idField string, bucketSize time.Duration, row interface{}) TimeSeriesTable {
-	m, ok := toMap(row)
-	if !ok {
-		panic("Unrecognized row type")
-	}
-	m[bucketFieldName] = time.Now()
-	return &timeSeriesT{
-		t: k.table(fmt.Sprintf("%s_timeSeries_%s_%s_%s", name, timeField, idField, bucketSize.String()), row, m, Keys{
-			PartitionKeys:     []string{bucketFieldName},
-			ClusteringColumns: []string{timeField, idField},
-		}).(*t),
-		timeField:  timeField,
-		idField:    idField,
-		bucketSize: bucketSize,
-	}
+	// Construct a descriptive table name
+	tableName := fmt.Sprintf("%s_timeSeries_%s_%s_%s", name, timeField, idField, bucketSize.String())
+	return k.TimeSeriesTableWithName(tableName, timeField, idField, bucketSize, row)
 }
 
 // TimeSeriesTableWithName creates a TimeSeriesTable with an overridden table name
@@ -110,21 +99,9 @@ func (k *k) TimeSeriesTableWithName(tableName, timeField, idField string, bucket
 }
 
 func (k *k) MultiTimeSeriesTable(name, indexField, timeField, idField string, bucketSize time.Duration, row interface{}) MultiTimeSeriesTable {
-	m, ok := toMap(row)
-	if !ok {
-		panic("Unrecognized row type")
-	}
-	m[bucketFieldName] = time.Now()
-	return &multiTimeSeriesT{
-		t: k.table(fmt.Sprintf("%s_multiTimeSeries_%s_%s_%s_%s", name, indexField, timeField, idField, bucketSize.String()), row, m, Keys{
-			PartitionKeys:     []string{indexField, bucketFieldName},
-			ClusteringColumns: []string{timeField, idField},
-		}).(*t),
-		indexField: indexField,
-		timeField:  timeField,
-		idField:    idField,
-		bucketSize: bucketSize,
-	}
+	// Construct a descriptive table name
+	tableName := fmt.Sprintf("%s_multiTimeSeries_%s_%s_%s_%s", name, indexField, timeField, idField, bucketSize.String())
+	return k.MultiTimeSeriesTableWithName(tableName, indexField, timeField, idField, bucketSize, row)
 }
 
 // MultiTimeSeriesTableWithName creates a MultiTimeSeriesTable with an overridden table name
