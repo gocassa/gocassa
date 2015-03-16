@@ -22,7 +22,7 @@ func ConnectToKeySpace(keySpace string, nodeIps []string, username, password str
 }
 
 func (k *k) DebugMode(b bool) {
-	k.debugMode = true
+	k.debugMode = b
 }
 
 func (k *k) Table(name string, entity interface{}, keys Keys) Table {
