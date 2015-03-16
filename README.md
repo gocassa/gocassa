@@ -1,14 +1,14 @@
 gocassa
 =======
 
-[![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg "GoDoc")](http://godoc.org/github.com/hailocab/gocassa) 
-[![Build Status](https://img.shields.io/travis/hailocab/gocassa/master.svg "Build Status")](https://travis-ci.org/hailocab/gocassa) 
+[![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg "GoDoc")](http://godoc.org/github.com/b2aio/gocassa)
+[![Build Status](https://img.shields.io/travis/b2aio/gocassa/master.svg "Build Status")](https://travis-ci.org/b2aio/gocassa)
 
 Gocassa is a high-level library on top of [gocql](https://github.com/gocql/gocql).
 
 Compared to gocql it provides query building, adds data binding, and provides easy-to-use "recipe" tables for common query use-cases. Unlike [cqlc](https://github.com/relops/cqlc), it does not use code generation.
 
-For docs, see: [https://godoc.org/github.com/hailocab/gocassa](https://godoc.org/github.com/hailocab/gocassa)
+For docs, see: [https://godoc.org/github.com/b2aio/gocassa](https://godoc.org/github.com/b2aio/gocassa)
 
 #### Table types
 
@@ -24,8 +24,8 @@ package main
 import(
     "fmt"
     "time"
-    
-    "github.com/hailocab/gocassa"
+
+    "github.com/b2aio/gocassa"
 )
 
 type Sale struct {
@@ -63,7 +63,7 @@ func main() {
     fmt.Println(result)
 }
 ```
-[link to this example](https://github.com/hailocab/gocassa/blob/master/examples/table1/table1.go)
+[link to this example](https://github.com/b2aio/gocassa/blob/master/examples/table1/table1.go)
 
 ##### `MapTable`
 
@@ -76,7 +76,7 @@ func main() {
     salesTable.Read("sale-1", &result).Run()
 }
 ```
-[link to this example](https://github.com/hailocab/gocassa/blob/master/examples/map_table1/map_table1.go)
+[link to this example](https://github.com/b2aio/gocassa/blob/master/examples/map_table1/map_table1.go)
 
 Read, Set, Update, and Delete all happen by "Id".
 
@@ -90,9 +90,9 @@ Read, Set, Update, and Delete all happen by "Id".
     results := []Sale{}
     err := salesTable.List("seller-1", nil, 0, &results).Run()
 ```
-[link to this example](https://github.com/hailocab/gocassa/blob/master/examples/multimap_table1/multimap_table1.go)
+[link to this example](https://github.com/b2aio/gocassa/blob/master/examples/multimap_table1/multimap_table1.go)
 
-For examples on how to do pagination or Update with this table, refer to the example (linked under code snippet). 
+For examples on how to do pagination or Update with this table, refer to the example (linked under code snippet).
 
 ##### `TimeSeriesTable`
 
