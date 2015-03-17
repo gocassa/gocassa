@@ -48,7 +48,7 @@ func (k *k) table(name string, entity interface{}, fieldSource map[string]interf
 
 func (k *k) MapTable(name, id string, row interface{}) MapTable {
 	return &mapT{
-		t: k.rawTable(fmt.Sprintf("%s_map_%s", name, id), row, Keys{
+		t: k.rawTable(fmt.Sprintf("%s_m_%s", name, id), row, Keys{
 			PartitionKeys: []string{id},
 		}).(*t),
 		idField: id,
@@ -61,7 +61,7 @@ func (k *k) SetKeysSpaceName(name string) {
 
 func (k *k) MultimapTable(name, fieldToIndexBy, id string, row interface{}) MultimapTable {
 	return &multimapT{
-		t: k.rawTable(fmt.Sprintf("%s_multimap_%s_%s", name, fieldToIndexBy, id), row, Keys{
+		t: k.rawTable(fmt.Sprintf("%s_mmap_%s_%s", name, fieldToIndexBy, id), row, Keys{
 			PartitionKeys:     []string{fieldToIndexBy},
 			ClusteringColumns: []string{id},
 		}).(*t),
@@ -77,7 +77,7 @@ func (k *k) TimeSeriesTable(name, timeField, idField string, bucketSize time.Dur
 	}
 	m[bucketFieldName] = time.Now()
 	return &timeSeriesT{
-		t: k.table(fmt.Sprintf("%s_timeSeries_%s_%s_%s", name, timeField, idField, bucketSize.String()), row, m, Keys{
+		t: k.table(fmt.Sprintf("%s_ts_%s_%s_%s", name, timeField, idField, bucketSize.String()), row, m, Keys{
 			PartitionKeys:     []string{bucketFieldName},
 			ClusteringColumns: []string{timeField, idField},
 		}).(*t),
@@ -94,7 +94,7 @@ func (k *k) MultiTimeSeriesTable(name, indexField, timeField, idField string, bu
 	}
 	m[bucketFieldName] = time.Now()
 	return &multiTimeSeriesT{
-		t: k.table(fmt.Sprintf("%s_multiTimeSeries_%s_%s_%s_%s", name, indexField, timeField, idField, bucketSize.String()), row, m, Keys{
+		t: k.table(fmt.Sprintf("%s_mts_%s_%s_%s_%s", name, indexField, timeField, idField, bucketSize.String()), row, m, Keys{
 			PartitionKeys:     []string{indexField, bucketFieldName},
 			ClusteringColumns: []string{timeField, idField},
 		}).(*t),
