@@ -3,10 +3,11 @@ package gocassa
 import (
 	"errors"
 	"fmt"
-	"github.com/gocql/gocql"
 	"reflect"
 	"strings"
 	"time"
+
+	"github.com/b2aio/gocql"
 )
 
 // CREATE TABLE users (
