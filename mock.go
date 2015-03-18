@@ -109,7 +109,10 @@ func (k *keyPart) Less(other *keyPart) bool {
 }
 
 func (k *keyPart) Bytes() []byte {
-	typeInfo := &gocql.TypeInfo{Type: cassaType(k.Value)}
+	typeInfo := &gocql.TypeInfo{
+		Proto: 0x03,
+		Type:  cassaType(k.Value),
+	}
 	// FIXME handle err
 	marshalled, _ := gocql.Marshal(typeInfo, k.Value)
 	return marshalled
