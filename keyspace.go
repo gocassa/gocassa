@@ -40,8 +40,8 @@ func (k *k) Table(name string, entity interface{}, keys Keys) Table {
 }
 
 func (k *k) NewTable(name string, entity interface{}, fields map[string]interface{}, keys Keys) Table {
-	// Both act as a proxy to a tableFactory, and the tableFactory itself (in most situations, a k will be its own
-	// tableFactory, but in mocking situations not always)
+	// Act both as a proxy to a tableFactory, and as the tableFactory itself (in most situations, a k will be its own
+	// tableFactory, but not always [ie. mocking])
 	if k.tableFactory != k {
 		return k.tableFactory.NewTable(name, entity, fields, keys)
 	} else {
