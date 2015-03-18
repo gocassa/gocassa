@@ -17,6 +17,7 @@ type k struct {
 	tableFactory tableFactory
 }
 
+// Connect to a certain keyspace directly. Same as using Connect().KeySpace(keySpaceName)
 func ConnectToKeySpace(keySpace string, nodeIps []string, username, password string) (KeySpace, error) {
 	c, err := Connect(nodeIps, username, password)
 	if err != nil {
@@ -26,10 +27,9 @@ func ConnectToKeySpace(keySpace string, nodeIps []string, username, password str
 }
 
 func (k *k) DebugMode(b bool) {
-	k.debugMode = true
+	k.debugMode = b
 }
 
-// Table returns a new Table. A Table is analogous to column families in Cassandra or tables in RDBMSes.
 func (k *k) Table(name string, entity interface{}, keys Keys) Table {
 	n := name + "__" + strings.Join(keys.PartitionKeys, "_") + "__" + strings.Join(keys.ClusteringColumns, "_")
 	m, ok := toMap(entity)
@@ -116,8 +116,8 @@ func (k *k) MultiTimeSeriesTable(name, indexField, timeField, idField string, bu
 
 // Returns table names in a keyspace
 func (k *k) Tables() ([]string, error) {
-	stmt := fmt.Sprintf("SELECT columnfamily_name FROM system.schema_columnfamilies WHERE keyspace_name='%s'", k.name)
-	maps, err := k.qe.Query(stmt)
+	const stmt = "SELECT columnfamily_name FROM system.schema_columnfamilies WHERE keyspace_name = ?"
+	maps, err := k.qe.Query(stmt, k.name)
 	if err != nil {
 		return nil, err
 	}
@@ -146,23 +146,6 @@ func (k *k) DropTable(cf string) error {
 	return k.qe.Execute(stmt)
 }
 
-// Translate errors returned by cassandra
-// Most of these should be checked after the appropriate commands only
-// or otherwise may give false positive results.
-//
-// PS: we shouldn't do this, really
-
-// Example: Cannot add existing keyspace "randKeyspace01"
-func isKeyspaceExistsError(s string) bool {
-	return strings.Contains(s, "exist")
-}
-
-func isTableExistsError(s string) bool {
-	return strings.Contains(s, "exist")
-}
-
-// unavailable
-// unconfigured columnfamily updtest1
-func isMissingKeyspaceOrTableError(s string) bool {
-	return strings.Contains(s, "unavailable") || strings.Contains(s, "unconfigured")
+func (k *k) Name() string {
+	return k.name
 }

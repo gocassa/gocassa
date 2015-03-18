@@ -9,8 +9,6 @@ import (
 
 	"github.com/gocql/gocql"
 	"github.com/google/btree"
-
-	g "github.com/hailocab/gocassa/generate"
 )
 
 // MockKeySpace implements the KeySpace interface and constructs in-memory tables.
@@ -111,7 +109,7 @@ func (k *keyPart) Less(other *keyPart) bool {
 }
 
 func (k *keyPart) Bytes() []byte {
-	typeInfo := &gocql.TypeInfo{Type: g.CassaType(k.Value)}
+	typeInfo := &gocql.TypeInfo{Type: cassaType(k.Value)}
 	// FIXME handle err
 	marshalled, _ := gocql.Marshal(typeInfo, k.Value)
 	return marshalled

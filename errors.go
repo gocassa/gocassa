@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+// RowNotFoundError is returned by Reads if the Row is not found.
 type RowNotFoundError struct {
 	stmt   string
 	params []interface{}

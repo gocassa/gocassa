@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"strings"
 
-	g "github.com/hailocab/gocassa/generate"
 	r "github.com/hailocab/gocassa/reflect"
 )
 
@@ -91,11 +90,42 @@ func (t t) generateFieldNames() string {
 	return strings.Join(xs, ", ")
 }
 
+func relations(keys Keys, m map[string]interface{}) []Relation {
+	ret := []Relation{}
+	for _, v := range append(keys.PartitionKeys, keys.ClusteringColumns...) {
+		ret = append(ret, Eq(v, m[v]))
+	}
+	return ret
+}
+
+func removeFields(m map[string]interface{}, s []string) map[string]interface{} {
+	keys := map[string]bool{}
+	for _, v := range s {
+		keys[v] = true
+	}
+	ret := map[string]interface{}{}
+	for k, v := range m {
+		if !keys[k] {
+			ret[k] = v
+		}
+	}
+	return ret
+}
+
+func transformFields(m map[string]interface{}) {
+	for k, v := range m {
+		switch t := v.(type) {
+		case Counter:
+			m[k] = CounterIncrement(int(t))
+		}
+	}
+}
+
 // INSERT INTO Hollywood.NerdMovies (user_uuid, fan)
 //   VALUES ('cfd66ccc-d857-4e90-b1e5-df98a3d40cd6', 'johndoe')
 //
 // Gotcha: primkey must be first
-func insert(keySpaceName, cfName string, fieldNames []string, opts Options) string {
+func insertStatement(keySpaceName, cfName string, fieldNames []string, opts Options) string {
 	placeHolders := make([]string, len(fieldNames))
 	for i := 0; i < len(fieldNames); i++ {
 		placeHolders[i] = "?"
@@ -126,16 +156,27 @@ func (t t) SetWithOptions(i interface{}, opts Options) Op {
 	if !ok {
 		panic("SetWithOptions: Incompatible type")
 	}
-	fields, values := keyValues(m)
-	stmt := insert(t.keySpace.name, t.info.name, fields, opts)
-	if t.keySpace.debugMode {
-		fmt.Println(stmt, values)
+	ks := append(t.info.keys.PartitionKeys, t.info.keys.ClusteringColumns...)
+	updFields := removeFields(m, ks)
+	if len(updFields) == 0 {
+		fields, insertVals := keyValues(m)
+		insertStmt := insertStatement(t.keySpace.name, t.info.name, fields, opts)
+		if t.keySpace.debugMode {
+			fmt.Println(insertStmt, insertVals)
+		}
+		return newWriteOp(t.keySpace.qe, insertStmt, insertVals)
 	}
-	return newWriteOp(t.keySpace.qe, stmt, values)
+	transformFields(updFields)
+	updStmt, updVals := updateStatement(t.keySpace.name, t.info.name, updFields, opts)
+	whereStmt, whereVals := generateWhere(relations(t.info.keys, m))
+	if t.keySpace.debugMode {
+		fmt.Println(updStmt+whereStmt, append(updVals, whereVals...))
+	}
+	return newWriteOp(t.keySpace.qe, updStmt+whereStmt, append(updVals, whereVals...))
 }
 
-func (t t) Set(i interface{}) Op {
-	return t.SetWithOptions(i, Options{})
+func (t t) Set(row interface{}) Op {
+	return t.SetWithOptions(row, Options{})
 }
 
 func (t t) Create() error {
@@ -146,7 +187,6 @@ func (t t) Create() error {
 	}
 }
 
-// Drop table if exists and create it again
 func (t t) Recreate() error {
 	if ex, err := t.keySpace.Exists(t.info.name); ex && err == nil {
 		if err := t.keySpace.DropTable(t.info.name); err != nil {
@@ -159,7 +199,7 @@ func (t t) Recreate() error {
 }
 
 func (t t) CreateStatement() (string, error) {
-	return g.CreateTable(t.keySpace.name,
+	return createTable(t.keySpace.name,
 		t.info.name,
 		t.info.keys.PartitionKeys,
 		t.info.keys.ClusteringColumns,
@@ -170,27 +210,3 @@ func (t t) CreateStatement() (string, error) {
 func (t t) Name() string {
 	return t.info.name
 }
-
-//const (
-//	asc	 = iota
-//	desc
-//)
-//
-//type Ordering struct {
-//	fieldName string
-//	order int
-//}
-//
-//func ASC(fieldName string) Ordering {
-//	return Ordering{
-//		fieldName: fieldName,
-//		order: asc,
-//	}
-//}
-//
-//func DESC(fieldName string) Ordering {
-//	return Ordering{
-//		fieldName: fieldName,
-//		order: asc,
-//	}
-//}
