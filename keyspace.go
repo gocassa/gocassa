@@ -36,14 +36,20 @@ func (k *k) Table(name string, entity interface{}, keys Keys) Table {
 	if !ok {
 		panic("Unrecognized row type")
 	}
-	return k.tableFactory.NewTable(n, entity, m, keys)
+	return k.NewTable(n, entity, m, keys)
 }
 
 func (k *k) NewTable(name string, entity interface{}, fields map[string]interface{}, keys Keys) Table {
-	ti := newTableInfo(k.name, name, keys, entity, fields)
-	return &t{
-		keySpace: k,
-		info:     ti,
+	// Both act as a proxy to a tableFactory, and the tableFactory itself (in most situations, a k will be its own
+	// tableFactory, but in mocking situations not always)
+	if k.tableFactory != k {
+		return k.tableFactory.NewTable(name, entity, fields, keys)
+	} else {
+		ti := newTableInfo(k.name, name, keys, entity, fields)
+		return &t{
+			keySpace: k,
+			info:     ti,
+		}
 	}
 }
 
