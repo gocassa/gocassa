@@ -25,9 +25,15 @@ func (k *k) DebugMode(b bool) {
 	k.debugMode = true
 }
 
-func (k *k) Table(name string, entity interface{}, keys Keys) Table {
-	n := name + "__" + strings.Join(keys.PartitionKeys, "_") + "__" + strings.Join(keys.ClusteringColumns, "_")
-	return k.rawTable(n, entity, keys)
+func (k *k) Table(name string, entity interface{}, keys Keys, opts ...TableOptions) Table {
+	options := mergeTableOptions(opts...)
+
+	// Construct a CQL table name if not provided
+	if options.TableName == "" {
+		options.TableName = name + "__" + strings.Join(keys.PartitionKeys, "_") + "__" + strings.Join(keys.ClusteringColumns, "_")
+	}
+
+	return k.rawTable(options.TableName, entity, keys)
 }
 
 func (k *k) rawTable(name string, entity interface{}, keys Keys) Table {
@@ -46,9 +52,16 @@ func (k *k) table(name string, entity interface{}, fieldSource map[string]interf
 	}
 }
 
-func (k *k) MapTable(name, id string, row interface{}) MapTable {
+func (k *k) MapTable(name, id string, row interface{}, opts ...TableOptions) MapTable {
+	options := mergeTableOptions(opts...)
+
+	// Construct a CQL table name if not provided
+	if options.TableName == "" {
+		options.TableName = fmt.Sprintf("%s_map_%s", name, id)
+	}
+
 	return &mapT{
-		t: k.rawTable(fmt.Sprintf("%s_map_%s", name, id), row, Keys{
+		t: k.rawTable(options.TableName, row, Keys{
 			PartitionKeys: []string{id},
 		}).(*t),
 		idField: id,
@@ -59,9 +72,16 @@ func (k *k) SetKeysSpaceName(name string) {
 	k.name = name
 }
 
-func (k *k) MultimapTable(name, fieldToIndexBy, id string, row interface{}) MultimapTable {
+func (k *k) MultimapTable(name, fieldToIndexBy, id string, row interface{}, opts ...TableOptions) MultimapTable {
+	options := mergeTableOptions(opts...)
+
+	// Construct a CQL table name if not provided
+	if options.TableName == "" {
+		options.TableName = fmt.Sprintf("%s_multimap_%s_%s", name, fieldToIndexBy, id)
+	}
+
 	return &multimapT{
-		t: k.rawTable(fmt.Sprintf("%s_multimap_%s_%s", name, fieldToIndexBy, id), row, Keys{
+		t: k.rawTable(options.TableName, row, Keys{
 			PartitionKeys:     []string{fieldToIndexBy},
 			ClusteringColumns: []string{id},
 		}).(*t),
@@ -70,25 +90,21 @@ func (k *k) MultimapTable(name, fieldToIndexBy, id string, row interface{}) Mult
 	}
 }
 
-func (k *k) TimeSeriesTable(name, timeField, idField string, bucketSize time.Duration, row interface{}) TimeSeriesTable {
-	// Construct a descriptive table name
-	tableName := fmt.Sprintf("%s_timeSeries_%s_%s_%s", name, timeField, idField, bucketSize.String())
-	return k.TimeSeriesTableWithName(tableName, timeField, idField, bucketSize, row)
-}
+func (k *k) TimeSeriesTable(name, timeField, idField string, bucketSize time.Duration, row interface{}, opts ...TableOptions) TimeSeriesTable {
+	options := mergeTableOptions(opts...)
 
-// TimeSeriesTableWithName creates a TimeSeriesTable with an overridden table name
-//
-// This is needed as the current generator creates names which can exceed
-// the 48 character table name limit.
-// See https://github.com/hailocab/gocassa/issues/79
-func (k *k) TimeSeriesTableWithName(tableName, timeField, idField string, bucketSize time.Duration, row interface{}) TimeSeriesTable {
+	// Construct a CQL table name if not provided
+	if options.TableName == "" {
+		options.TableName = fmt.Sprintf("%s_timeSeries_%s_%s_%s", name, timeField, idField, bucketSize.String())
+	}
+
 	m, ok := toMap(row)
 	if !ok {
 		panic("Unrecognized row type")
 	}
 	m[bucketFieldName] = time.Now()
 	return &timeSeriesT{
-		t: k.table(tableName, row, m, Keys{
+		t: k.table(options.TableName, row, m, Keys{
 			PartitionKeys:     []string{bucketFieldName},
 			ClusteringColumns: []string{timeField, idField},
 		}).(*t),
@@ -98,25 +114,21 @@ func (k *k) TimeSeriesTableWithName(tableName, timeField, idField string, bucket
 	}
 }
 
-func (k *k) MultiTimeSeriesTable(name, indexField, timeField, idField string, bucketSize time.Duration, row interface{}) MultiTimeSeriesTable {
-	// Construct a descriptive table name
-	tableName := fmt.Sprintf("%s_multiTimeSeries_%s_%s_%s_%s", name, indexField, timeField, idField, bucketSize.String())
-	return k.MultiTimeSeriesTableWithName(tableName, indexField, timeField, idField, bucketSize, row)
-}
+func (k *k) MultiTimeSeriesTable(name, indexField, timeField, idField string, bucketSize time.Duration, row interface{}, opts ...TableOptions) MultiTimeSeriesTable {
+	options := mergeTableOptions(opts...)
 
-// MultiTimeSeriesTableWithName creates a MultiTimeSeriesTable with an overridden table name
-//
-// This is needed as the current generator creates names which can exceed
-// the 48 character table name limit.
-// See https://github.com/hailocab/gocassa/issues/79
-func (k *k) MultiTimeSeriesTableWithName(tableName, indexField, timeField, idField string, bucketSize time.Duration, row interface{}) MultiTimeSeriesTable {
+	// Construct a CQL table name if not provided
+	if options.TableName == "" {
+		options.TableName = fmt.Sprintf("%s_multiTimeSeries_%s_%s_%s_%s", name, indexField, timeField, idField, bucketSize.String())
+	}
+
 	m, ok := toMap(row)
 	if !ok {
 		panic("Unrecognized row type")
 	}
 	m[bucketFieldName] = time.Now()
 	return &multiTimeSeriesT{
-		t: k.table(tableName, row, m, Keys{
+		t: k.table(options.TableName, row, m, Keys{
 			PartitionKeys:     []string{indexField, bucketFieldName},
 			ClusteringColumns: []string{timeField, idField},
 		}).(*t),

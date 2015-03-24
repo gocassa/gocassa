@@ -26,6 +26,11 @@ type tableInfo struct {
 	fieldValues    []interface{}
 }
 
+// TableOptions contains additional optional configuration parameters to be passed to a table
+type TableOptions struct {
+	TableName string
+}
+
 func newTableInfo(keyspace, name string, keys Keys, entity interface{}, fieldSource map[string]interface{}) *tableInfo {
 	cinf := &tableInfo{
 		keyspace:      keyspace,
@@ -209,4 +214,13 @@ func (t t) CreateStatement() (string, error) {
 
 func (t t) Name() string {
 	return t.info.name
+}
+
+// mergeTableOptions is a slight misnomer - if more than one is provided we return the first
+func mergeTableOptions(opts ...TableOptions) TableOptions {
+	if len(opts) < 1 {
+		return TableOptions{}
+	}
+
+	return opts[0]
 }
