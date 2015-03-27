@@ -110,7 +110,7 @@ func (m Modifier) cql(name string) (string, []interface{}) {
 		str = fmt.Sprintf("%v = %v - [%v]", name, name, printElem(m.args[0]))
 	case modifierMapSetFields:
 		buf := new(bytes.Buffer)
-		buf.WriteString(fmt.Sprintf("%v = ", name))
+		buf.WriteString(fmt.Sprintf("%v = %v + ", name, name))
 		ma, ok := m.args[0].(map[string]interface{})
 		if !ok {
 			panic(fmt.Sprintf("Argument for MapSetFields is not a map: %v", m.args[0]))

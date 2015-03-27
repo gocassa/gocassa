@@ -349,10 +349,13 @@ func TestMaps(t *testing.T) {
 	})).Run(); err != nil {
 		t.Fatal(err)
 	}
-	if err := tbl.Read("1", &c).Run(); err != nil {
+
+	// Read back into a new struct (see #83)
+	var c2 CustomerWithMap
+	if err := tbl.Read("1", &c2).Run(); err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(c, CustomerWithMap{
+	if !reflect.DeepEqual(c2, CustomerWithMap{
 		Id: "1",
 		Map: map[string]string{
 			"2": "Two",
@@ -362,7 +365,7 @@ func TestMaps(t *testing.T) {
 			"6": "Is Even",
 		},
 	}) {
-		t.Fatal(c)
+		t.Fatal(c2)
 	}
 }
 
