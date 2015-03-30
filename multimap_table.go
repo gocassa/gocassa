@@ -39,8 +39,9 @@ func (mm *multimapT) List(field, startId interface{}, limit int, pointerToASlice
 }
 
 func (mm *multimapT) WithOptions(o Options) MultimapTable {
+	tee := mm.t.WithOptions(o).(t)
 	return &multimapT{
-		t:              mm.t.WithOptions(o).(*t),
+		t:              &tee,
 		fieldToIndexBy: mm.fieldToIndexBy,
 		idField:        mm.idField,
 	}

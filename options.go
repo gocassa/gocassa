@@ -4,12 +4,17 @@ import (
 	"time"
 )
 
-// Options allows specification of (optional, hah) query parameters.
+// Options can contain table or statement specific options.
+// The reason for this is because statement specific (TTL, Limit) options make sense as table level options
+// (eg. have default TTL for every Update without specifying it all the time)
 type Options struct {
 	// TTL specifies a duration over which data is valid. It will be truncated to second precision upon statement
 	// execution.
-	TTL   time.Duration
+	TTL time.Duration
+	// Limit query result set
 	Limit int
+	// TableName
+	TableName string
 }
 
 func TTL(t time.Duration) Options {
@@ -31,5 +36,10 @@ func Limit(i int) Options {
 
 func (o Options) SetLimit(i int) Options {
 	o.Limit = i
+	return o
+}
+
+func (o Options) SetTableName(n string) Options {
+	o.TableName = n
 	return o
 }

@@ -1,6 +1,7 @@
 package gocassa
 
 import (
+	"fmt"
 	"testing"
 	"time"
 )
@@ -55,5 +56,35 @@ func TestTimeSeriesT(t *testing.T) {
 	}
 	if len(*ts) != 4 {
 		t.Fatal(ts)
+	}
+}
+
+// This is a test of table wide limit not specific to timeseries
+func TestTimeSeriesTableLimit(t *testing.T) {
+	tbl := ns.TimeSeriesTable("tripTime6", "Time", "Id", time.Hour, Trip{})
+	createIf(tbl.(TableChanger), t)
+	for i := 0; i < 10; i++ {
+		i := Trip{
+			Id:   fmt.Sprintf("%v", i),
+			Time: time.Now(),
+		}
+		if err := tbl.Set(i).Run(); err != nil {
+			t.Fatal(err)
+		}
+	}
+	res := []Trip{}
+	err := tbl.List(time.Now().Add(-1*time.Hour), time.Now().Add(1*time.Hour), &res).Run()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(res) != 10 {
+		t.Fatal(len(res))
+	}
+	err = tbl.WithOptions(Limit(3)).List(time.Now().Add(-1*time.Hour), time.Now().Add(1*time.Hour), &res).Run()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(res) != 3 {
+		t.Fatal(len(res))
 	}
 }

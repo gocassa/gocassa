@@ -67,8 +67,9 @@ func (o *timeSeriesT) List(startTime time.Time, endTime time.Time, pointerToASli
 }
 
 func (o *timeSeriesT) WithOptions(opt Options) TimeSeriesTable {
+	tee := o.t.WithOptions(opt).(t)
 	return &timeSeriesT{
-		t:          o.t.WithOptions(opt).(*t),
+		t:          &tee,
 		timeField:  o.timeField,
 		idField:    o.idField,
 		bucketSize: o.bucketSize,

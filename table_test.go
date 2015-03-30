@@ -52,13 +52,3 @@ func TestCreateTable(t *testing.T) {
 		t.Fatal(err)
 	}
 }
-
-type Customer1 struct {
-	Id       string
-	MaxSpeed int
-	Brand    string
-}
-
-func TestCreateTable2(t *testing.T) {
-
-}

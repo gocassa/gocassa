@@ -26,8 +26,9 @@ func (m *mapT) MultiRead(ids []interface{}, pointerToASlice interface{}) Op {
 }
 
 func (m *mapT) WithOptions(o Options) MapTable {
+	tee := m.t.WithOptions(o).(t)
 	return &mapT{
-		t:       m.t.WithOptions(o).(*t),
+		t:       &tee,
 		idField: m.idField,
 	}
 }

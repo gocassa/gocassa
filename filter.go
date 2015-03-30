@@ -91,6 +91,7 @@ func (f filter) Delete() Op {
 // Query returns the query from the filter so you can read the rows matching the filter.
 func (f filter) Query() Query {
 	return &query{
-		f: f,
+		f:       f,
+		options: *f.t.options,
 	}
 }

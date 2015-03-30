@@ -67,8 +67,9 @@ func (o *multiTimeSeriesT) List(v interface{}, startTime time.Time, endTime time
 }
 
 func (o *multiTimeSeriesT) WithOptions(opt Options) MultiTimeSeriesTable {
+	tee := o.t.WithOptions(opt).(t)
 	return &multiTimeSeriesT{
-		t:          o.t.WithOptions(opt).(*t),
+		t:          &tee,
 		indexField: o.indexField,
 		idField:    o.idField,
 		bucketSize: o.bucketSize,
