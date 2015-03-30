@@ -60,7 +60,7 @@ func anyEquals(value interface{}, terms []interface{}) bool {
 func convertToPrimitive(i interface{}) interface{} {
 	switch v := i.(type) {
 	case time.Time:
-		return v.Nanosecond()
+		return v.UnixNano()
 	case time.Duration:
 		return v.Nanoseconds()
 	default:

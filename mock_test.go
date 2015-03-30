@@ -2,6 +2,7 @@ package gocassa
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -15,6 +16,14 @@ type user struct {
 	Name string
 }
 
+type point struct {
+	Time time.Time
+	Id   int
+	User string
+	X    float64
+	Y    float64
+}
+
 func TestRunMockSuite(t *testing.T) {
 	suite.Run(t, new(MockSuite))
 }
@@ -26,6 +35,8 @@ type MockSuite struct {
 	ks      KeySpace
 	mapTbl  MapTable
 	mmapTbl MultimapTable
+	tsTbl   TimeSeriesTable
+	mtsTbl  MultiTimeSeriesTable
 }
 
 func (s *MockSuite) SetupTest() {
@@ -38,6 +49,8 @@ func (s *MockSuite) SetupTest() {
 
 	s.mapTbl = s.ks.MapTable("users", "Pk1", user{})
 	s.mmapTbl = s.ks.MultimapTable("users", "Pk1", "Pk2", user{})
+	s.tsTbl = s.ks.TimeSeriesTable("points", "Time", "Id", 1*time.Minute, point{})
+	s.mtsTbl = s.ks.MultiTimeSeriesTable("points", "User", "Time", "Id", 1*time.Minute, point{})
 }
 
 // Table tests
@@ -186,10 +199,22 @@ func (s *MockSuite) TestMultiMapTableMultiRead() {
 func (s *MockSuite) TestMultiMapTableList() {
 	s.insertUsers()
 	var users []user
+
+	// Offset 0, limit 10
 	s.NoError(s.mmapTbl.List(1, 0, 10, &users).Run())
 	s.Len(users, 2)
 	s.Equal("Jane", users[0].Name)
 	s.Equal("Joe", users[1].Name)
+
+	// Offset 1, limit 1
+	s.NoError(s.mmapTbl.List(1, 1, 1, &users).Run())
+	s.Len(users, 1)
+	s.Equal("Jane", users[0].Name)
+
+	// Offset 2, limit 1
+	s.NoError(s.mmapTbl.List(1, 2, 1, &users).Run())
+	s.Len(users, 1)
+	s.Equal("Joe", users[0].Name)
 }
 
 func (s *MockSuite) TestMultiMapTableUpdate() {
@@ -215,6 +240,131 @@ func (s *MockSuite) TestMultiMapTableDeleteAll() {
 	s.NoError(s.mmapTbl.DeleteAll(1).Run())
 	var users []user
 	s.Empty(users)
+}
+
+// TimeSeriesTable tests
+func (s *MockSuite) TestTimeSeriesTableRead() {
+	points := s.insertPoints()
+
+	var p point
+	s.NoError(s.tsTbl.Read(points[0].Time, points[0].Id, &p).Run())
+	s.Equal(points[0], p)
+}
+
+func (s *MockSuite) TestTimeSeriesTableList() {
+	points := s.insertPoints()
+
+	// First two points
+	var ps []point
+	s.NoError(s.tsTbl.List(points[0].Time, points[1].Time, &ps).Run())
+	s.Len(ps, 2)
+	s.Equal(points[0], ps[0])
+	s.Equal(points[1], ps[1])
+
+	// Last two points
+	s.NoError(s.tsTbl.List(points[1].Time, points[2].Time, &ps).Run())
+	s.Len(ps, 2)
+	s.Equal(points[1], ps[0])
+	s.Equal(points[2], ps[1])
+}
+
+func (s *MockSuite) TestTimeSeriesTableUpdate() {
+	points := s.insertPoints()
+
+	s.NoError(s.tsTbl.Update(points[0].Time, points[0].Id, map[string]interface{}{
+		"X": 42.0,
+		"Y": 43.0,
+	}).Run())
+	var p point
+	s.NoError(s.tsTbl.Read(points[0].Time, points[0].Id, &p).Run())
+	s.Equal(42.0, p.X)
+	s.Equal(43.0, p.Y)
+}
+
+func (s *MockSuite) TestTimeSeriesTableDelete() {
+	points := s.insertPoints()
+
+	var p point
+	s.NoError(s.tsTbl.Delete(points[0].Time, points[0].Id).Run())
+	s.Equal(RowNotFoundError{}, s.tsTbl.Read(points[0].Time, points[0].Id, &p).Run())
+}
+
+// MultiTimeSeriesTable tests
+func (s *MockSuite) TestMultiTimeSeriesTableRead() {
+	points := s.insertPoints()
+
+	var p point
+	s.NoError(s.mtsTbl.Read("John", points[0].Time, points[0].Id, &p).Run())
+	s.Equal(points[0], p)
+}
+
+func (s *MockSuite) TestMultiTimeSeriesTableList() {
+	points := s.insertPoints()
+
+	var ps []point
+	s.NoError(s.mtsTbl.List("John", points[0].Time, points[2].Time, &ps).Run())
+	s.Len(ps, 2)
+	s.Equal(points[0], ps[0])
+	s.Equal(points[2], ps[1])
+
+	s.NoError(s.mtsTbl.List("Jane", points[0].Time, points[2].Time, &ps).Run())
+	s.Len(ps, 1)
+	s.Equal(points[1], ps[0])
+}
+
+func (s *MockSuite) TestMultiTimeSeriesTableUpdate() {
+	points := s.insertPoints()
+
+	s.NoError(s.mtsTbl.Update("John", points[0].Time, points[0].Id, map[string]interface{}{
+		"X": 42.0,
+	}).Run())
+
+	var p point
+	s.NoError(s.mtsTbl.Read("John", points[0].Time, points[0].Id, &p).Run())
+	s.Equal(42.0, p.X)
+}
+
+func (s *MockSuite) TestMultiTimeSeriesTableDelete() {
+	points := s.insertPoints()
+
+	s.NoError(s.mtsTbl.Delete("John", points[0].Time, points[0].Id).Run())
+
+	var p point
+	s.Equal(RowNotFoundError{}, s.mtsTbl.Read("John", points[0].Time, points[0].Id, &p).Run())
+}
+
+// Helper functions
+func (s *MockSuite) insertPoints() []point {
+	points := []point{
+		point{
+			Time: s.parseTime("2015-04-01 15:41:00"),
+			Id:   1,
+			User: "John",
+			X:    1.1,
+			Y:    1.2,
+		},
+		point{
+			Time: s.parseTime("2015-04-01 15:41:05"),
+			Id:   2,
+			User: "Jane",
+			X:    5.1,
+			Y:    5.2,
+		},
+		point{
+			Time: s.parseTime("2015-04-01 15:41:10"),
+			Id:   3,
+			User: "John",
+			X:    1.1,
+			Y:    1.3,
+		},
+	}
+
+	for _, p := range points {
+		s.NoError(s.tsTbl.Set(p).Run())
+		s.NoError(s.mtsTbl.Set(p).Run())
+	}
+
+	return points
 }
 
 func (s *MockSuite) insertUsers() (user, user, user, user) {
@@ -261,4 +411,10 @@ func (s *MockSuite) insertUsers() (user, user, user, user) {
 	}
 
 	return u1, u2, u3, u4
+}
+
+func (s *MockSuite) parseTime(value string) time.Time {
+	t, err := time.Parse("2006-01-02 15:04:05", value)
+	s.NoError(err)
+	return t
 }
