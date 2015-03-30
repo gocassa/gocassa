@@ -65,3 +65,12 @@ func (o *multiTimeSeriesT) List(v interface{}, startTime time.Time, endTime time
 	}
 	return o.Where(Eq(o.indexField, v), In(bucketFieldName, buckets...), GTE(o.timeField, startTime), LTE(o.timeField, endTime)).Query().Read(pointerToASlice)
 }
+
+func (o *multiTimeSeriesT) WithOptions(opt Options) MultiTimeSeriesTable {
+	return &multiTimeSeriesT{
+		t:          o.t.WithOptions(opt).(*t),
+		indexField: o.indexField,
+		idField:    o.idField,
+		bucketSize: o.bucketSize,
+	}
+}

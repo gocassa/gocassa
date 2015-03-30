@@ -43,6 +43,7 @@ type MapTable interface {
 	Delete(id interface{}) Op
 	Read(id, pointer interface{}) Op
 	MultiRead(ids []interface{}, pointerToASlice interface{}) Op
+	WithOptions(Options) MapTable
 	TableChanger
 }
 
@@ -61,6 +62,7 @@ type MultimapTable interface {
 	List(v, startId interface{}, limit int, pointerToASlice interface{}) Op
 	Read(v, id, pointer interface{}) Op
 	MultiRead(v interface{}, ids []interface{}, pointerToASlice interface{}) Op
+	WithOptions(Options) MultimapTable
 	TableChanger
 }
 
@@ -78,6 +80,7 @@ type TimeSeriesTable interface {
 	Delete(timeStamp time.Time, id interface{}) Op
 	Read(timeStamp time.Time, id, pointer interface{}) Op
 	List(start, end time.Time, pointerToASlice interface{}) Op
+	WithOptions(Options) TimeSeriesTable
 	TableChanger
 }
 
@@ -95,6 +98,7 @@ type MultiTimeSeriesTable interface {
 	Delete(v interface{}, timeStamp time.Time, id interface{}) Op
 	Read(v interface{}, timeStamp time.Time, id, pointer interface{}) Op
 	List(v interface{}, start, end time.Time, pointerToASlice interface{}) Op
+	WithOptions(Options) MultiTimeSeriesTable
 	TableChanger
 }
 
@@ -171,6 +175,7 @@ type Table interface {
 	// Where accepts a bunch of realtions and returns a filter. See the documentation for Relation and Filter to understand what that means.
 	Where(relations ...Relation) Filter // Because we provide selections
 	// Name returns the underlying table name, as stored in C*
+	WithOptions(Options) Table
 	TableChanger
 }
 

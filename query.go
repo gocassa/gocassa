@@ -5,12 +5,12 @@ import (
 )
 
 type query struct {
-	f     filter
-	limit int
+	f       filter
+	options Options
 }
 
 func (q *query) Limit(i int) Query {
-	q.limit = i
+	q.options = q.options.SetLimit(i)
 	return q
 }
 
@@ -74,8 +74,8 @@ func (q *query) generateOrderBy() (string, []interface{}) {
 }
 
 func (q *query) generateLimit() (string, []interface{}) {
-	if q.limit < 1 {
+	if q.options.Limit < 1 {
 		return "", []interface{}{}
 	}
-	return "LIMIT ?", []interface{}{q.limit}
+	return "LIMIT ?", []interface{}{q.options.Limit}
 }

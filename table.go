@@ -13,6 +13,7 @@ import (
 type t struct {
 	keySpace *k
 	info     *tableInfo
+	options  *Options
 }
 
 // Contains mostly analyzed information about the entity
@@ -176,7 +177,7 @@ func (t t) SetWithOptions(i interface{}, opts Options) Op {
 }
 
 func (t t) Set(row interface{}) Op {
-	return t.SetWithOptions(row, Options{})
+	return t.SetWithOptions(row, *t.options)
 }
 
 func (t t) Create() error {
@@ -209,4 +210,12 @@ func (t t) CreateStatement() (string, error) {
 
 func (t t) Name() string {
 	return t.info.name
+}
+
+func (table t) WithOptions(o Options) Table {
+	return t{
+		keySpace: table.keySpace,
+		info:     table.info,
+		options:  &o,
+	}
 }

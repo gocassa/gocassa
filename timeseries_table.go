@@ -65,3 +65,12 @@ func (o *timeSeriesT) List(startTime time.Time, endTime time.Time, pointerToASli
 	}
 	return o.Where(In(bucketFieldName, buckets...), GTE(o.timeField, startTime), LTE(o.timeField, endTime)).Query().Read(pointerToASlice)
 }
+
+func (o *timeSeriesT) WithOptions(opt Options) TimeSeriesTable {
+	return &timeSeriesT{
+		t:          o.t.WithOptions(opt).(*t),
+		timeField:  o.timeField,
+		idField:    o.idField,
+		bucketSize: o.bucketSize,
+	}
+}
