@@ -263,6 +263,10 @@ func (f *MockFilter) keysFromRelations(keys []string) ([]*keyPart, error) {
 	var rowKey *keyPart
 	var result []*keyPart
 
+	if len(keys) == 0 {
+		return []*keyPart{nil}, nil
+	}
+
 	for i, key := range keys {
 		lastKey := i == len(keys)-1
 		relation, ok := keyRelationMap[key]
@@ -336,14 +340,14 @@ func (f *MockFilter) Delete() Op {
 				return nil
 			}
 
-			superColumnKeys, err := f.keysFromRelations(f.table.keys.ClusteringColumns)
-			if err != nil {
-				return err
-			}
+			row.Ascend(func(item btree.Item) bool {
+				columns := item.(*superColumn).Columns
+				if f.rowMatch(columns) {
+					row.Delete(item)
+				}
 
-			for _, superColumnKey := range superColumnKeys {
-				row.Delete(superColumnKey.ToSuperColumn())
-			}
+				return true
+			})
 		}
 
 		return nil
@@ -380,7 +384,7 @@ func (q *MockQuery) Read(out interface{}) Op {
 			})
 		}
 
-		if q.limit > 0 {
+		if q.limit > 0 && q.limit < len(result) {
 			result = result[:q.limit]
 		}
 
@@ -407,7 +411,7 @@ func (q *MockQuery) ReadOne(out interface{}) Op {
 
 		sliceVal := slicePtrVal.Elem()
 		if sliceVal.Len() < 1 {
-			return fmt.Errorf("Not found")
+			return RowNotFoundError{}
 		}
 		q.assignResult(sliceVal.Index(0).Interface(), out)
 		return nil
