@@ -39,7 +39,31 @@ func (o Options) SetLimit(i int) Options {
 	return o
 }
 
+func TableName(tableName string) Options {
+	return Options{
+		TableName: tableName,
+	}
+}
+
 func (o Options) SetTableName(n string) Options {
 	o.TableName = n
 	return o
+}
+
+func (o Options) merge(neu Options) Options {
+	ret := Options{
+		TTL:       o.TTL,
+		Limit:     o.Limit,
+		TableName: o.TableName,
+	}
+	if neu.TTL != time.Duration(0) {
+		ret.TTL = neu.TTL
+	}
+	if neu.Limit != 0 {
+		ret.Limit = neu.Limit
+	}
+	if len(neu.TableName) > 0 {
+		ret.TableName = neu.TableName
+	}
+	return ret
 }

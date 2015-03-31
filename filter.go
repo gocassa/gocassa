@@ -66,7 +66,7 @@ func updateStatement(kn, cfName string, fields map[string]interface{}, opts Opti
 
 func (f filter) UpdateWithOptions(m map[string]interface{}, opts Options) Op {
 	str, wvals := generateWhere(f.rs)
-	stmt, uvals := updateStatement(f.t.keySpace.name, f.t.info.name, m, opts)
+	stmt, uvals := updateStatement(f.t.keySpace.name, f.t.Name(), m, opts)
 	vs := append(uvals, wvals...)
 	if f.t.keySpace.debugMode {
 		fmt.Println(stmt+" "+str, vs)
@@ -81,7 +81,7 @@ func (f filter) Update(m map[string]interface{}) Op {
 
 func (f filter) Delete() Op {
 	str, vals := generateWhere(f.rs)
-	stmt := fmt.Sprintf("DELETE FROM %s.%s%s", f.t.keySpace.name, f.t.info.name, str)
+	stmt := fmt.Sprintf("DELETE FROM %s.%s%s", f.t.keySpace.name, f.t.Name(), str)
 	if f.t.keySpace.debugMode {
 		fmt.Println(stmt, vals)
 	}
@@ -92,6 +92,6 @@ func (f filter) Delete() Op {
 func (f filter) Query() Query {
 	return &query{
 		f:       f,
-		options: *f.t.options,
+		options: f.t.options,
 	}
 }

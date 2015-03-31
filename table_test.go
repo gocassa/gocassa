@@ -3,6 +3,7 @@ package gocassa
 import (
 	"fmt"
 	"math/rand"
+	"strings"
 	"testing"
 	"time"
 )
@@ -50,5 +51,25 @@ func TestCreateTable(t *testing.T) {
 	err = ns.(*k).DropTable(name)
 	if err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestCreateStatement(t *testing.T) {
+	cs := ns.Table("something", Customer{}, Keys{
+		PartitionKeys: []string{"Id", "Name"},
+	})
+	str, err := cs.CreateStatement()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(str, "something") {
+		t.Fatal(str)
+	}
+	str, err = cs.WithOptions(TableName("funky")).CreateStatement()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(str, "funky") {
+		t.Fatal(str)
 	}
 }

@@ -43,7 +43,7 @@ func (k *k) table(name string, entity interface{}, fieldSource map[string]interf
 	return &t{
 		keySpace: k,
 		info:     ti,
-		options:  &Options{},
+		options:  Options{},
 	}
 }
 

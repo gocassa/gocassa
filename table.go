@@ -13,7 +13,7 @@ import (
 type t struct {
 	keySpace *k
 	info     *tableInfo
-	options  *Options
+	options  Options
 }
 
 // Contains mostly analyzed information about the entity
@@ -161,14 +161,14 @@ func (t t) SetWithOptions(i interface{}, opts Options) Op {
 	updFields := removeFields(m, ks)
 	if len(updFields) == 0 {
 		fields, insertVals := keyValues(m)
-		insertStmt := insertStatement(t.keySpace.name, t.info.name, fields, opts)
+		insertStmt := insertStatement(t.keySpace.name, t.Name(), fields, opts)
 		if t.keySpace.debugMode {
 			fmt.Println(insertStmt, insertVals)
 		}
 		return newWriteOp(t.keySpace.qe, insertStmt, insertVals)
 	}
 	transformFields(updFields)
-	updStmt, updVals := updateStatement(t.keySpace.name, t.info.name, updFields, opts)
+	updStmt, updVals := updateStatement(t.keySpace.name, t.Name(), updFields, opts)
 	whereStmt, whereVals := generateWhere(relations(t.info.keys, m))
 	if t.keySpace.debugMode {
 		fmt.Println(updStmt+whereStmt, append(updVals, whereVals...))
@@ -177,7 +177,7 @@ func (t t) SetWithOptions(i interface{}, opts Options) Op {
 }
 
 func (t t) Set(row interface{}) Op {
-	return t.SetWithOptions(row, *t.options)
+	return t.SetWithOptions(row, t.options)
 }
 
 func (t t) Create() error {
@@ -189,8 +189,8 @@ func (t t) Create() error {
 }
 
 func (t t) Recreate() error {
-	if ex, err := t.keySpace.Exists(t.info.name); ex && err == nil {
-		if err := t.keySpace.DropTable(t.info.name); err != nil {
+	if ex, err := t.keySpace.Exists(t.Name()); ex && err == nil {
+		if err := t.keySpace.DropTable(t.Name()); err != nil {
 			return err
 		}
 	} else if err != nil {
@@ -201,7 +201,7 @@ func (t t) Recreate() error {
 
 func (t t) CreateStatement() (string, error) {
 	return createTable(t.keySpace.name,
-		t.info.name,
+		t.Name(),
 		t.info.keys.PartitionKeys,
 		t.info.keys.ClusteringColumns,
 		t.info.fields,
@@ -209,6 +209,9 @@ func (t t) CreateStatement() (string, error) {
 }
 
 func (t t) Name() string {
+	if len(t.options.TableName) > 0 {
+		return t.options.TableName
+	}
 	return t.info.name
 }
 
@@ -216,6 +219,6 @@ func (table t) WithOptions(o Options) Table {
 	return t{
 		keySpace: table.keySpace,
 		info:     table.info,
-		options:  &o,
+		options:  table.options.merge(o),
 	}
 }
