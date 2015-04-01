@@ -5,7 +5,7 @@ import (
 )
 
 type multiTimeSeriesT struct {
-	*t
+	Table
 	indexField string
 	timeField  string
 	idField    string
@@ -22,7 +22,7 @@ func (o *multiTimeSeriesT) SetWithOptions(v interface{}, opts Options) Op {
 	} else {
 		m[bucketFieldName] = o.bucket(tim.Unix())
 	}
-	return o.t.SetWithOptions(m, opts)
+	return o.Table.SetWithOptions(m, opts)
 }
 
 func (o *multiTimeSeriesT) Set(v interface{}) Op {
@@ -67,9 +67,8 @@ func (o *multiTimeSeriesT) List(v interface{}, startTime time.Time, endTime time
 }
 
 func (o *multiTimeSeriesT) WithOptions(opt Options) MultiTimeSeriesTable {
-	tee := o.t.WithOptions(opt).(t)
 	return &multiTimeSeriesT{
-		t:          &tee,
+		Table:      o.Table.WithOptions(opt),
 		indexField: o.indexField,
 		idField:    o.idField,
 		bucketSize: o.bucketSize,

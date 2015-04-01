@@ -1,7 +1,7 @@
 package gocassa
 
 type mapT struct {
-	*t
+	Table
 	idField string
 }
 
@@ -26,9 +26,8 @@ func (m *mapT) MultiRead(ids []interface{}, pointerToASlice interface{}) Op {
 }
 
 func (m *mapT) WithOptions(o Options) MapTable {
-	tee := m.t.WithOptions(o).(t)
 	return &mapT{
-		t:       &tee,
+		Table:   m.Table.WithOptions(o),
 		idField: m.idField,
 	}
 }

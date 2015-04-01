@@ -1,7 +1,7 @@
 package gocassa
 
 type multimapT struct {
-	*t
+	Table
 	fieldToIndexBy string
 	idField        string
 }
@@ -39,9 +39,8 @@ func (mm *multimapT) List(field, startId interface{}, limit int, pointerToASlice
 }
 
 func (mm *multimapT) WithOptions(o Options) MultimapTable {
-	tee := mm.t.WithOptions(o).(t)
 	return &multimapT{
-		t:              &tee,
+		Table:          mm.Table.WithOptions(o),
 		fieldToIndexBy: mm.fieldToIndexBy,
 		idField:        mm.idField,
 	}

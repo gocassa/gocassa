@@ -7,7 +7,7 @@ import (
 const bucketFieldName = "bucket"
 
 type timeSeriesT struct {
-	*t
+	Table
 	timeField  string
 	idField    string
 	bucketSize time.Duration
@@ -23,7 +23,7 @@ func (o *timeSeriesT) SetWithOptions(v interface{}, opts Options) Op {
 	} else {
 		m[bucketFieldName] = o.bucket(tim.Unix())
 	}
-	return o.t.SetWithOptions(m, opts)
+	return o.Table.SetWithOptions(m, opts)
 }
 
 func (o *timeSeriesT) Set(v interface{}) Op {
@@ -67,9 +67,8 @@ func (o *timeSeriesT) List(startTime time.Time, endTime time.Time, pointerToASli
 }
 
 func (o *timeSeriesT) WithOptions(opt Options) TimeSeriesTable {
-	tee := o.t.WithOptions(opt).(t)
 	return &timeSeriesT{
-		t:          &tee,
+		Table:      o.Table.WithOptions(opt),
 		timeField:  o.timeField,
 		idField:    o.idField,
 		bucketSize: o.bucketSize,
