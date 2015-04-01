@@ -153,6 +153,9 @@ func (t *MockTable) keyFromColumnValues(columns map[string]interface{}, keys []s
 }
 
 func (t *MockTable) Name() string {
+	if len(t.options.TableName) > 0 {
+		return t.options.TableName
+	}
 	return t.name
 }
 
@@ -205,7 +208,7 @@ func (t *MockTable) SetWithOptions(i interface{}, options Options) Op {
 }
 
 func (t *MockTable) Set(i interface{}) Op {
-	return t.SetWithOptions(i, Options{})
+	return t.SetWithOptions(i, t.options)
 }
 
 func (t *MockTable) Where(relations ...Relation) Filter {
@@ -367,8 +370,8 @@ func (f *MockFilter) Delete() Op {
 
 // MockQuery implements the Query interface and works with MockFilter.
 type MockQuery struct {
-	filter *MockFilter
-	limit  int
+	filter  *MockFilter
+	options Options
 }
 
 func (q *MockQuery) Read(out interface{}) Op {
@@ -395,8 +398,8 @@ func (q *MockQuery) Read(out interface{}) Op {
 			})
 		}
 
-		if q.limit > 0 && q.limit < len(result) {
-			result = result[:q.limit]
+		if q.options.Limit > 0 && q.options.Limit < len(result) {
+			result = result[:q.options.Limit]
 		}
 
 		return q.assignResult(result, out)
@@ -430,6 +433,6 @@ func (q *MockQuery) ReadOne(out interface{}) Op {
 }
 
 func (q *MockQuery) Limit(limit int) Query {
-	q.limit = limit
+	q.options = q.options.SetLimit(limit)
 	return q
 }
