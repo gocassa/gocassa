@@ -1,7 +1,7 @@
 package gocassa
 
 type mapT struct {
-	*t
+	Table
 	idField string
 }
 

@@ -3,6 +3,9 @@ package gocassa
 import (
 	"fmt"
 	"strings"
+	"time"
+
+	"github.com/surgebase/compare"
 )
 
 const (
@@ -43,6 +46,52 @@ func (r Relation) cql() (string, []interface{}) {
 		ret = key + " <= ?"
 	}
 	return ret, r.terms
+}
+
+func anyEquals(value interface{}, terms []interface{}) bool {
+	for _, term := range terms {
+		if value == term {
+			return true
+		}
+	}
+	return false
+}
+
+func convertToPrimitive(i interface{}) interface{} {
+	switch v := i.(type) {
+	case time.Time:
+		return v.UnixNano()
+	case time.Duration:
+		return v.Nanoseconds()
+	default:
+		return i
+	}
+}
+
+func (r Relation) accept(i interface{}) bool {
+	var result bool
+	var err error
+
+	if r.op == equality || r.op == in {
+		return anyEquals(i, r.terms)
+	}
+
+	a, b := convertToPrimitive(i), convertToPrimitive(r.terms[0])
+
+	switch r.op {
+	case greaterThan:
+		result, err = compare.BuiltinGreaterThan(a, b)
+	case greaterThanOrEquals:
+		result, err = compare.BuiltinGreaterThan(a, b)
+		result = result || a == b
+	case lesserThanOrEquals:
+		result, err = compare.BuiltinLessThan(a, b)
+		result = result || a == b
+	case lesserThan:
+		result, err = compare.BuiltinLessThan(a, b)
+	}
+
+	return err == nil && result
 }
 
 func toI(i interface{}) []interface{} {

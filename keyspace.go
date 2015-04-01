@@ -6,10 +6,15 @@ import (
 	"time"
 )
 
+type tableFactory interface {
+	NewTable(string, interface{}, map[string]interface{}, Keys) Table
+}
+
 type k struct {
-	qe        QueryExecutor
-	name      string
-	debugMode bool
+	qe           QueryExecutor
+	name         string
+	debugMode    bool
+	tableFactory tableFactory
 }
 
 // Connect to a certain keyspace directly. Same as using Connect().KeySpace(keySpaceName)
@@ -27,30 +32,36 @@ func (k *k) DebugMode(b bool) {
 
 func (k *k) Table(name string, entity interface{}, keys Keys) Table {
 	n := name + "__" + strings.Join(keys.PartitionKeys, "_") + "__" + strings.Join(keys.ClusteringColumns, "_")
-	return k.rawTable(n, entity, keys)
-}
-
-func (k *k) rawTable(name string, entity interface{}, keys Keys) Table {
 	m, ok := toMap(entity)
 	if !ok {
 		panic("Unrecognized row type")
 	}
-	return k.table(name, entity, m, keys)
+	return k.NewTable(n, entity, m, keys)
 }
 
-func (k *k) table(name string, entity interface{}, fieldSource map[string]interface{}, keys Keys) Table {
-	ti := newTableInfo(k.name, name, keys, entity, fieldSource)
-	return &t{
-		keySpace: k,
-		info:     ti,
+func (k *k) NewTable(name string, entity interface{}, fields map[string]interface{}, keys Keys) Table {
+	// Act both as a proxy to a tableFactory, and as the tableFactory itself (in most situations, a k will be its own
+	// tableFactory, but not always [ie. mocking])
+	if k.tableFactory != k {
+		return k.tableFactory.NewTable(name, entity, fields, keys)
+	} else {
+		ti := newTableInfo(k.name, name, keys, entity, fields)
+		return &t{
+			keySpace: k,
+			info:     ti,
+		}
 	}
 }
 
 func (k *k) MapTable(name, id string, row interface{}) MapTable {
+	m, ok := toMap(row)
+	if !ok {
+		panic("Unrecognized row type")
+	}
 	return &mapT{
-		t: k.rawTable(fmt.Sprintf("%s_map_%s", name, id), row, Keys{
+		Table: k.NewTable(fmt.Sprintf("%s_map_%s", name, id), row, m, Keys{
 			PartitionKeys: []string{id},
-		}).(*t),
+		}),
 		idField: id,
 	}
 }
@@ -60,11 +71,15 @@ func (k *k) SetKeysSpaceName(name string) {
 }
 
 func (k *k) MultimapTable(name, fieldToIndexBy, id string, row interface{}) MultimapTable {
+	m, ok := toMap(row)
+	if !ok {
+		panic("Unrecognized row type")
+	}
 	return &multimapT{
-		t: k.rawTable(fmt.Sprintf("%s_multimap_%s_%s", name, fieldToIndexBy, id), row, Keys{
+		Table: k.NewTable(fmt.Sprintf("%s_multimap_%s_%s", name, fieldToIndexBy, id), row, m, Keys{
 			PartitionKeys:     []string{fieldToIndexBy},
 			ClusteringColumns: []string{id},
-		}).(*t),
+		}),
 		idField:        id,
 		fieldToIndexBy: fieldToIndexBy,
 	}
@@ -77,10 +92,10 @@ func (k *k) TimeSeriesTable(name, timeField, idField string, bucketSize time.Dur
 	}
 	m[bucketFieldName] = time.Now()
 	return &timeSeriesT{
-		t: k.table(fmt.Sprintf("%s_timeSeries_%s_%s_%s", name, timeField, idField, bucketSize.String()), row, m, Keys{
+		Table: k.NewTable(fmt.Sprintf("%s_timeSeries_%s_%s_%s", name, timeField, idField, bucketSize), row, m, Keys{
 			PartitionKeys:     []string{bucketFieldName},
 			ClusteringColumns: []string{timeField, idField},
-		}).(*t),
+		}),
 		timeField:  timeField,
 		idField:    idField,
 		bucketSize: bucketSize,
@@ -94,10 +109,10 @@ func (k *k) MultiTimeSeriesTable(name, indexField, timeField, idField string, bu
 	}
 	m[bucketFieldName] = time.Now()
 	return &multiTimeSeriesT{
-		t: k.table(fmt.Sprintf("%s_multiTimeSeries_%s_%s_%s_%s", name, indexField, timeField, idField, bucketSize.String()), row, m, Keys{
+		Table: k.NewTable(fmt.Sprintf("%s_multiTimeSeries_%s_%s_%s_%s", name, indexField, timeField, idField, bucketSize.String()), row, m, Keys{
 			PartitionKeys:     []string{indexField, bucketFieldName},
 			ClusteringColumns: []string{timeField, idField},
-		}).(*t),
+		}),
 		indexField: indexField,
 		timeField:  timeField,
 		idField:    idField,

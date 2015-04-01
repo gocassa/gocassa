@@ -1,7 +1,7 @@
 package gocassa
 
 type multimapT struct {
-	*t
+	Table
 	fieldToIndexBy string
 	idField        string
 }
