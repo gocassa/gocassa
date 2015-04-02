@@ -76,7 +76,7 @@ func (f filter) UpdateWithOptions(m map[string]interface{}, opts Options) Op {
 
 // Update does a partial update on the filter.
 func (f filter) Update(m map[string]interface{}) Op {
-	return f.UpdateWithOptions(m, Options{})
+	return f.UpdateWithOptions(m, f.t.options)
 }
 
 func (f filter) Delete() Op {
