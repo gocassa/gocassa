@@ -219,6 +219,6 @@ func (table t) WithOptions(o Options) Table {
 	return t{
 		keySpace: table.keySpace,
 		info:     table.info,
-		options:  table.options.merge(o),
+		options:  table.options.Merge(o),
 	}
 }

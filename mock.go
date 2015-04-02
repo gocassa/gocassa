@@ -236,7 +236,7 @@ func (t *MockTable) WithOptions(o Options) Table {
 		rows:    t.rows,
 		entity:  t.entity,
 		keys:    t.keys,
-		options: t.options.merge(o),
+		options: t.options.Merge(o),
 	}
 }
 
@@ -433,6 +433,6 @@ func (q *MockQuery) ReadOne(out interface{}) Op {
 }
 
 func (q *MockQuery) Limit(limit int) Query {
-	q.options = q.options.SetLimit(limit)
+	q.options = q.options.Merge(Limit(limit))
 	return q
 }

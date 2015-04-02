@@ -23,20 +23,10 @@ func TTL(t time.Duration) Options {
 	}
 }
 
-func (o Options) SetTTL(t time.Duration) Options {
-	o.TTL = t
-	return o
-}
-
 func Limit(i int) Options {
 	return Options{
 		Limit: i,
 	}
-}
-
-func (o Options) SetLimit(i int) Options {
-	o.Limit = i
-	return o
 }
 
 func TableName(tableName string) Options {
@@ -45,12 +35,8 @@ func TableName(tableName string) Options {
 	}
 }
 
-func (o Options) SetTableName(n string) Options {
-	o.TableName = n
-	return o
-}
-
-func (o Options) merge(neu Options) Options {
+// Returns a new Options which is a left biased merge of the two initial Options.
+func (o Options) Merge(neu Options) Options {
 	ret := Options{
 		TTL:       o.TTL,
 		Limit:     o.Limit,
