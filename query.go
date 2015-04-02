@@ -10,7 +10,7 @@ type query struct {
 }
 
 func (q *query) Limit(i int) Query {
-	q.options = q.options.Merge(Limit(i))
+	q.options = q.options.Merge(Options{Limit: i})
 	return q
 }
 

@@ -17,24 +17,6 @@ type Options struct {
 	TableName string
 }
 
-func TTL(t time.Duration) Options {
-	return Options{
-		TTL: t,
-	}
-}
-
-func Limit(i int) Options {
-	return Options{
-		Limit: i,
-	}
-}
-
-func TableName(tableName string) Options {
-	return Options{
-		TableName: tableName,
-	}
-}
-
 // Returns a new Options which is a left biased merge of the two initial Options.
 func (o Options) Merge(neu Options) Options {
 	ret := Options{

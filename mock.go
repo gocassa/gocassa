@@ -433,6 +433,6 @@ func (q *MockQuery) ReadOne(out interface{}) Op {
 }
 
 func (q *MockQuery) Limit(limit int) Query {
-	q.options = q.options.Merge(Limit(limit))
+	q.options = q.options.Merge(Options{Limit: limit})
 	return q
 }

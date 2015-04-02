@@ -65,7 +65,7 @@ func TestCreateStatement(t *testing.T) {
 	if !strings.Contains(str, "something") {
 		t.Fatal(str)
 	}
-	str, err = cs.WithOptions(TableName("funky")).CreateStatement()
+	str, err = cs.WithOptions(Options{TableName: "funky"}).CreateStatement()
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -80,7 +80,7 @@ func TestTimeSeriesTableLimit(t *testing.T) {
 	if len(res) != 10 {
 		t.Fatal(len(res))
 	}
-	err = tbl.WithOptions(Limit(3)).List(time.Now().Add(-1*time.Hour), time.Now().Add(1*time.Hour), &res).Run()
+	err = tbl.WithOptions(Options{Limit: 3}).List(time.Now().Add(-1*time.Hour), time.Now().Add(1*time.Hour), &res).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
