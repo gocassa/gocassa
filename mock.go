@@ -17,6 +17,7 @@ type mockKeySpace struct {
 }
 
 type mockOp struct {
+	options Options
 	funcs []func() error
 }
 
@@ -41,6 +42,10 @@ func (m mockOp) Run() error {
 		}
 	}
 	return nil
+}
+
+func (m mockOp) WithOptions(opt Options) Op {
+	return m
 }
 
 func (m mockOp) RunAtomically() error {
@@ -246,12 +251,6 @@ type MockFilter struct {
 	relations []Relation
 }
 
-func (f *MockFilter) Query() Query {
-	return &MockQuery{
-		filter: f,
-	}
-}
-
 func (f *MockFilter) rowMatch(row map[string]interface{}) bool {
 	for _, relation := range f.relations {
 		value := row[relation.key]
@@ -368,29 +367,23 @@ func (f *MockFilter) Delete() Op {
 	})
 }
 
-// MockQuery implements the Query interface and works with MockFilter.
-type MockQuery struct {
-	filter  *MockFilter
-	options Options
-}
-
-func (q *MockQuery) Read(out interface{}) Op {
+func (q *MockFilter) Read(out interface{}) Op {
 	return newOp(func() error {
-		rowKeys, err := q.filter.keysFromRelations(q.filter.table.keys.PartitionKeys)
+		rowKeys, err := q.keysFromRelations(q.table.keys.PartitionKeys)
 		if err != nil {
 			return err
 		}
 
 		var result []map[string]interface{}
 		for _, rowKey := range rowKeys {
-			row := q.filter.table.rows[rowKey.RowKey()]
+			row := q.table.rows[rowKey.RowKey()]
 			if row == nil {
 				continue
 			}
 
 			row.Ascend(func(item btree.Item) bool {
 				columns := item.(*superColumn).Columns
-				if q.filter.rowMatch(columns) {
+				if q.rowMatch(columns) {
 					result = append(result, columns)
 				}
 
@@ -398,15 +391,15 @@ func (q *MockQuery) Read(out interface{}) Op {
 			})
 		}
 
-		if q.options.Limit > 0 && q.options.Limit < len(result) {
-			result = result[:q.options.Limit]
-		}
+		//if q.options.Limit > 0 && q.options.Limit < len(result) {
+		//	result = result[:q.options.Limit]
+		//}
 
 		return q.assignResult(result, out)
 	})
 }
 
-func (q *MockQuery) assignResult(records interface{}, out interface{}) error {
+func (q *MockFilter) assignResult(records interface{}, out interface{}) error {
 	bytes, err := json.Marshal(records)
 	if err != nil {
 		return err
@@ -414,7 +407,7 @@ func (q *MockQuery) assignResult(records interface{}, out interface{}) error {
 	return json.Unmarshal(bytes, out)
 }
 
-func (q *MockQuery) ReadOne(out interface{}) Op {
+func (q *MockFilter) ReadOne(out interface{}) Op {
 	return newOp(func() error {
 		slicePtrVal := reflect.New(reflect.SliceOf(reflect.ValueOf(out).Elem().Type()))
 
@@ -430,9 +423,4 @@ func (q *MockQuery) ReadOne(out interface{}) Op {
 		q.assignResult(sliceVal.Index(0).Interface(), out)
 		return nil
 	})
-}
-
-func (q *MockQuery) Limit(limit int) Query {
-	q.options = q.options.Merge(Options{Limit: limit})
-	return q
 }

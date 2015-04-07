@@ -152,32 +152,24 @@ func insertStatement(keySpaceName, cfName string, fieldNames []string, opts Opti
 	return buf.String()
 }
 
-func (t t) SetWithOptions(i interface{}, opts Options) Op {
+func (t t) Set(i interface{}) Op {
 	m, ok := toMap(i)
 	if !ok {
 		panic("SetWithOptions: Incompatible type")
 	}
 	ks := append(t.info.keys.PartitionKeys, t.info.keys.ClusteringColumns...)
 	updFields := removeFields(m, ks)
-	if len(updFields) == 0 {
-		fields, insertVals := keyValues(m)
-		insertStmt := insertStatement(t.keySpace.name, t.Name(), fields, opts)
-		if t.keySpace.debugMode {
-			fmt.Println(insertStmt, insertVals)
-		}
-		return newWriteOp(t.keySpace.qe, insertStmt, insertVals)
+	if len(updFields) == 0 {	
+		return newWriteOp(t.keySpace.qe, filter{
+			t: t,
+		}, insert, m)
 	}
 	transformFields(updFields)
-	updStmt, updVals := updateStatement(t.keySpace.name, t.Name(), updFields, opts)
-	whereStmt, whereVals := generateWhere(relations(t.info.keys, m))
-	if t.keySpace.debugMode {
-		fmt.Println(updStmt+whereStmt, append(updVals, whereVals...))
-	}
-	return newWriteOp(t.keySpace.qe, updStmt+whereStmt, append(updVals, whereVals...))
-}
-
-func (t t) Set(row interface{}) Op {
-	return t.SetWithOptions(row, t.options)
+	rels := relations(t.info.keys, m)
+	return newWriteOp(t.keySpace.qe, filter{
+		t: t,
+		relations: rels, 
+	}, update, updFields)
 }
 
 func (t t) Create() error {

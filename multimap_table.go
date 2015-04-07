@@ -10,10 +10,6 @@ func (mm *multimapT) Update(field, id interface{}, m map[string]interface{}) Op 
 	return mm.Where(Eq(mm.fieldToIndexBy, field), Eq(mm.idField, id)).Update(m)
 }
 
-func (mm *multimapT) UpdateWithOptions(field, id interface{}, m map[string]interface{}, opts Options) Op {
-	return mm.Where(Eq(mm.fieldToIndexBy, field), Eq(mm.idField, id)).UpdateWithOptions(m, opts)
-}
-
 func (mm *multimapT) Delete(field, id interface{}) Op {
 	return mm.Where(Eq(mm.fieldToIndexBy, field), Eq(mm.idField, id)).Delete()
 }
@@ -23,11 +19,11 @@ func (mm *multimapT) DeleteAll(field interface{}) Op {
 }
 
 func (mm *multimapT) Read(field, id, pointer interface{}) Op {
-	return mm.Where(Eq(mm.fieldToIndexBy, field), Eq(mm.idField, id)).Query().ReadOne(pointer)
+	return mm.Where(Eq(mm.fieldToIndexBy, field), Eq(mm.idField, id)).ReadOne(pointer)
 }
 
 func (mm *multimapT) MultiRead(field interface{}, ids []interface{}, pointerToASlice interface{}) Op {
-	return mm.Where(Eq(mm.fieldToIndexBy, field), In(mm.idField, ids...)).Query().Read(pointerToASlice)
+	return mm.Where(Eq(mm.fieldToIndexBy, field), In(mm.idField, ids...)).Read(pointerToASlice)
 }
 
 func (mm *multimapT) List(field, startId interface{}, limit int, pointerToASlice interface{}) Op {
@@ -35,7 +31,7 @@ func (mm *multimapT) List(field, startId interface{}, limit int, pointerToASlice
 	if startId != nil {
 		rels = append(rels, GTE(mm.idField, startId))
 	}
-	return mm.Where(rels...).Query().Limit(limit).Read(pointerToASlice)
+	return mm.Where(rels...).Read(pointerToASlice).WithOptions(Options{Limit: limit})
 }
 
 func (mm *multimapT) WithOptions(o Options) MultimapTable {
