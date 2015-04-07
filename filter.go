@@ -1,8 +1,6 @@
 package gocassa
 
-import (
-
-)
+import ()
 
 type filter struct {
 	t  t
@@ -26,7 +24,7 @@ func (f filter) Read(pointerToASlice interface{}) Op {
 		qe: f.t.keySpace.qe,
 		ops: []singleOp{
 			{
-				f:  	f,
+				f:      f,
 				opType: read,
 				result: pointerToASlice,
 			},
@@ -39,11 +37,10 @@ func (f filter) ReadOne(pointer interface{}) Op {
 		qe: f.t.keySpace.qe,
 		ops: []singleOp{
 			{
-				f:  	f,
+				f:      f,
 				opType: singleRead,
 				result: pointer,
 			},
 		},
 	}
 }
-

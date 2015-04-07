@@ -41,7 +41,7 @@ func TestCreateTable(t *testing.T) {
 		t.Fatal(err)
 	}
 	res := &[]Customer{}
-	err = cs.Where(Eq("Id", "1001"), Eq("Name", "Joe")).Query().Read(res).Run()
+	err = cs.Where(Eq("Id", "1001"), Eq("Name", "Joe")).Read(res).Run()
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -159,7 +159,7 @@ func (t t) Set(i interface{}) Op {
 	}
 	ks := append(t.info.keys.PartitionKeys, t.info.keys.ClusteringColumns...)
 	updFields := removeFields(m, ks)
-	if len(updFields) == 0 {	
+	if len(updFields) == 0 {
 		return newWriteOp(t.keySpace.qe, filter{
 			t: t,
 		}, insert, m)
@@ -167,8 +167,8 @@ func (t t) Set(i interface{}) Op {
 	transformFields(updFields)
 	rels := relations(t.info.keys, m)
 	return newWriteOp(t.keySpace.qe, filter{
-		t: t,
-		relations: rels, 
+		t:  t,
+		rs: rels,
 	}, update, updFields)
 }
 

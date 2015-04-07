@@ -13,7 +13,7 @@ type timeSeriesT struct {
 	bucketSize time.Duration
 }
 
-func (o *timeSeriesT) SetWithOptions(v interface{}, opts Options) Op {
+func (o *timeSeriesT) Set(v interface{}) Op {
 	m, ok := toMap(v)
 	if !ok {
 		panic("Can't set: not able to convert")
@@ -23,11 +23,7 @@ func (o *timeSeriesT) SetWithOptions(v interface{}, opts Options) Op {
 	} else {
 		m[bucketFieldName] = o.bucket(tim.Unix())
 	}
-	return o.Table.SetWithOptions(m, opts)
-}
-
-func (o *timeSeriesT) Set(v interface{}) Op {
-	return o.SetWithOptions(v, Options{})
+	return o.Table.Set(m)
 }
 
 func (o *timeSeriesT) bucket(secs int64) int64 {
@@ -39,11 +35,6 @@ func (o *timeSeriesT) Update(timeStamp time.Time, id interface{}, m map[string]i
 	return o.Where(Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Update(m)
 }
 
-func (o *timeSeriesT) UpdateWithOptions(timeStamp time.Time, id interface{}, m map[string]interface{}, opts Options) Op {
-	bucket := o.bucket(timeStamp.Unix())
-	return o.Where(Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).UpdateWithOptions(m, opts)
-}
-
 func (o *timeSeriesT) Delete(timeStamp time.Time, id interface{}) Op {
 	bucket := o.bucket(timeStamp.Unix())
 	return o.Where(Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Delete()
@@ -51,7 +42,7 @@ func (o *timeSeriesT) Delete(timeStamp time.Time, id interface{}) Op {
 
 func (o *timeSeriesT) Read(timeStamp time.Time, id, pointer interface{}) Op {
 	bucket := o.bucket(timeStamp.Unix())
-	return o.Where(Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Query().ReadOne(pointer)
+	return o.Where(Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).ReadOne(pointer)
 }
 
 func (o *timeSeriesT) List(startTime time.Time, endTime time.Time, pointerToASlice interface{}) Op {
@@ -63,7 +54,7 @@ func (o *timeSeriesT) List(startTime time.Time, endTime time.Time, pointerToASli
 		}
 		buckets = append(buckets, i)
 	}
-	return o.Where(In(bucketFieldName, buckets...), GTE(o.timeField, startTime), LTE(o.timeField, endTime)).Query().Read(pointerToASlice)
+	return o.Where(In(bucketFieldName, buckets...), GTE(o.timeField, startTime), LTE(o.timeField, endTime)).Read(pointerToASlice)
 }
 
 func (o *timeSeriesT) WithOptions(opt Options) TimeSeriesTable {

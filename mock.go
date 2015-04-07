@@ -18,12 +18,12 @@ type mockKeySpace struct {
 
 type mockOp struct {
 	options Options
-	funcs []func() error
+	funcs   []func(mockOp) error
 }
 
-func newOp(f func() error) mockOp {
+func newOp(f func(mockOp) error) mockOp {
 	return mockOp{
-		funcs: []func() error{f},
+		funcs: []func(mockOp) error{f},
 	}
 }
 
@@ -36,7 +36,7 @@ func (m mockOp) Add(ops ...Op) Op {
 
 func (m mockOp) Run() error {
 	for _, f := range m.funcs {
-		err := f()
+		err := f(m)
 		if err != nil {
 			return err
 		}
@@ -45,7 +45,10 @@ func (m mockOp) Run() error {
 }
 
 func (m mockOp) WithOptions(opt Options) Op {
-	return m
+	return mockOp{
+		options: opt,
+		funcs:   m.funcs,
+	}
 }
 
 func (m mockOp) RunAtomically() error {
@@ -187,7 +190,7 @@ func (t *MockTable) getOrCreateColumnGroup(rowKey, superColumnKey *keyPart) map[
 }
 
 func (t *MockTable) SetWithOptions(i interface{}, options Options) Op {
-	return newOp(func() error {
+	return newOp(func(m mockOp) error {
 		columns, ok := toMap(i)
 		if !ok {
 			return errors.New("Can't create: value not understood")
@@ -305,7 +308,7 @@ func (f *MockFilter) keysFromRelations(keys []string) ([]*keyPart, error) {
 }
 
 func (f *MockFilter) UpdateWithOptions(m map[string]interface{}, options Options) Op {
-	return newOp(func() error {
+	return newOp(func(mock mockOp) error {
 		rowKeys, err := f.keysFromRelations(f.table.keys.PartitionKeys)
 		if err != nil {
 			return err
@@ -341,7 +344,7 @@ func (f *MockFilter) Update(m map[string]interface{}) Op {
 }
 
 func (f *MockFilter) Delete() Op {
-	return newOp(func() error {
+	return newOp(func(m mockOp) error {
 		rowKeys, err := f.keysFromRelations(f.table.keys.PartitionKeys)
 		if err != nil {
 			return err
@@ -368,7 +371,7 @@ func (f *MockFilter) Delete() Op {
 }
 
 func (q *MockFilter) Read(out interface{}) Op {
-	return newOp(func() error {
+	return newOp(func(m mockOp) error {
 		rowKeys, err := q.keysFromRelations(q.table.keys.PartitionKeys)
 		if err != nil {
 			return err
@@ -390,10 +393,10 @@ func (q *MockFilter) Read(out interface{}) Op {
 				return true
 			})
 		}
-
-		//if q.options.Limit > 0 && q.options.Limit < len(result) {
-		//	result = result[:q.options.Limit]
-		//}
+		opt := q.table.options.Merge(m.options)
+		if opt.Limit > 0 && opt.Limit < len(result) {
+			result = result[:opt.Limit]
+		}
 
 		return q.assignResult(result, out)
 	})
@@ -408,7 +411,7 @@ func (q *MockFilter) assignResult(records interface{}, out interface{}) error {
 }
 
 func (q *MockFilter) ReadOne(out interface{}) Op {
-	return newOp(func() error {
+	return newOp(func(m mockOp) error {
 		slicePtrVal := reflect.New(reflect.SliceOf(reflect.ValueOf(out).Elem().Type()))
 
 		err := q.Read(slicePtrVal.Interface()).Run()

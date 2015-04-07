@@ -1,10 +1,10 @@
 package gocassa
 
 import (
-	"encoding/json"
 	"bytes"
-	"strconv"
+	"encoding/json"
 	"fmt"
+	"strconv"
 )
 
 const (
@@ -16,16 +16,16 @@ const (
 )
 
 type op struct {
-	qe  QueryExecutor
+	qe      QueryExecutor
 	options Options
-	ops []singleOp
+	ops     []singleOp
 }
 
 type singleOp struct {
-	f filter
+	f      filter
 	opType int
 	result interface{}
-	m map[string]interface{} // map for updates, sets etc
+	m      map[string]interface{} // map for updates, sets etc
 }
 
 func newWriteOp(qe QueryExecutor, f filter, opType int, m map[string]interface{}) *op {
@@ -33,9 +33,9 @@ func newWriteOp(qe QueryExecutor, f filter, opType int, m map[string]interface{}
 		qe: qe,
 		ops: []singleOp{
 			{
-				f: 		f,
+				f:      f,
 				opType: opType,
-				m: m,
+				m:      m,
 			},
 		},
 	}
@@ -110,8 +110,8 @@ func (w *op) Run() error {
 func (w *op) WithOptions(opt Options) Op {
 	return &op{
 		options: opt,
-		qe: w.qe,
-		ops: w.ops,
+		qe:      w.qe,
+		ops:     w.ops,
 	}
 }
 
@@ -132,14 +132,11 @@ func (w op) RunAtomically() error {
 func (o *singleOp) generateWrite(opt Options) (string, []interface{}) {
 	var str string
 	var vals []interface{}
-	switch (o.opType) {
+	switch o.opType {
 	case update:
 		stmt, uvals := updateStatement(o.f.t.keySpace.name, o.f.t.Name(), o.m, o.f.t.options.Merge(opt))
-		whereStmt, whereVals := generateWhere(relations(o.f.t.info.keys, o.m))
-		if o.f.t.keySpace.debugMode {
-			fmt.Println(stmt+whereStmt, append(uvals, whereVals...))
-		}
-		str = stmt+whereStmt
+		whereStmt, whereVals := generateWhere(o.f.rs)
+		str = stmt + whereStmt
 		vals = append(uvals, whereVals...)
 	case delete:
 		str, vals = generateWhere(o.f.rs)
@@ -158,7 +155,7 @@ func (o *singleOp) generateWrite(opt Options) (string, []interface{}) {
 func (o *singleOp) generateRead(opt Options) (string, []interface{}) {
 	w, wv := generateWhere(o.f.rs)
 	ord, ov := o.generateOrderBy()
-	lim, lv := o.generateLimit(opt)
+	lim, lv := o.generateLimit(o.f.t.options.Merge(opt))
 	str := fmt.Sprintf("SELECT %s FROM %s.%s", o.f.t.generateFieldNames(), o.f.t.keySpace.name, o.f.t.Name())
 	vals := []interface{}{}
 	if w != "" {
@@ -169,7 +166,7 @@ func (o *singleOp) generateRead(opt Options) (string, []interface{}) {
 		str += " " + ord
 		vals = append(vals, ov...)
 	}
-	if lim!= "" {
+	if lim != "" {
 		str += " " + lim
 		vals = append(vals, lv...)
 	}
