@@ -31,7 +31,7 @@ func (mm *multimapT) List(field, startId interface{}, limit int, pointerToASlice
 	if startId != nil {
 		rels = append(rels, GTE(mm.idField, startId))
 	}
-	return mm.Where(rels...).Read(pointerToASlice).WithOptions(Options{Limit: limit})
+	return mm.WithOptions(Options{Limit: limit}).(*multimapT).Where(rels...).Read(pointerToASlice)
 }
 
 func (mm *multimapT) WithOptions(o Options) MultimapTable {

@@ -107,7 +107,7 @@ func (w *op) Run() error {
 	return nil
 }
 
-func (w *op) WithOptions(opt Options) Op {
+func (w *op) withOptions(opt Options) Op {
 	return &op{
 		options: opt,
 		qe:      w.qe,

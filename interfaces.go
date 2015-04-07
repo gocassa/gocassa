@@ -123,11 +123,12 @@ type Op interface {
 	// Run the operation.
 	Run() error
 	// You do not need this in 95% of the use cases, use Run!
-	// Using atomic batched writes (logged batches in Cassandra terminolohu) comes at a high performance cost!
+	// Using atomic batched writes (logged batches in Cassandra terminology) comes at a high performance cost!
 	RunAtomically() error
 	// Add an other Op to this one.
 	Add(...Op) Op
-	WithOptions(Options) Op
+	// @#85
+	// WithOptions(Options) Op
 }
 
 // Danger zone! Do not use this interface unless you really know what you are doing
