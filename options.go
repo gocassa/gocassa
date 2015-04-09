@@ -17,7 +17,7 @@ type Options struct {
 	TableName string
 }
 
-// Returns a new Options which is a left biased merge of the two initial Options.
+// Returns a new Options which is a right biased merge of the two initial Options.
 func (o Options) Merge(neu Options) Options {
 	ret := Options{
 		TTL:       o.TTL,

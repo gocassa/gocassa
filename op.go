@@ -16,16 +16,16 @@ const (
 )
 
 type op struct {
-	qe      QueryExecutor
-	options Options
-	ops     []singleOp
+	qe  QueryExecutor
+	ops []singleOp
 }
 
 type singleOp struct {
-	f      filter
-	opType int
-	result interface{}
-	m      map[string]interface{} // map for updates, sets etc
+	options Options
+	f       filter
+	opType  int
+	result  interface{}
+	m       map[string]interface{} // map for updates, sets etc
 }
 
 func newWriteOp(qe QueryExecutor, f filter, opType int, m map[string]interface{}) *op {
@@ -99,7 +99,7 @@ func (w *op) Add(wo ...Op) Op {
 
 func (w *op) Run() error {
 	for _, v := range w.ops {
-		err := v.run(w.qe, w.options)
+		err := v.run(w.qe, v.options)
 		if err != nil {
 			return err
 		}
@@ -107,11 +107,20 @@ func (w *op) Run() error {
 	return nil
 }
 
-func (w *op) withOptions(opt Options) Op {
+func (w *op) WithOptions(opt Options) Op {
+	newOps := []singleOp{}
+	for _, v := range w.ops {
+		newOps = append(newOps, singleOp{
+			options: v.options.Merge(opt),
+			f:       v.f,
+			opType:  v.opType,
+			result:  v.result,
+			m:       v.m,
+		})
+	}
 	return &op{
-		options: opt,
-		qe:      w.qe,
-		ops:     w.ops,
+		qe:  w.qe,
+		ops: newOps,
 	}
 }
 

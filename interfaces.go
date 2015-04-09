@@ -127,8 +127,16 @@ type Op interface {
 	RunAtomically() error
 	// Add an other Op to this one.
 	Add(...Op) Op
-	// @#85
-	// WithOptions(Options) Op
+	// WithOptions lets you specify `Op` level `Options`.
+	// The `Op` level Options and the `Table` level `Options` will be merged in a way that Op level takes precedence.
+	// All queries in an `Op` will have the specified `Options`.
+	// When using Add(), the existing options are preserved.
+	// For example:
+	//
+	//    op1.WithOptions(Options{Limit:3}).Add(op2.WithOptions(Options{Limit:2})) // op1 has a limit of 3, op2 has a limit of 2
+	//    op1.WithOptions(Options{Limit:3}).Add(op2).WithOptions(Options{Limit:2}) // op1 and op2 both have a limit of 2
+	//
+	WithOptions(Options) Op
 }
 
 // Danger zone! Do not use this interface unless you really know what you are doing
