@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"runtime"
 	"strconv"
 )
 
@@ -61,9 +62,10 @@ func (w *singleOp) readOne(qe QueryExecutor, opt Options) error {
 		return err
 	}
 	if len(maps) == 0 {
+		_, f, n, _ := runtime.Caller(3)
 		return RowNotFoundError{
-			stmt:   stmt,
-			params: params,
+			file: f,
+			line: n,
 		}
 	}
 	bytes, err := json.Marshal(maps[0])
