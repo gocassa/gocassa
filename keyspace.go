@@ -49,6 +49,7 @@ func (k *k) NewTable(name string, entity interface{}, fields map[string]interfac
 		return &t{
 			keySpace: k,
 			info:     ti,
+			options:  Options{},
 		}
 	}
 }

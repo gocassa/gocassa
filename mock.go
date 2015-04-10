@@ -17,12 +17,13 @@ type mockKeySpace struct {
 }
 
 type mockOp struct {
-	funcs []func() error
+	options Options
+	funcs   []func(mockOp) error
 }
 
-func newOp(f func() error) mockOp {
+func newOp(f func(mockOp) error) mockOp {
 	return mockOp{
-		funcs: []func() error{f},
+		funcs: []func(mockOp) error{f},
 	}
 }
 
@@ -35,12 +36,19 @@ func (m mockOp) Add(ops ...Op) Op {
 
 func (m mockOp) Run() error {
 	for _, f := range m.funcs {
-		err := f()
+		err := f(m)
 		if err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func (m mockOp) WithOptions(opt Options) Op {
+	return mockOp{
+		options: opt,
+		funcs:   m.funcs,
+	}
 }
 
 func (m mockOp) RunAtomically() error {
@@ -65,10 +73,11 @@ func NewMockKeySpace() KeySpace {
 // MockTable implements the Table interface and stores rows in-memory.
 type MockTable struct {
 	// rows is mapping from row key to column group key to column map
-	name   string
-	rows   map[rowKey]*btree.BTree
-	entity interface{}
-	keys   Keys
+	name    string
+	rows    map[rowKey]*btree.BTree
+	entity  interface{}
+	keys    Keys
+	options Options
 }
 
 type rowKey string
@@ -173,6 +182,9 @@ func (t *MockTable) keyFromColumnValues(columns map[string]interface{}, keys []s
 }
 
 func (t *MockTable) Name() string {
+	if len(t.options.TableName) > 0 {
+		return t.options.TableName
+	}
 	return t.name
 }
 
@@ -199,7 +211,7 @@ func (t *MockTable) getOrCreateColumnGroup(rowKey, superColumnKey *keyPart) map[
 }
 
 func (t *MockTable) SetWithOptions(i interface{}, options Options) Op {
-	return newOp(func() error {
+	return newOp(func(m mockOp) error {
 		columns, ok := toMap(i)
 		if !ok {
 			return errors.New("Can't create: value not understood")
@@ -225,7 +237,7 @@ func (t *MockTable) SetWithOptions(i interface{}, options Options) Op {
 }
 
 func (t *MockTable) Set(i interface{}) Op {
-	return t.SetWithOptions(i, Options{})
+	return t.SetWithOptions(i, t.options)
 }
 
 func (t *MockTable) Where(relations ...Relation) Filter {
@@ -247,16 +259,20 @@ func (t *MockTable) Recreate() error {
 	return nil
 }
 
+func (t *MockTable) WithOptions(o Options) Table {
+	return &MockTable{
+		name:    t.name,
+		rows:    t.rows,
+		entity:  t.entity,
+		keys:    t.keys,
+		options: t.options.Merge(o),
+	}
+}
+
 // MockFilter implements the Filter interface and works with MockTable.
 type MockFilter struct {
 	table     *MockTable
 	relations []Relation
-}
-
-func (f *MockFilter) Query() Query {
-	return &MockQuery{
-		filter: f,
-	}
 }
 
 func (f *MockFilter) rowMatch(row map[string]interface{}) bool {
@@ -313,7 +329,7 @@ func (f *MockFilter) keysFromRelations(keys []string) ([]*keyPart, error) {
 }
 
 func (f *MockFilter) UpdateWithOptions(m map[string]interface{}, options Options) Op {
-	return newOp(func() error {
+	return newOp(func(mock mockOp) error {
 		rowKeys, err := f.keysFromRelations(f.table.keys.PartitionKeys)
 		if err != nil {
 			return err
@@ -349,7 +365,7 @@ func (f *MockFilter) Update(m map[string]interface{}) Op {
 }
 
 func (f *MockFilter) Delete() Op {
-	return newOp(func() error {
+	return newOp(func(m mockOp) error {
 		rowKeys, err := f.keysFromRelations(f.table.keys.PartitionKeys)
 		if err != nil {
 			return err
@@ -375,45 +391,39 @@ func (f *MockFilter) Delete() Op {
 	})
 }
 
-// MockQuery implements the Query interface and works with MockFilter.
-type MockQuery struct {
-	filter *MockFilter
-	limit  int
-}
-
-func (q *MockQuery) Read(out interface{}) Op {
-	return newOp(func() error {
-		rowKeys, err := q.filter.keysFromRelations(q.filter.table.keys.PartitionKeys)
+func (q *MockFilter) Read(out interface{}) Op {
+	return newOp(func(m mockOp) error {
+		rowKeys, err := q.keysFromRelations(q.table.keys.PartitionKeys)
 		if err != nil {
 			return err
 		}
 
 		var result []map[string]interface{}
 		for _, rowKey := range rowKeys {
-			row := q.filter.table.rows[rowKey.RowKey()]
+			row := q.table.rows[rowKey.RowKey()]
 			if row == nil {
 				continue
 			}
 
 			row.Ascend(func(item btree.Item) bool {
 				columns := item.(*superColumn).Columns
-				if q.filter.rowMatch(columns) {
+				if q.rowMatch(columns) {
 					result = append(result, columns)
 				}
 
 				return true
 			})
 		}
-
-		if q.limit > 0 && q.limit < len(result) {
-			result = result[:q.limit]
+		opt := q.table.options.Merge(m.options)
+		if opt.Limit > 0 && opt.Limit < len(result) {
+			result = result[:opt.Limit]
 		}
 
 		return q.assignResult(result, out)
 	})
 }
 
-func (q *MockQuery) assignResult(records interface{}, out interface{}) error {
+func (q *MockFilter) assignResult(records interface{}, out interface{}) error {
 	bytes, err := json.Marshal(records)
 	if err != nil {
 		return err
@@ -421,8 +431,8 @@ func (q *MockQuery) assignResult(records interface{}, out interface{}) error {
 	return json.Unmarshal(bytes, out)
 }
 
-func (q *MockQuery) ReadOne(out interface{}) Op {
-	return newOp(func() error {
+func (q *MockFilter) ReadOne(out interface{}) Op {
+	return newOp(func(m mockOp) error {
 		slicePtrVal := reflect.New(reflect.SliceOf(reflect.ValueOf(out).Elem().Type()))
 
 		err := q.Read(slicePtrVal.Interface()).Run()
@@ -437,9 +447,4 @@ func (q *MockQuery) ReadOne(out interface{}) Op {
 		q.assignResult(sliceVal.Index(0).Interface(), out)
 		return nil
 	})
-}
-
-func (q *MockQuery) Limit(limit int) Query {
-	q.limit = limit
-	return q
 }

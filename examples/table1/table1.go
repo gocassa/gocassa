@@ -41,7 +41,7 @@ func main() {
 	}
 
 	result := Sale{}
-	if err := salesTable.Where(gocassa.Eq("Id", "sale-1")).Query().ReadOne(&result).Run(); err != nil {
+	if err := salesTable.Where(gocassa.Eq("Id", "sale-1")).ReadOne(&result).Run(); err != nil {
 		panic(err)
 	}
 	fmt.Println(result)

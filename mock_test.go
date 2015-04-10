@@ -56,7 +56,7 @@ func (s *MockSuite) SetupTest() {
 // Table tests
 func (s *MockSuite) TestTableEmpty() {
 	var result []user
-	s.NoError(s.tbl.Where(Eq("Pk1", 1), Eq("Pk2", 1), Eq("Ck1", 1), Eq("Ck2", 1)).Query().Read(&result).Run())
+	s.NoError(s.tbl.Where(Eq("Pk1", 1), Eq("Pk2", 1), Eq("Ck1", 1), Eq("Ck2", 1)).Read(&result).Run())
 	s.Equal(0, len(result))
 }
 
@@ -64,32 +64,32 @@ func (s *MockSuite) TestTableRead() {
 	u1, u2, u3, u4 := s.insertUsers()
 
 	var users []user
-	s.NoError(s.tbl.Where(Eq("Pk1", 1), Eq("Pk2", 1)).Query().Read(&users).Run())
+	s.NoError(s.tbl.Where(Eq("Pk1", 1), Eq("Pk2", 1)).Read(&users).Run())
 	s.Equal([]user{u1, u3, u4}, users)
 
-	s.NoError(s.tbl.Where(Eq("Pk1", 1), Eq("Pk2", 2)).Query().Read(&users).Run())
+	s.NoError(s.tbl.Where(Eq("Pk1", 1), Eq("Pk2", 2)).Read(&users).Run())
 	s.Equal([]user{u2}, users)
 
-	s.NoError(s.tbl.Where(Eq("Pk1", 1), In("Pk2", 1, 2)).Query().Read(&users).Run())
+	s.NoError(s.tbl.Where(Eq("Pk1", 1), In("Pk2", 1, 2)).Read(&users).Run())
 	s.Equal([]user{u1, u3, u4, u2}, users)
 
-	s.NoError(s.tbl.Where(Eq("Pk1", 1), Eq("Pk2", 1), Eq("Ck1", 1)).Query().Read(&users).Run())
+	s.NoError(s.tbl.Where(Eq("Pk1", 1), Eq("Pk2", 1), Eq("Ck1", 1)).Read(&users).Run())
 	s.Equal([]user{u1, u4}, users)
 
-	s.NoError(s.tbl.Where(Eq("Pk1", 1), Eq("Pk2", 1), Eq("Ck1", 1), Eq("Ck2", 1)).Query().Read(&users).Run())
+	s.NoError(s.tbl.Where(Eq("Pk1", 1), Eq("Pk2", 1), Eq("Ck1", 1), Eq("Ck2", 1)).Read(&users).Run())
 	s.Equal([]user{u1}, users)
 
-	s.NoError(s.tbl.Where(Eq("Pk1", 1), Eq("Pk2", 1), GT("Ck1", 1)).Query().Read(&users).Run())
+	s.NoError(s.tbl.Where(Eq("Pk1", 1), Eq("Pk2", 1), GT("Ck1", 1)).Read(&users).Run())
 	s.Equal([]user{u3}, users)
 
-	s.NoError(s.tbl.Where(Eq("Pk1", 1), Eq("Pk2", 1), Eq("Ck1", 1), LT("Ck2", 2)).Query().Read(&users).Run())
+	s.NoError(s.tbl.Where(Eq("Pk1", 1), Eq("Pk2", 1), Eq("Ck1", 1), LT("Ck2", 2)).Read(&users).Run())
 	s.Equal([]user{u1}, users)
 
 	var u user
-	s.NoError(s.tbl.Where(Eq("Pk1", 1), Eq("Pk2", 1), Eq("Ck1", 1), Eq("Ck2", 1)).Query().ReadOne(&u).Run())
+	s.NoError(s.tbl.Where(Eq("Pk1", 1), Eq("Pk2", 1), Eq("Ck1", 1), Eq("Ck2", 1)).ReadOne(&u).Run())
 	s.Equal(u1, u)
 
-	s.NoError(s.tbl.Where(Eq("Pk1", 1), Eq("Pk2", 1), Eq("Ck1", 1), Eq("Ck2", 2)).Query().ReadOne(&u).Run())
+	s.NoError(s.tbl.Where(Eq("Pk1", 1), Eq("Pk2", 1), Eq("Ck1", 1), Eq("Ck2", 2)).ReadOne(&u).Run())
 	s.Equal(u4, u)
 }
 
@@ -103,7 +103,7 @@ func (s *MockSuite) TestTableUpdate() {
 	}).Run())
 
 	var u user
-	s.NoError(s.tbl.Where(relations...).Query().ReadOne(&u).Run())
+	s.NoError(s.tbl.Where(relations...).ReadOne(&u).Run())
 	s.Equal("x", u.Name)
 
 	relations = []Relation{Eq("Pk1", 1), In("Pk2", 1, 2), Eq("Ck1", 1), Eq("Ck2", 1)}
@@ -113,7 +113,7 @@ func (s *MockSuite) TestTableUpdate() {
 	}).Run())
 
 	var users []user
-	s.NoError(s.tbl.Where(relations...).Query().Read(&users).Run())
+	s.NoError(s.tbl.Where(relations...).Read(&users).Run())
 	for _, u := range users {
 		s.Equal("y", u.Name)
 	}
@@ -126,7 +126,7 @@ func (s *MockSuite) TestTableDeleteOne() {
 	s.NoError(s.tbl.Where(relations...).Delete().Run())
 
 	var users []user
-	s.NoError(s.tbl.Where(relations...).Query().Read(&users).Run())
+	s.NoError(s.tbl.Where(relations...).Read(&users).Run())
 	s.Empty(users)
 }
 
@@ -137,7 +137,7 @@ func (s *MockSuite) TestTableDeleteWithIn() {
 	s.NoError(s.tbl.Where(relations...).Delete().Run())
 
 	var users []user
-	s.NoError(s.tbl.Where(relations...).Query().Read(&users).Run())
+	s.NoError(s.tbl.Where(relations...).Read(&users).Run())
 	s.Empty(users)
 }
 
