@@ -29,7 +29,7 @@ func newOp(f func(mockOp) error) mockOp {
 
 func (m mockOp) Add(ops ...Op) Op {
 	for _, o := range ops {
-		m.funcs = append(m.funcs, o.(*mockOp).funcs...)
+		m.funcs = append(m.funcs, o.(mockOp).funcs...)
 	}
 	return m
 }

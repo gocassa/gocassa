@@ -86,11 +86,15 @@ func (s *MockSuite) TestTableRead() {
 	s.Equal([]user{u1}, users)
 
 	var u user
-	s.NoError(s.tbl.Where(Eq("Pk1", 1), Eq("Pk2", 1), Eq("Ck1", 1), Eq("Ck2", 1)).ReadOne(&u).Run())
+	op1 := s.tbl.Where(Eq("Pk1", 1), Eq("Pk2", 1), Eq("Ck1", 1), Eq("Ck2", 1)).ReadOne(&u)
+	s.NoError(op1.Run())
 	s.Equal(u1, u)
 
-	s.NoError(s.tbl.Where(Eq("Pk1", 1), Eq("Pk2", 1), Eq("Ck1", 1), Eq("Ck2", 2)).ReadOne(&u).Run())
+	op2 := s.tbl.Where(Eq("Pk1", 1), Eq("Pk2", 1), Eq("Ck1", 1), Eq("Ck2", 2)).ReadOne(&u)
+	s.NoError(op2.Run())
 	s.Equal(u4, u)
+
+	s.NoError(op1.Add(op2).Run())
 }
 
 func (s *MockSuite) TestTableUpdate() {
