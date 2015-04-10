@@ -86,6 +86,27 @@ func (c *superColumn) Less(item btree.Item) bool {
 	return c.Key.Less(other.Key)
 }
 
+type gocqlTypeInfo struct {
+	proto byte
+	typ   gocql.Type
+}
+
+func (t gocqlTypeInfo) New() interface{} {
+	return &gocqlTypeInfo{t.proto, t.typ}
+}
+
+func (t gocqlTypeInfo) Type() gocql.Type {
+	return t.typ
+}
+
+func (t gocqlTypeInfo) Version() byte {
+	return t.proto
+}
+
+func (t gocqlTypeInfo) Custom() string {
+	return ""
+}
+
 type keyPart struct {
 	Key   string
 	Value interface{}
@@ -109,9 +130,9 @@ func (k *keyPart) Less(other *keyPart) bool {
 }
 
 func (k *keyPart) Bytes() []byte {
-	typeInfo := &gocql.TypeInfo{
-		Proto: 0x03,
-		Type:  cassaType(k.Value),
+	typeInfo := &gocqlTypeInfo{
+		proto: 0x03,
+		typ:   cassaType(k.Value),
 	}
 	// FIXME handle err
 	marshalled, _ := gocql.Marshal(typeInfo, k.Value)
