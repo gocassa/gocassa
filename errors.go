@@ -7,12 +7,15 @@ import (
 
 // RowNotFoundError is returned by Reads if the Row is not found.
 type RowNotFoundError struct {
-	stmt   string
-	params []interface{}
+	file string
+	line int
 }
 
 func (r RowNotFoundError) Error() string {
-	// This is not optimal at all
-	completCql := fmt.Sprintf(strings.Replace(r.stmt, "?", "%v", -1), r.params...)
-	return "The following query returned no results: " + completCql
+	ss := strings.Split(r.file, "/")
+	f := ""
+	if len(ss) > 0 {
+		f = ss[len(ss)-1]
+	}
+	return fmt.Sprintf("%v:%v: No rows returned", f, r.line)
 }
