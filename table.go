@@ -13,6 +13,7 @@ import (
 type t struct {
 	keySpace *k
 	info     *tableInfo
+	options  Options
 }
 
 // Contains mostly analyzed information about the entity
@@ -151,7 +152,7 @@ func insertStatement(keySpaceName, cfName string, fieldNames []string, opts Opti
 	return buf.String()
 }
 
-func (t t) SetWithOptions(i interface{}, opts Options) Op {
+func (t t) Set(i interface{}) Op {
 	m, ok := toMap(i)
 	if !ok {
 		panic("SetWithOptions: Incompatible type")
@@ -159,24 +160,16 @@ func (t t) SetWithOptions(i interface{}, opts Options) Op {
 	ks := append(t.info.keys.PartitionKeys, t.info.keys.ClusteringColumns...)
 	updFields := removeFields(m, ks)
 	if len(updFields) == 0 {
-		fields, insertVals := keyValues(m)
-		insertStmt := insertStatement(t.keySpace.name, t.info.name, fields, opts)
-		if t.keySpace.debugMode {
-			fmt.Println(insertStmt, insertVals)
-		}
-		return newWriteOp(t.keySpace.qe, insertStmt, insertVals)
+		return newWriteOp(t.keySpace.qe, filter{
+			t: t,
+		}, insert, m)
 	}
 	transformFields(updFields)
-	updStmt, updVals := updateStatement(t.keySpace.name, t.info.name, updFields, opts)
-	whereStmt, whereVals := generateWhere(relations(t.info.keys, m))
-	if t.keySpace.debugMode {
-		fmt.Println(updStmt+whereStmt, append(updVals, whereVals...))
-	}
-	return newWriteOp(t.keySpace.qe, updStmt+whereStmt, append(updVals, whereVals...))
-}
-
-func (t t) Set(row interface{}) Op {
-	return t.SetWithOptions(row, Options{})
+	rels := relations(t.info.keys, m)
+	return newWriteOp(t.keySpace.qe, filter{
+		t:  t,
+		rs: rels,
+	}, update, updFields)
 }
 
 func (t t) Create() error {
@@ -188,8 +181,8 @@ func (t t) Create() error {
 }
 
 func (t t) Recreate() error {
-	if ex, err := t.keySpace.Exists(t.info.name); ex && err == nil {
-		if err := t.keySpace.DropTable(t.info.name); err != nil {
+	if ex, err := t.keySpace.Exists(t.Name()); ex && err == nil {
+		if err := t.keySpace.DropTable(t.Name()); err != nil {
 			return err
 		}
 	} else if err != nil {
@@ -200,7 +193,7 @@ func (t t) Recreate() error {
 
 func (t t) CreateStatement() (string, error) {
 	return createTable(t.keySpace.name,
-		t.info.name,
+		t.Name(),
 		t.info.keys.PartitionKeys,
 		t.info.keys.ClusteringColumns,
 		t.info.fields,
@@ -208,5 +201,16 @@ func (t t) CreateStatement() (string, error) {
 }
 
 func (t t) Name() string {
+	if len(t.options.TableName) > 0 {
+		return t.options.TableName
+	}
 	return t.info.name
+}
+
+func (table t) WithOptions(o Options) Table {
+	return t{
+		keySpace: table.keySpace,
+		info:     table.info,
+		options:  table.options.Merge(o),
+	}
 }

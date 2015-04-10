@@ -36,13 +36,12 @@ type KeySpace interface {
 
 // MapTable gives you basic CRUD functionality. If you need fancier ways to query your data set have a look at the other tables.
 type MapTable interface {
-	SetWithOptions(v interface{}, opts Options) Op
 	Set(v interface{}) Op
-	UpdateWithOptions(id interface{}, m map[string]interface{}, opts Options) Op
 	Update(id interface{}, m map[string]interface{}) Op
 	Delete(id interface{}) Op
 	Read(id, pointer interface{}) Op
 	MultiRead(ids []interface{}, pointerToASlice interface{}) Op
+	WithOptions(Options) MapTable
 	TableChanger
 }
 
@@ -52,15 +51,14 @@ type MapTable interface {
 
 // MultimapTable lets you list rows based on a field equality, eg. 'list all sales where seller id = v'.
 type MultimapTable interface {
-	SetWithOptions(v interface{}, opts Options) Op
 	Set(v interface{}) Op
-	UpdateWithOptions(v, id interface{}, m map[string]interface{}, opts Options) Op
 	Update(v, id interface{}, m map[string]interface{}) Op
 	Delete(v, id interface{}) Op
 	DeleteAll(v interface{}) Op
 	List(v, startId interface{}, limit int, pointerToASlice interface{}) Op
 	Read(v, id, pointer interface{}) Op
 	MultiRead(v interface{}, ids []interface{}, pointerToASlice interface{}) Op
+	WithOptions(Options) MultimapTable
 	TableChanger
 }
 
@@ -71,13 +69,12 @@ type MultimapTable interface {
 // TimeSeriesTable lets you list rows which have a field value between two date ranges.
 type TimeSeriesTable interface {
 	// timeField and idField must be present
-	SetWithOptions(v interface{}, opts Options) Op
 	Set(v interface{}) Op
-	UpdateWithOptions(timeStamp time.Time, id interface{}, m map[string]interface{}, opts Options) Op
 	Update(timeStamp time.Time, id interface{}, m map[string]interface{}) Op
 	Delete(timeStamp time.Time, id interface{}) Op
 	Read(timeStamp time.Time, id, pointer interface{}) Op
 	List(start, end time.Time, pointerToASlice interface{}) Op
+	WithOptions(Options) TimeSeriesTable
 	TableChanger
 }
 
@@ -88,13 +85,12 @@ type TimeSeriesTable interface {
 // MultiTimeSeriesTable is a cross between TimeSeries and Multimap tables.
 type MultiTimeSeriesTable interface {
 	// timeField and idField must be present
-	SetWithOptions(v interface{}, opts Options) Op
 	Set(v interface{}) Op
-	UpdateWithOptions(v interface{}, timeStamp time.Time, id interface{}, m map[string]interface{}, opts Options) Op
 	Update(v interface{}, timeStamp time.Time, id interface{}, m map[string]interface{}) Op
 	Delete(v interface{}, timeStamp time.Time, id interface{}) Op
 	Read(v interface{}, timeStamp time.Time, id, pointer interface{}) Op
 	List(v interface{}, start, end time.Time, pointerToASlice interface{}) Op
+	WithOptions(Options) MultiTimeSeriesTable
 	TableChanger
 }
 
@@ -102,27 +98,17 @@ type MultiTimeSeriesTable interface {
 // Raw CQL
 //
 
-// Query is a subset of a Table intended to be read
-type Query interface {
+// Filter is a subset of a Table, filtered by Relations.
+// You can do writes or reads on a filter.
+type Filter interface {
+	// Updates does a partial update. Use this if you don't want to overwrite your whole row, but you want to modify fields atomically.
+	Update(m map[string]interface{}) Op // Probably this is danger zone (can't be implemented efficiently) on a selectuinb with more than 1 document
+	// Delete all rows matching the filter.
+	Delete() Op
 	// Read the results. Make sure you pass in a pointer to a slice.
 	Read(pointerToASlice interface{}) Op
 	// Read one result. Make sure you pass in a pointer.
 	ReadOne(pointer interface{}) Op
-	// Limit the number of rows to be returned.
-	Limit(int) Query
-}
-
-// Filter is a subset of a Table, filtered by Relations.
-// You can do writes or reads on a filter.
-type Filter interface {
-	// Selection modifiers
-	Query() Query
-	// Updates does a partial update. Use this if you don't want to overwrite your whole row, but you want to modify fields atomically.
-	Update(m map[string]interface{}) Op // Probably this is danger zone (can't be implemented efficiently) on a selectuinb with more than 1 document
-	// UpdateWithOptions is the same as Update but with extra options.
-	UpdateWithOptions(m map[string]interface{}, opts Options) Op
-	// Delete all rows matching the filter.
-	Delete() Op
 }
 
 // Keys is used with the raw CQL Table type. It is implicit when using recipe tables.
@@ -137,10 +123,20 @@ type Op interface {
 	// Run the operation.
 	Run() error
 	// You do not need this in 95% of the use cases, use Run!
-	// Using atomic batched writes (logged batches in Cassandra terminolohu) comes at a high performance cost!
+	// Using atomic batched writes (logged batches in Cassandra terminology) comes at a high performance cost!
 	RunAtomically() error
 	// Add an other Op to this one.
 	Add(...Op) Op
+	// WithOptions lets you specify `Op` level `Options`.
+	// The `Op` level Options and the `Table` level `Options` will be merged in a way that Op level takes precedence.
+	// All queries in an `Op` will have the specified `Options`.
+	// When using Add(), the existing options are preserved.
+	// For example:
+	//
+	//    op1.WithOptions(Options{Limit:3}).Add(op2.WithOptions(Options{Limit:2})) // op1 has a limit of 3, op2 has a limit of 2
+	//    op1.WithOptions(Options{Limit:3}).Add(op2).WithOptions(Options{Limit:2}) // op1 and op2 both have a limit of 2
+	//
+	WithOptions(Options) Op
 }
 
 // Danger zone! Do not use this interface unless you really know what you are doing
@@ -166,11 +162,10 @@ type Table interface {
 	// Set Inserts, or Replaces your row with the supplied struct. Be aware that what is not in your struct
 	// will be deleted. To only overwrite some of the fields, use Query.Update.
 	Set(v interface{}) Op
-	// SetWithOptions is the same as set, but with Options, like TTL, see the Options type for details
-	SetWithOptions(v interface{}, opts Options) Op
 	// Where accepts a bunch of realtions and returns a filter. See the documentation for Relation and Filter to understand what that means.
 	Where(relations ...Relation) Filter // Because we provide selections
 	// Name returns the underlying table name, as stored in C*
+	WithOptions(Options) Table
 	TableChanger
 }
 
