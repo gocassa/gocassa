@@ -1,7 +1,5 @@
 package gocassa
 
-import ()
-
 type filter struct {
 	t  t
 	rs []Relation

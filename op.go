@@ -165,24 +165,29 @@ func (o *singleOp) generateRead(opt Options) (string, []interface{}) {
 	w, wv := generateWhere(o.f.rs)
 	ord, ov := o.generateOrderBy()
 	lim, lv := o.generateLimit(o.f.t.options.Merge(opt))
-	str := fmt.Sprintf("SELECT %s FROM %s.%s", o.f.t.generateFieldNames(), o.f.t.keySpace.name, o.f.t.Name())
+	stmt := fmt.Sprintf("SELECT %s FROM %s.%s", o.f.t.generateFieldNames(), o.f.t.keySpace.name, o.f.t.Name())
 	vals := []interface{}{}
+	buf := new(bytes.Buffer)
+	buf.WriteString(stmt)
 	if w != "" {
-		str += " " + w
+		buf.WriteString(" ")
+		buf.WriteString(w)
 		vals = append(vals, wv...)
 	}
 	if ord != "" {
-		str += " " + ord
+		buf.WriteString(" ")
+		buf.WriteString(ord)
 		vals = append(vals, ov...)
 	}
 	if lim != "" {
-		str += " " + lim
+		buf.WriteString(" ")
+		buf.WriteString(lim)
 		vals = append(vals, lv...)
 	}
 	if o.f.t.keySpace.debugMode {
-		fmt.Println(str, vals)
+		fmt.Println(buf.String(), vals)
 	}
-	return str, vals
+	return buf.String(), vals
 }
 
 func (p *singleOp) generateOrderBy() (string, []interface{}) {
