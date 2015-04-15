@@ -61,6 +61,7 @@ func (o *multiTimeSeriesT) WithOptions(opt Options) MultiTimeSeriesTable {
 	return &multiTimeSeriesT{
 		Table:      o.Table.WithOptions(opt),
 		indexField: o.indexField,
+		timeField:  o.timeField,
 		idField:    o.idField,
 		bucketSize: o.bucketSize,
 	}
