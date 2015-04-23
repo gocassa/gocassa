@@ -99,7 +99,7 @@ For examples on how to do pagination or Update with this table, refer to the exa
 `TimeSeriesTable` provides an interface to list rows within a time interval:
 
 ```go
-    salesTable := keySpace.TimeSeriesTable("sale", "Created", "Id", Sale{})
+    salesTable := keySpace.TimeSeriesTable("sale", "Created", "Id", Sale{}, 24 * time.Hour)
     //...
     results := []Sale{}
     err := salesTable.List(yesterdayTime, todayTime, &results).Run()
@@ -110,8 +110,24 @@ For examples on how to do pagination or Update with this table, refer to the exa
 `MultiTimeSeriesTable` is like a cross between `MultimapTable` and `TimeSeriesTable`. It can list rows within a time interval, and filtered by equality of a single field. The following lists sales in a time interval, by a certain seller:
 
 ```go
-    salesTable := keySpace.MultiTimeSeriesTable("sale", "SellerId", "Created", "Id", Sale{})
+    salesTable := keySpace.MultiTimeSeriesTable("sale", "SellerId", "Created", "Id", Sale{}, 24 * time.Hour)
     //...
     results := []Sale{}
     err := salesTable.List("seller-1", yesterdayTime, todayTime, &results).Run()
+```
+
+##### Rough edges
+
+###### Too long table names
+
+In case you get the following error: 
+
+```
+Column family names shouldn't be more than 48 characters long (got "somelongishtablename_multitimeseries_start_id_24h0m0s")
+```
+
+You can use the TableName options to override the default internal ones:
+
+```
+tbl = tbl.WithOptions(Options{TableName: "somelongishtablename_mts_start_id_24h0m0s"})
 ```
