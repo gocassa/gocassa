@@ -407,3 +407,10 @@ func TestCounters(t *testing.T) {
 		t.Fatal(c)
 	}
 }
+
+func TestNoop(t *testing.T) {
+	err := Noop().Run()
+	if err != nil {
+		t.Fatal(err)
+	}
+}

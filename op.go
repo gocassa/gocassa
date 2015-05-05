@@ -92,8 +92,16 @@ func (w *singleOp) run(qe QueryExecutor, opt Options) error {
 	return nil
 }
 
+func Noop() Op {
+	return &op{
+		qe:  nil,
+		ops: []singleOp{},
+	}
+}
+
 func (w *op) Add(wo ...Op) Op {
 	for _, v := range wo {
+		w.qe = v.(*op).qe
 		w.ops = append(w.ops, v.(*op).ops...)
 	}
 	return w
