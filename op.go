@@ -92,6 +92,7 @@ func (w *singleOp) run(qe QueryExecutor, opt Options) error {
 	return nil
 }
 
+// Noop returns an empty `Op` which is useful to conditionally add `Op`s to.
 func Noop() Op {
 	return &op{
 		qe:  nil,
