@@ -407,3 +407,29 @@ func TestCounters(t *testing.T) {
 		t.Fatal(c)
 	}
 }
+
+func TestNoop(t *testing.T) {
+	err := Noop().Run()
+	if err != nil {
+		t.Fatal(err)
+	}
+	tbl := ns.MapTable("customer4987", "Id", CustomerWithCounter{})
+	createIf(tbl.(TableChanger), t)
+	c := CustomerWithCounter{
+		Id:      "1",
+		Counter: Counter(0),
+	}
+	if err := tbl.Set(c).Run(); err != nil {
+		t.Fatal(err)
+	}
+	c = CustomerWithCounter{
+		Id:      "2",
+		Counter: Counter(0),
+	}
+	if err := Noop().Add(tbl.Read("1", &c)).Run(); err != nil {
+		t.Fatal(err)
+	}
+	if c.Id != "1" {
+		t.Fatal(c)
+	}
+}
