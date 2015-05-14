@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"strings"
+	"time"
 )
 
 // Modifiers are used with update statements.
@@ -143,6 +144,8 @@ func printElem(i interface{}) string {
 	switch v := i.(type) {
 	case string:
 		return "'" + escape(v) + "'"
+	case time.Time:
+		return "'" + escape(fmt.Sprintf("%v", i.(time.Time).UnixNano()/1000000)) + "'"
 	}
 	return fmt.Sprintf("%v", i)
 }
