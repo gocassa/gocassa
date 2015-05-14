@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"strings"
+	"time"
 )
 
 // Modifiers are used with update statements.
@@ -50,7 +51,7 @@ func ListSetAtIndex(index int, value interface{}) Modifier {
 	}
 }
 
-// ListRemove removes all elements from a list having a particular value 
+// ListRemove removes all elements from a list having a particular value
 func ListRemove(value interface{}) Modifier {
 	return Modifier{
 		op:   modifierListRemove,
@@ -133,7 +134,7 @@ func (m Modifier) cql(name string) (string, []interface{}) {
 		if val > 0 {
 			str = fmt.Sprintf("%v = %v + %v", name, name, printElem(val))
 		} else {
-			str = fmt.Sprintf("%v = %v - %v", name, name, printElem(val * -1))
+			str = fmt.Sprintf("%v = %v - %v", name, name, printElem(val*-1))
 		}
 	}
 	return str, vals
@@ -143,8 +144,15 @@ func printElem(i interface{}) string {
 	switch v := i.(type) {
 	case string:
 		return "'" + escape(v) + "'"
+	case time.Time:
+		return "'" + escape(fmt.Sprintf("%v", unixMilli(i.(time.Time)))) + "'"
 	}
 	return fmt.Sprintf("%v", i)
+}
+
+// unixMilli returns the number of milliseconds since epoch
+func unixMilli(t time.Time) int64 {
+	return t.Unix()*1e3 + int64(t.Nanosecond()/1e6)
 }
 
 func escape(s string) string {
