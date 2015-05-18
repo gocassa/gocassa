@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/b2aio/gocassa"
+	"github.com/mondough/gocassa"
 )
 
 // This test assumes that cassandra is running on default port locally and
