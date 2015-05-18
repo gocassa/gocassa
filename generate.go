@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/b2aio/gocql"
+	"github.com/mondough/gocql"
 )
 
 // CREATE TABLE users (
