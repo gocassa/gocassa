@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"sync"
 
 	"github.com/gocql/gocql"
 	"github.com/google/btree"
@@ -72,6 +73,8 @@ func NewMockKeySpace() KeySpace {
 
 // MockTable implements the Table interface and stores rows in-memory.
 type MockTable struct {
+	sync.RWMutex
+
 	// rows is mapping from row key to column group key to column map
 	name    string
 	rows    map[rowKey]*btree.BTree
@@ -189,6 +192,9 @@ func (t *MockTable) Name() string {
 }
 
 func (t *MockTable) getOrCreateRow(rowKey *keyPart) *btree.BTree {
+	t.Lock()
+	defer t.Unlock()
+
 	row := t.rows[rowKey.RowKey()]
 	if row == nil {
 		row = btree.New(2)
@@ -366,6 +372,9 @@ func (f *MockFilter) Update(m map[string]interface{}) Op {
 
 func (f *MockFilter) Delete() Op {
 	return newOp(func(m mockOp) error {
+		f.table.Lock()
+		defer f.table.Unlock()
+
 		rowKeys, err := f.keysFromRelations(f.table.keys.PartitionKeys)
 		if err != nil {
 			return err
@@ -393,6 +402,9 @@ func (f *MockFilter) Delete() Op {
 
 func (q *MockFilter) Read(out interface{}) Op {
 	return newOp(func(m mockOp) error {
+		q.table.Lock()
+		defer q.table.Unlock()
+
 		rowKeys, err := q.keysFromRelations(q.table.keys.PartitionKeys)
 		if err != nil {
 			return err
