@@ -192,9 +192,6 @@ func (t *MockTable) Name() string {
 }
 
 func (t *MockTable) getOrCreateRow(rowKey *keyPart) *btree.BTree {
-	t.Lock()
-	defer t.Unlock()
-
 	row := t.rows[rowKey.RowKey()]
 	if row == nil {
 		row = btree.New(2)
@@ -218,6 +215,9 @@ func (t *MockTable) getOrCreateColumnGroup(rowKey, superColumnKey *keyPart) map[
 
 func (t *MockTable) SetWithOptions(i interface{}, options Options) Op {
 	return newOp(func(m mockOp) error {
+		t.Lock()
+		defer t.Unlock()
+
 		columns, ok := toMap(i)
 		if !ok {
 			return errors.New("Can't create: value not understood")
@@ -336,6 +336,9 @@ func (f *MockFilter) keysFromRelations(keys []string) ([]*keyPart, error) {
 
 func (f *MockFilter) UpdateWithOptions(m map[string]interface{}, options Options) Op {
 	return newOp(func(mock mockOp) error {
+		f.table.Lock()
+		defer f.table.Unlock()
+
 		rowKeys, err := f.keysFromRelations(f.table.keys.PartitionKeys)
 		if err != nil {
 			return err
