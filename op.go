@@ -160,7 +160,7 @@ func (o *singleOp) generateWrite(opt Options) (string, []interface{}) {
 		vals = append(uvals, whereVals...)
 	case delete:
 		str, vals = generateWhere(o.f.rs)
-		str = fmt.Sprintf("DELETE FROM %s.%s%s", o.f.t.keySpace.name, o.f.t.info.name, str)
+		str = fmt.Sprintf("DELETE FROM %s.%s%s", o.f.t.keySpace.name, o.f.t.Name(), str)
 	case insert:
 		fields, insertVals := keyValues(o.m)
 		str = insertStatement(o.f.t.keySpace.name, o.f.t.Name(), fields, o.f.t.options.Merge(opt))
