@@ -2,8 +2,7 @@ package gocassa
 
 import (
 	"errors"
-
-	"github.com/mondough/gocql"
+	"github.com/gocql/gocql"
 )
 
 type goCQLBackend struct {

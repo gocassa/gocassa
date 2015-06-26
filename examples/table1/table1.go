@@ -2,9 +2,8 @@ package main
 
 import (
 	"fmt"
-	"time"
-
 	"github.com/mondough/gocassa"
+	"time"
 )
 
 // This test assumes that cassandra is running on default port locally and
@@ -42,7 +41,7 @@ func main() {
 	}
 
 	result := Sale{}
-	if err := salesTable.Where(gocassa.Eq("Id", "sale-1")).Query().ReadOne(&result).Run(); err != nil {
+	if err := salesTable.Where(gocassa.Eq("Id", "sale-1")).ReadOne(&result).Run(); err != nil {
 		panic(err)
 	}
 	fmt.Println(result)

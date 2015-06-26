@@ -1,7 +1,7 @@
 package reflect
 
 import (
-	"github.com/mondough/gocql"
+	"github.com/gocql/gocql"
 
 	"testing"
 )

@@ -57,7 +57,7 @@ func TestEq(t *testing.T) {
 		t.Fatal(err)
 	}
 	res := &[]Customer{}
-	err = cs.Where(Eq("Id", "50")).Query().Read(res).Run()
+	err = cs.Where(Eq("Id", "50")).Read(res).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -91,7 +91,7 @@ func TestMultipleRowResults(t *testing.T) {
 	}
 
 	res := []Customer{}
-	err = cs.Where(Eq("Name", "John")).Query().Read(&res).Run()
+	err = cs.Where(Eq("Name", "John")).Read(&res).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -115,7 +115,7 @@ func TestIn(t *testing.T) {
 		t.Fatal(err)
 	}
 	res := []Customer{}
-	err = cs.Where(In("Id", "100", "200")).Query().Read(&res).Run()
+	err = cs.Where(In("Id", "100", "200")).Read(&res).Run()
 	if len(res) != 2 {
 		for _, v := range res {
 			fmt.Println(v)
@@ -138,7 +138,7 @@ func TestAnd(t *testing.T) {
 		t.Fatal(err)
 	}
 	res := []Customer{}
-	err = cs.Where(Eq("Id", "100"), Eq("Name", "Joe")).Query().Read(&res).Run()
+	err = cs.Where(Eq("Id", "100"), Eq("Name", "Joe")).Read(&res).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -150,7 +150,7 @@ func TestAnd(t *testing.T) {
 func TestQueryReturnError(t *testing.T) {
 	cs := ns.Table("customer2", Customer{}, Keys{})
 	res := []Customer{}
-	err := cs.Where(Eq("Id", "100"), Eq("Name", "Joe")).Query().Read(&res).Run()
+	err := cs.Where(Eq("Id", "100"), Eq("Name", "Joe")).Read(&res).Run()
 	if err == nil {
 		t.Fatal("Table customer2 does not exist - should return error")
 	}
@@ -215,7 +215,7 @@ func TestTypesMarshal(t *testing.T) {
 		t.Fatal(err)
 	}
 	res := []Customer3{}
-	err := tbl.Where(Eq("Id", "1")).Query().Read(&res).Run()
+	err := tbl.Where(Eq("Id", "1")).Read(&res).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -247,7 +247,7 @@ func TestUpdateList(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = f.Query().ReadOne(&c).Run()
+	err = f.ReadOne(&c).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -266,7 +266,7 @@ func TestUpdateList(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = f.Query().ReadOne(&c).Run()
+	err = f.ReadOne(&c).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -279,7 +279,7 @@ func TestUpdateList(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = f.Query().ReadOne(&c).Run()
+	err = f.ReadOne(&c).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -292,7 +292,7 @@ func TestUpdateList(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = f.Query().ReadOne(&c).Run()
+	err = f.ReadOne(&c).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -404,6 +404,32 @@ func TestCounters(t *testing.T) {
 		t.Fatal(err)
 	}
 	if c.Counter != Counter(4) {
+		t.Fatal(c)
+	}
+}
+
+func TestNoop(t *testing.T) {
+	err := Noop().Run()
+	if err != nil {
+		t.Fatal(err)
+	}
+	tbl := ns.MapTable("customer4987", "Id", CustomerWithCounter{})
+	createIf(tbl.(TableChanger), t)
+	c := CustomerWithCounter{
+		Id:      "1",
+		Counter: Counter(0),
+	}
+	if err := tbl.Set(c).Run(); err != nil {
+		t.Fatal(err)
+	}
+	c = CustomerWithCounter{
+		Id:      "2",
+		Counter: Counter(0),
+	}
+	if err := Noop().Add(tbl.Read("1", &c)).Run(); err != nil {
+		t.Fatal(err)
+	}
+	if c.Id != "1" {
 		t.Fatal(c)
 	}
 }
