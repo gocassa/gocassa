@@ -2,7 +2,6 @@ package reflect
 
 import (
 	"github.com/gocql/gocql"
-
 	"testing"
 )
 
@@ -13,15 +12,47 @@ type Tweet struct {
 	OriginalTweet *gocql.UUID `json:"origin"`
 }
 
+type Visit struct {
+	Id        gocql.UUID
+	Path      string
+	VisitorId gocql.UUID `cql:"visitor_id;null"`
+}
+
+func TestNullableFields(t *testing.T) {
+	visit := Visit{
+		Id:   gocql.TimeUUID(),
+		Path: "/contact-us",
+	}
+
+	info, err := NewStructInfo(visit)
+
+	if err != nil {
+		t.Error("ok is false for a tweet")
+	}
+
+	m := info.ToMapWithoutZero()
+
+	if m["Path"] != visit.Path {
+		t.Errorf("Expected %s but got %s", visit.Path, m["Path"])
+	}
+
+	if m["Id"] != visit.Id {
+		t.Errorf("Expected %s but got %s", visit.Id, m["Id"])
+	}
+
+	_, ok := m["visitor_id"]
+
+	if ok {
+		t.Error("visitor_id should not be present in map")
+	}
+}
+
 func TestStructToMap(t *testing.T) {
 	//Test that if the value is not a struct we return nil, false
-	m, ok := StructToMap("str")
-	if m != nil {
-		t.Error("map is not nil when val is a string")
-	}
-	if ok {
-		t.Error("ok result from StructToMap when the val is a string")
+	info, err := NewStructInfo("str")
 
+	if err == nil {
+		t.Error("map is not nil when val is a string")
 	}
 
 	tweet := Tweet{
@@ -31,10 +62,13 @@ func TestStructToMap(t *testing.T) {
 		nil,
 	}
 
-	m, ok = StructToMap(tweet)
-	if !ok {
+	info, err = NewStructInfo(tweet)
+
+	if err != nil {
 		t.Error("ok is false for a tweet")
 	}
+
+	m := info.ToMap()
 
 	if m["Timeline"] != tweet.Timeline {
 		t.Errorf("Expected %s but got %s", tweet.Timeline, m["Timeline"])
@@ -52,7 +86,11 @@ func TestStructToMap(t *testing.T) {
 
 	id := gocql.TimeUUID()
 	tweet.OriginalTweet = &id
-	m, _ = StructToMap(tweet)
+
+	info, _ = NewStructInfo(tweet)
+
+	m = info.ToMap()
+
 	if m["OriginalTweet"] != tweet.OriginalTweet {
 		t.Errorf("Expected nil but got %s", m["OriginalTweet"])
 	}

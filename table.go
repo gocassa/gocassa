@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	r "github.com/hailocab/gocassa/reflect"
 )
@@ -27,7 +28,15 @@ type tableInfo struct {
 	fieldValues    []interface{}
 }
 
-func newTableInfo(keyspace, name string, keys Keys, entity interface{}, fieldSource map[string]interface{}) *tableInfo {
+func newTableInfo(keyspace, name string, keys Keys, entity interface{}, info *r.StructInfo) *tableInfo {
+	fieldSource := info.ToMap()
+
+	for _, key := range keys.PartitionKeys {
+		if key == bucketFieldName {
+			fieldSource[bucketFieldName] = time.Now()
+		}
+	}
+
 	cinf := &tableInfo{
 		keyspace:      keyspace,
 		name:          name,
@@ -47,6 +56,7 @@ func newTableInfo(keyspace, name string, keys Keys, entity interface{}, fieldSou
 	}
 	cinf.fields = fields
 	cinf.fieldValues = values
+
 	return cinf
 }
 
@@ -73,7 +83,14 @@ func toMap(i interface{}) (map[string]interface{}, bool) {
 	case map[string]interface{}:
 		return v, true
 	}
-	return r.StructToMap(i)
+
+	info, err := r.NewStructInfo(i)
+
+	if err != nil {
+		return nil, false
+	}
+
+	return info.ToMapWithoutZero(), true
 }
 
 func (t t) Where(rs ...Relation) Filter {
@@ -154,6 +171,7 @@ func insertStatement(keySpaceName, cfName string, fieldNames []string, opts Opti
 
 func (t t) Set(i interface{}) Op {
 	m, ok := toMap(i)
+
 	if !ok {
 		panic("SetWithOptions: Incompatible type")
 	}
@@ -164,8 +182,10 @@ func (t t) Set(i interface{}) Op {
 			t: t,
 		}, insert, m)
 	}
+
 	transformFields(updFields)
 	rels := relations(t.info.keys, m)
+
 	return newWriteOp(t.keySpace.qe, filter{
 		t:  t,
 		rs: rels,

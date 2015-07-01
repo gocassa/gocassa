@@ -55,7 +55,7 @@ func (m mockOp) RunAtomically() error {
 	return m.Run()
 }
 
-func (ks *mockKeySpace) NewTable(name string, entity interface{}, fields map[string]interface{}, keys Keys) Table {
+func (ks *mockKeySpace) NewTable(name string, entity interface{}, keys Keys) Table {
 	return &MockTable{
 		name:   name,
 		entity: entity,

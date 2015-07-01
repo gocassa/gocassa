@@ -6,6 +6,7 @@ import (
 	r "reflect"
 	"strings"
 	"sync"
+	"time"
 )
 
 // StructToMap converts a struct to map. The object's default key string
@@ -21,29 +22,19 @@ import (
 //
 //   // Field appears in the resulting map as key "myName"
 //   Field int "myName"
-func StructToMap(val interface{}) (map[string]interface{}, bool) {
-	// indirect so function works with both structs and pointers to them
-	structVal := r.Indirect(r.ValueOf(val))
-	kind := structVal.Kind()
-	if kind != r.Struct {
-		return nil, false
-	}
-	sinfo := getStructInfo(structVal)
-	mapVal := make(map[string]interface{}, len(sinfo.FieldsList))
-	for _, field := range sinfo.FieldsList {
-		mapVal[field.Key] = structVal.Field(field.Num).Interface()
-	}
-	return mapVal, true
-}
-
 // MapToStruct converts a map to a struct. It is the inverse of the StructToMap
+
 // function. For details see StructToMap.
 func MapToStruct(m map[string]interface{}, struc interface{}) error {
-	val := r.Indirect(r.ValueOf(struc))
-	sinfo := getStructInfo(val)
+	sinfo, err := NewStructInfo(struc)
+
+	if err != nil {
+		return err
+	}
+
 	for k, v := range m {
 		if info, ok := sinfo.FieldsMap[k]; ok {
-			structField := val.Field(info.Num)
+			structField := sinfo.Value.Field(info.Num)
 			if structField.Type().Name() == r.TypeOf(v).Name() {
 				structField.Set(r.ValueOf(v))
 			}
@@ -56,25 +47,21 @@ func MapToStruct(m map[string]interface{}, struc interface{}) error {
 // for the given struct. For details on how the field names are determined please
 // see StructToMap.
 func FieldsAndValues(val interface{}) ([]string, []interface{}, bool) {
-	// indirect so function works with both structs and pointers to them
-	structVal := r.Indirect(r.ValueOf(val))
-	kind := structVal.Kind()
-	if kind != r.Struct {
+	sinfo, err := NewStructInfo(val)
+
+	if err != nil {
 		return nil, nil, false
 	}
-	sinfo := getStructInfo(structVal)
+
 	fields := make([]string, len(sinfo.FieldsList))
 	values := make([]interface{}, len(sinfo.FieldsList))
 	for i, info := range sinfo.FieldsList {
-		field := structVal.Field(info.Num)
+		field := sinfo.Value.Field(info.Num)
 		fields[i] = info.Key
 		values[i] = field.Interface()
 	}
 	return fields, values, true
 }
-
-var structMapMutex sync.RWMutex
-var structMap = make(map[r.Type]*structInfo)
 
 type fieldInfo struct {
 	Key string
@@ -82,24 +69,44 @@ type fieldInfo struct {
 }
 
 type structInfo struct {
-	// FieldsMap is used to access fields by their key
 	FieldsMap map[string]fieldInfo
 	// FieldsList allows iteration over the fields in their struct order.
-	FieldsList []fieldInfo
+	FieldsList     []fieldInfo
+	NullableFields []string
 }
 
-func getStructInfo(v r.Value) *structInfo {
-	st := r.Indirect(v).Type()
+type StructInfo struct {
+	// FieldsMap is used to access fields by their key
+	*structInfo
+	Value r.Value
+}
+
+var structMapMutex sync.RWMutex
+var structMap = make(map[r.Type]*structInfo)
+
+func NewStructInfo(val interface{}) (*StructInfo, error) {
+	structVal := r.Indirect(r.ValueOf(val))
+	kind := structVal.Kind()
+	if kind != r.Struct {
+		return nil, fmt.Errorf("You must pass a valid struct")
+	}
+
+	st := r.Indirect(structVal).Type()
+
 	structMapMutex.RLock()
 	sinfo, found := structMap[st]
 	structMapMutex.RUnlock()
 	if found {
-		return sinfo
+		return &StructInfo{
+			sinfo,
+			structVal,
+		}, nil
 	}
 
 	n := st.NumField()
 	fieldsMap := make(map[string]fieldInfo, n)
 	fieldsList := make([]fieldInfo, 0, n)
+	nullableFields := make([]string, 0, n)
 	for i := 0; i != n; i++ {
 		field := st.Field(i)
 		info := fieldInfo{Num: i}
@@ -109,26 +116,92 @@ func getStructInfo(v r.Value) *structInfo {
 		if tag == "" && strings.Index(string(field.Tag), ":") < 0 {
 			tag = string(field.Tag)
 		}
+
+		opt := strings.Split(tag, ";")
+
 		if tag != "" {
-			info.Key = tag
+			info.Key = opt[0]
 		} else {
 			info.Key = field.Name
 		}
 
-		if _, found = fieldsMap[info.Key]; found {
-			msg := fmt.Sprintf("Duplicated key '%s' in struct %s", info.Key, st.String())
-			panic(msg)
+		if len(opt) > 1 && opt[1] == "null" {
+			nullableFields = append(nullableFields, info.Key)
+		}
+
+		if _, found := fieldsMap[info.Key]; found {
+			return nil, fmt.Errorf("Duplicated key '%s' in struct %s", info.Key, st.String())
 		}
 
 		fieldsList = append(fieldsList, info)
 		fieldsMap[info.Key] = info
 	}
+
 	sinfo = &structInfo{
 		fieldsMap,
 		fieldsList,
+		nullableFields,
 	}
+
 	structMapMutex.Lock()
 	structMap[st] = sinfo
 	structMapMutex.Unlock()
-	return sinfo
+
+	return &StructInfo{
+		sinfo,
+		structVal,
+	}, nil
+}
+
+func (s *StructInfo) ToMap() map[string]interface{} {
+	mapVal := make(map[string]interface{}, len(s.FieldsList))
+
+	for _, field := range s.FieldsList {
+		value := s.Value.Field(field.Num)
+
+		mapVal[field.Key] = value.Interface()
+	}
+
+	return mapVal
+}
+
+func (s *StructInfo) ToMapWithoutZero() map[string]interface{} {
+	mapVal := make(map[string]interface{}, len(s.FieldsList))
+
+	for _, field := range s.FieldsList {
+		value := s.Value.Field(field.Num)
+
+		mapVal[field.Key] = value.Interface()
+
+		for _, nullable := range s.NullableFields {
+			if isZero(value) {
+				delete(mapVal, nullable)
+			}
+		}
+	}
+
+	return mapVal
+}
+
+func isZero(v r.Value) bool {
+	switch v.Kind() {
+	case r.Func, r.Map, r.Slice:
+		return v.IsNil()
+	case r.Array:
+		z := true
+		for i := 0; i < v.Len(); i++ {
+			z = z && isZero(v.Index(i))
+		}
+		return z
+	case r.Struct:
+		i := v.Interface()
+
+		switch i.(type) {
+		case time.Time:
+			return i.(time.Time).IsZero()
+		}
+	}
+	z := r.Zero(v.Type())
+
+	return v.Interface() == z.Interface()
 }

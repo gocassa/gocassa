@@ -7,6 +7,7 @@ import (
 
 func TestMapTable(t *testing.T) {
 	tbl := ns.MapTable("customer81", "Id", Customer{})
+
 	createIf(tbl.(TableChanger), t)
 	joe := Customer{
 		Id:   "33",
