@@ -10,6 +10,7 @@ import (
 
 func createIf(cs TableChanger, tes *testing.T) {
 	err := cs.(TableChanger).Recreate()
+
 	if err != nil {
 		tes.Fatal(err)
 	}
