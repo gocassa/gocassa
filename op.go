@@ -16,6 +16,9 @@ const (
 	insert
 )
 
+type noop struct {
+}
+
 type op struct {
 	qe  QueryExecutor
 	ops []singleOp
@@ -94,10 +97,27 @@ func (w *singleOp) run(qe QueryExecutor, opt Options) error {
 
 // Noop returns an empty `Op` which is useful to conditionally add `Op`s to.
 func Noop() Op {
-	return &op{
-		qe:  nil,
-		ops: []singleOp{},
+	return &noop{}
+}
+
+func (w *noop) Add(wo ...Op) Op {
+	if len(wo) == 0 {
+		return w
 	}
+
+	return wo[0].Add(wo[1:]...)
+}
+
+func (w *noop) Run() error {
+	return nil
+}
+
+func (w *noop) RunAtomically() error {
+	return nil
+}
+
+func (w *noop) WithOptions(_ Options) Op {
+	return w
 }
 
 func (w *op) Add(wo ...Op) Op {
