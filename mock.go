@@ -453,6 +453,30 @@ func (f *MockFilter) UpdateWithOptions(m map[string]interface{}, options Options
 				}
 
 				for key, value := range m {
+					if mod, ok := value.(Modifier); ok {
+						switch mod.op {
+						case modifierMapSetFields:
+							targetMap := make(map[string]interface{})
+							if superColumn[key] != nil {
+								// if it isn't nil then try and type cast it to a map
+								if targetMap, ok = superColumn[key].(map[string]interface{}); !ok {
+									panic(fmt.Sprintf("Can't use MapSetFields modifier on field that isn't a map: %T", superColumn[key]))
+								}
+							}
+
+							ma, ok := mod.args[0].(map[string]interface{})
+							if !ok {
+								panic("Argument for MapSetFields is not a map")
+							}
+							for k, v := range ma {
+								targetMap[k] = v
+							}
+							value = targetMap
+						default:
+							return errors.New(fmt.Sprintf("Modifer %v not supported by mock keyspace", mod.op))
+						}
+					}
+
 					superColumn[key] = value
 				}
 			}
