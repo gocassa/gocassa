@@ -337,6 +337,17 @@ func (s *MockSuite) TestMultiTimeSeriesTableDelete() {
 	s.Equal(RowNotFoundError{}, s.mtsTbl.Read("John", points[0].Time, points[0].Id, &p).Run())
 }
 
+func (s *MockSuite) TestNoop() {
+	s.insertUsers()
+	var users []user
+	op := Noop()
+	op = op.Add(s.mapTbl.MultiRead([]interface{}{1, 2}, &users))
+	s.NoError(op.Run())
+	s.Len(users, 2)
+	s.Equal("Jane", users[0].Name)
+	s.Equal("Jill", users[1].Name)
+}
+
 // Helper functions
 func (s *MockSuite) insertPoints() []point {
 	points := []point{
