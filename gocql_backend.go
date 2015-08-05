@@ -39,6 +39,15 @@ func (cb goCQLBackend) ExecuteAtomically(stmts []string, vals [][]interface{}) e
 	return nil
 }
 
+// GoCQLSessionToQueryExecutor enables you to supply your own gocql session with your custom options
+// Then you can use NewConnection to mint your own thing
+// See #90 for more details
+func GoCQLSessionToQueryExecutor(sess *gocql.Session) QueryExecutor {
+	return goCQLBackend{
+		session: sess,
+	}
+}
+
 func newGoCQLBackend(nodeIps []string, username, password string) (QueryExecutor, error) {
 	cluster := gocql.NewCluster(nodeIps...)
 	cluster.Consistency = gocql.One
@@ -50,7 +59,5 @@ func newGoCQLBackend(nodeIps []string, username, password string) (QueryExecutor
 	if err != nil {
 		return nil, err
 	}
-	return goCQLBackend{
-		session: sess,
-	}, nil
+	return GoCQLSessionToQueryExecutor(sess), nil
 }

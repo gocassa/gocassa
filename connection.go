@@ -9,6 +9,7 @@ type connection struct {
 }
 
 // Connect to a cluster.
+// If you are happy with default the options use this, if you need anything fancier, use `NewConnection`
 func Connect(nodeIps []string, username, password string) (Connection, error) {
 	qe, err := newGoCQLBackend(nodeIps, username, password)
 	if err != nil {
@@ -20,8 +21,8 @@ func Connect(nodeIps []string, username, password string) (Connection, error) {
 }
 
 // NewConnection creates a Connection with a custom query executor.
-// This is mostly useful for testing/mocking purposes.
-// Use `Connect` if you just want to talk to Cassandra.
+// Use `Connect` if you just want to talk to Cassandra with the default options.
+// See `GoCQLSessionToQueryExecutor` if you want to use a gocql session with your own options as a `QueryExecutor`
 func NewConnection(q QueryExecutor) Connection {
 	return &connection{
 		q: q,
