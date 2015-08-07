@@ -121,6 +121,36 @@ func (k *k) MultiTimeSeriesTable(name, indexField, timeField, idField string, bu
 	}
 }
 
+func (k *k) FlakeSeriesTable(name string, bucketSize time.Duration, row interface{}) FlakeSeriesTable {
+	m, ok := toMap(row)
+	if !ok {
+		panic("Unrecognized row type")
+	}
+	m[flakeTimestampFieldName] = time.Now()
+	return &flakeSeriesT{
+		Table: k.NewTable(fmt.Sprintf("%s_flakeSeries", name), row, m, Keys{
+			PartitionKeys:     []string{bucketFieldName},
+			ClusteringColumns: []string{flakeTimestampFieldName, "Id"},
+		}),
+		bucketSize: bucketSize,
+	}
+}
+
+func (k *k) MultiFlakeSeriesTable(name, indexField string, bucketSize time.Duration, row interface{}) MultiFlakeSeriesTable {
+	m, ok := toMap(row)
+	if !ok {
+		panic("Unrecognized row type")
+	}
+	m[flakeTimestampFieldName] = time.Now()
+	return &multiFlakeSeriesT{
+		Table: k.NewTable(fmt.Sprintf("%s_by_%s_flakeSeries", name, indexField), row, m, Keys{
+			PartitionKeys:     []string{indexField, bucketFieldName},
+			ClusteringColumns: []string{flakeTimestampFieldName, "Id"},
+		}),
+		bucketSize: bucketSize,
+	}
+}
+
 // Returns table names in a keyspace
 func (k *k) Tables() ([]string, error) {
 	const stmt = "SELECT columnfamily_name FROM system.schema_columnfamilies WHERE keyspace_name = ?"

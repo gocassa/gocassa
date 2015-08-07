@@ -18,6 +18,8 @@ type KeySpace interface {
 	MultimapTable(tableName, fieldToIndexBy, uniqueKey string, row interface{}) MultimapTable
 	TimeSeriesTable(tableName, timeField, uniqueKey string, bucketSize time.Duration, row interface{}) TimeSeriesTable
 	MultiTimeSeriesTable(tableName, fieldToIndexByField, timeField, uniqueKey string, bucketSize time.Duration, row interface{}) MultiTimeSeriesTable
+	FlakeSeriesTable(tableName string, bucketSize time.Duration, row interface{}) FlakeSeriesTable
+	MultiFlakeSeriesTable(tableName, indexField string, bucketSize time.Duration, row interface{}) MultiFlakeSeriesTable
 	Table(tableName string, row interface{}, keys Keys) Table
 	// DebugMode enables/disables debug mode depending on the value of the input boolean.
 	// When DebugMode is enabled, all built CQL statements are printe to stdout.
@@ -92,6 +94,24 @@ type MultiTimeSeriesTable interface {
 	List(v interface{}, start, end time.Time, pointerToASlice interface{}) Op
 	WithOptions(Options) MultiTimeSeriesTable
 	TableChanger
+}
+
+type FlakeSeriesTable interface {
+	Set(v interface{}) (Op, error)
+	Update(id string, m map[string]interface{}) (Op, error)
+	Delete(id string) (Op, error)
+	Read(id string, pointer interface{}) (Op, error)
+	List(start, end time.Time, pointerToASlice interface{}) (Op, error)
+	WithOptions(Options) FlakeSeriesTable
+}
+
+type MultiFlakeSeriesTable interface {
+	Set(v interface{}) (Op, error)
+	Update(v interface{}, id string, m map[string]interface{}) (Op, error)
+	Delete(v interface{}, id string) (Op, error)
+	Read(v interface{}, id string, pointer interface{}) (Op, error)
+	List(v interface{}, start, end time.Time, pointerToASlice interface{}) (Op, error)
+	WithOptions(Options) MultiFlakeSeriesTable
 }
 
 //
