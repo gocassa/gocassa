@@ -197,7 +197,9 @@ func (t t) CreateStatement() (string, error) {
 		t.info.keys.PartitionKeys,
 		t.info.keys.ClusteringColumns,
 		t.info.fields,
-		t.info.fieldValues)
+		t.info.fieldValues,
+		t.options.Order,
+	)
 }
 
 func (t t) Name() string {

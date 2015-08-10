@@ -72,4 +72,64 @@ func TestCreateStatement(t *testing.T) {
 	if !strings.Contains(str, "funky") {
 		t.Fatal(str)
 	}
+	// if clustering order is not specified, it should omit the clustering order by and use the default
+	if strings.Contains(str, "WITH CLUSTERING ORDER BY") {
+		t.Fatal(str)
+	}
+}
+
+func TestCreateStatementWithClusteringOrder(t *testing.T) {
+	order := &ClusteringOrder{
+		Columns: []ClusteringOrderColumn{
+			ClusteringOrderColumn{
+				Ascending: false,
+				Column:    "Name",
+			},
+		},
+	}
+	cs := ns.Table("something", Customer{}, Keys{
+		PartitionKeys:     []string{"Id"},
+		ClusteringColumns: []string{"Name"},
+	})
+	opts := Options{Order: order}
+	str, err := cs.WithOptions(opts).CreateStatement()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(str, "something") {
+		t.Fatal(str)
+	}
+	if !strings.Contains(str, "WITH CLUSTERING ORDER BY (Name DESC)") {
+		t.Fatal(str)
+	}
+}
+
+func TestCreateStatementWithMultipleClusteringOrder(t *testing.T) {
+	order := &ClusteringOrder{
+		Columns: []ClusteringOrderColumn{
+			ClusteringOrderColumn{
+				Ascending: false,
+				Column:    "Name",
+			},
+			ClusteringOrderColumn{
+				Ascending: true,
+				Column:    "Tag",
+			},
+		},
+	}
+	cs := ns.Table("something", Customer2{}, Keys{
+		PartitionKeys:     []string{"Id"},
+		ClusteringColumns: []string{"Name", "Tag"},
+	})
+	opts := Options{Order: order}
+	str, err := cs.WithOptions(opts).CreateStatement()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(str, "something") {
+		t.Fatal(str)
+	}
+	if !strings.Contains(str, "WITH CLUSTERING ORDER BY (Name DESC, Tag ASC)") {
+		t.Fatal(str)
+	}
 }
