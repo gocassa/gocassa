@@ -101,7 +101,8 @@ type FlakeSeriesTable interface {
 	Update(id string, m map[string]interface{}) (Op, error)
 	Delete(id string) (Op, error)
 	Read(id string, pointer interface{}) (Op, error)
-	List(start, end time.Time, pointerToASlice interface{}) (Op, error)
+	List(start, end time.Time, pointerToASlice interface{}) Op
+	ListSince(id string, window time.Duration, pointerToASlice interface{}) (Op, error)
 	WithOptions(Options) FlakeSeriesTable
 }
 
@@ -110,7 +111,8 @@ type MultiFlakeSeriesTable interface {
 	Update(v interface{}, id string, m map[string]interface{}) (Op, error)
 	Delete(v interface{}, id string) (Op, error)
 	Read(v interface{}, id string, pointer interface{}) (Op, error)
-	List(v interface{}, start, end time.Time, pointerToASlice interface{}) (Op, error)
+	List(v interface{}, start, end time.Time, pointerToASlice interface{}) Op
+	ListSince(v interface{}, id string, window time.Duration, pointerToASlice interface{}) (Op, error)
 	WithOptions(Options) MultiFlakeSeriesTable
 }
 

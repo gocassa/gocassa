@@ -61,9 +61,9 @@ func (o *multiFlakeSeriesT) Read(v interface{}, id string, pointer interface{}) 
 	return o.Where(Eq(o.indexField, v), Eq(bucketFieldName, bucket), Eq(flakeTimestampFieldName, timestamp), Eq("Id", id)).ReadOne(pointer), nil
 }
 
-func (o *multiFlakeSeriesT) List(v interface{}, startTime, endTime time.Time, pointerToASlice interface{}) (Op, error) {
+func (o *multiFlakeSeriesT) List(v interface{}, startTime, endTime time.Time, pointerToASlice interface{}) Op {
 	buckets := o.buckets(startTime, endTime)
-	return o.Where(Eq(o.indexField, v), In(bucketFieldName, buckets...), GTE(flakeTimestampFieldName, startTime), LT(flakeTimestampFieldName, endTime)).Read(pointerToASlice), nil
+	return o.Where(Eq(o.indexField, v), In(bucketFieldName, buckets...), GTE(flakeTimestampFieldName, startTime), LT(flakeTimestampFieldName, endTime)).Read(pointerToASlice)
 }
 
 // ListSince queries the flakeSeries for the items after the specified ID but within the time window,
