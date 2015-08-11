@@ -53,3 +53,19 @@ func (o Options) Merge(neu Options) Options {
 	}
 	return ret
 }
+
+// AppendClusteringOrder adds a clustering order.  If there already clustering orders, the new one is added to the end.
+func (o Options) AppendClusteringOrder(column string, ascending bool) Options {
+	order := o.Order
+	if order == nil {
+		order = &ClusteringOrder{}
+	}
+	col := ClusteringOrderColumn{
+		Column:    column,
+		Ascending: ascending,
+	}
+	order.Columns = append(order.Columns, col)
+	withOrder := Options{Order: order}
+
+	return o.Merge(withOrder)
+}
