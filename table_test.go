@@ -192,29 +192,3 @@ func TestCreateStatement(t *testing.T) {
 		t.Fatal(str)
 	}
 }
-
-func TestCreateStatementWithClusteringOrder(t *testing.T) {
-	order := &ClusteringOrder{
-		Columns: []ClusteringOrderColumn{
-			ClusteringOrderColumn{
-				Ascending: false,
-				Column:    "Name",
-			},
-		},
-	}
-	cs := ns.Table("something", Customer{}, Keys{
-		PartitionKeys:     []string{"Id"},
-		ClusteringColumns: []string{"Name"},
-	})
-	opts := Options{Order: order}
-	str, err := cs.WithOptions(opts).CreateStatement()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !strings.Contains(str, "something") {
-		t.Fatal(str)
-	}
-	if !strings.Contains(str, "WITH CLUSTERING ORDER BY (Name DESC)") {
-		t.Fatal(str)
-	}
-}
