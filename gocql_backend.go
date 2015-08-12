@@ -2,6 +2,7 @@ package gocassa
 
 import (
 	"errors"
+
 	"github.com/gocql/gocql"
 )
 

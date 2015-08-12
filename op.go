@@ -3,51 +3,58 @@ package gocassa
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"runtime"
 	"strconv"
 )
 
 const (
-	read = iota
-	singleRead
-	delete
-	update
-	insert
+	readOpType uint8 = iota
+	singleReadOpType
+	deleteOpType
+	updateOpType
+	insertOpType
 )
-
-type noop struct {
-}
-
-type op struct {
-	qe  QueryExecutor
-	ops []singleOp
-}
 
 type singleOp struct {
 	options Options
 	f       filter
-	opType  int
+	opType  uint8
 	result  interface{}
 	m       map[string]interface{} // map for updates, sets etc
+	qe      QueryExecutor
 }
 
-func newWriteOp(qe QueryExecutor, f filter, opType int, m map[string]interface{}) *op {
-	return &op{
-		qe: qe,
-		ops: []singleOp{
-			{
-				f:      f,
-				opType: opType,
-				m:      m,
-			},
-		},
-	}
+func (o *singleOp) WithOptions(opts Options) Op {
+	return &singleOp{
+		options: o.options.Merge(opts),
+		f:       o.f,
+		opType:  o.opType,
+		result:  o.result,
+		m:       o.m,
+		qe:      o.qe}
 }
 
-func (w *singleOp) read(qe QueryExecutor, opt Options) error {
-	stmt, params := w.generateRead(opt)
-	maps, err := qe.Query(stmt, params...)
+func (o *singleOp) Add(additions ...Op) Op {
+	return multiOp{o}.Add(additions...)
+}
+
+func (o *singleOp) Preflight() error {
+	return nil
+}
+
+func newWriteOp(qe QueryExecutor, f filter, opType uint8, m map[string]interface{}) *singleOp {
+	return &singleOp{
+		qe:     qe,
+		f:      f,
+		opType: opType,
+		m:      m}
+}
+
+func (w *singleOp) read() error {
+	stmt, params := w.generateRead(w.options)
+	maps, err := w.qe.Query(stmt, params...)
 	if err != nil {
 		return err
 	}
@@ -58,9 +65,9 @@ func (w *singleOp) read(qe QueryExecutor, opt Options) error {
 	return json.Unmarshal(bytes, w.result)
 }
 
-func (w *singleOp) readOne(qe QueryExecutor, opt Options) error {
-	stmt, params := w.generateRead(opt)
-	maps, err := qe.Query(stmt, params...)
+func (w *singleOp) readOne() error {
+	stmt, params := w.generateRead(w.options)
+	maps, err := w.qe.Query(stmt, params...)
 	if err != nil {
 		return err
 	}
@@ -78,110 +85,40 @@ func (w *singleOp) readOne(qe QueryExecutor, opt Options) error {
 	return json.Unmarshal(bytes, w.result)
 }
 
-func (w *singleOp) write(qe QueryExecutor, opt Options) error {
-	stmt, params := w.generateWrite(opt)
-	return qe.Execute(stmt, params...)
+func (w *singleOp) write() error {
+	stmt, params := w.generateWrite(w.options)
+	return w.qe.Execute(stmt, params...)
 }
 
-func (w *singleOp) run(qe QueryExecutor, opt Options) error {
-	switch w.opType {
-	case update, insert, delete:
-		return w.write(qe, opt)
-	case read:
-		return w.read(qe, opt)
-	case singleRead:
-		return w.readOne(qe, opt)
+func (o *singleOp) Run() error {
+	switch o.opType {
+	case updateOpType, insertOpType, deleteOpType:
+		return o.write()
+	case readOpType:
+		return o.read()
+	case singleReadOpType:
+		return o.readOne()
 	}
 	return nil
 }
 
-// Noop returns an empty `Op` which is useful to conditionally add `Op`s to.
-func Noop() Op {
-	return &noop{}
-}
-
-func (w *noop) Add(wo ...Op) Op {
-	if len(wo) == 0 {
-		return w
-	}
-
-	return wo[0].Add(wo[1:]...)
-}
-
-func (w *noop) Run() error {
-	return nil
-}
-
-func (w *noop) RunAtomically() error {
-	return nil
-}
-
-func (w *noop) WithOptions(_ Options) Op {
-	return w
-}
-
-func (w *op) Add(wo ...Op) Op {
-	for _, v := range wo {
-		w.qe = v.(*op).qe
-		w.ops = append(w.ops, v.(*op).ops...)
-	}
-	return w
-}
-
-func (w *op) Run() error {
-	for _, v := range w.ops {
-		err := v.run(w.qe, v.options)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (w *op) WithOptions(opt Options) Op {
-	newOps := []singleOp{}
-	for _, v := range w.ops {
-		newOps = append(newOps, singleOp{
-			options: v.options.Merge(opt),
-			f:       v.f,
-			opType:  v.opType,
-			result:  v.result,
-			m:       v.m,
-		})
-	}
-	return &op{
-		qe:  w.qe,
-		ops: newOps,
-	}
-}
-
-func (w op) RunAtomically() error {
-	return fmt.Errorf("Not implemented yet")
-	//stmts := []string{}
-	//params := [][]interface{}{}
-	//for _, vop := range w.ops {
-	//	// We are pushing the limits of the type system here...
-	//	if vop.opType == update || vop.opType == insert || vop.opType == delete {
-	//		stmts = append(stmts, vop.stmt)
-	//		params = append(params, vop.params)
-	//	}
-	//}
-	//return w.qe.ExecuteAtomically(stmts, params)
+func (o *singleOp) RunAtomically() error {
+	return errors.New("RunAtomically() is not implemented yet")
 }
 
 func (o *singleOp) generateWrite(opt Options) (string, []interface{}) {
 	var str string
 	var vals []interface{}
 	switch o.opType {
-	case update:
+	case updateOpType:
 		stmt, uvals := updateStatement(o.f.t.keySpace.name, o.f.t.Name(), o.m, o.f.t.options.Merge(opt))
 		whereStmt, whereVals := generateWhere(o.f.rs)
 		str = stmt + whereStmt
 		vals = append(uvals, whereVals...)
-	case delete:
+	case deleteOpType:
 		str, vals = generateWhere(o.f.rs)
 		str = fmt.Sprintf("DELETE FROM %s.%s%s", o.f.t.keySpace.name, o.f.t.Name(), str)
-	case insert:
+	case insertOpType:
 		fields, insertVals := keyValues(o.m)
 		str = insertStatement(o.f.t.keySpace.name, o.f.t.Name(), fields, o.f.t.options.Merge(opt))
 		vals = insertVals
@@ -221,7 +158,7 @@ func (o *singleOp) generateRead(opt Options) (string, []interface{}) {
 	return buf.String(), vals
 }
 
-func (p *singleOp) generateOrderBy() (string, []interface{}) {
+func (o *singleOp) generateOrderBy() (string, []interface{}) {
 	return "", []interface{}{}
 	// " ORDER BY %v"
 }
