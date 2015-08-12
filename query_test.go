@@ -46,6 +46,8 @@ func init() {
 	cluster := gocql.NewCluster(getTestHosts()...)
 	cluster.Consistency = gocql.One
 	cluster.Timeout = 1500 * time.Millisecond // Travis' C* is sloooow
+	cluster.RetryPolicy = &gocql.SimpleRetryPolicy{
+		NumRetries: 3}
 	sess, err := cluster.CreateSession()
 	if err != nil {
 		panic(err)
