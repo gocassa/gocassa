@@ -55,7 +55,7 @@ func TestCreateTable(t *testing.T) {
 }
 
 func TestClusteringOrder(t *testing.T) {
-	options := Options{}.AppendClusteringOrder("Id", false)
+	options := Options{}.AppendClusteringOrder("Id", DESC)
 	name := "customer_by_name"
 	cs := ns.Table(name, Customer{}, Keys{
 		PartitionKeys:     []string{"Name"},
@@ -106,8 +106,7 @@ func TestClusteringOrder(t *testing.T) {
 }
 
 func TestClusteringOrderMultipl(t *testing.T) {
-	options := Options{}.AppendClusteringOrder("Tag", false).AppendClusteringOrder("Tag", false)
-	(&options).AppendClusteringOrder("Id", false)
+	options := Options{}.AppendClusteringOrder("Tag", DESC).AppendClusteringOrder("Id", DESC)
 	name := "customer_by_name2"
 	cs := ns.Table(name, Customer2{}, Keys{
 		PartitionKeys:     []string{"Name"},

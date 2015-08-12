@@ -27,7 +27,7 @@ import (
 // );
 //
 
-func createTable(keySpace, cf string, partitionKeys, colKeys []string, fields []string, values []interface{}, order *ClusteringOrder) (string, error) {
+func createTable(keySpace, cf string, partitionKeys, colKeys []string, fields []string, values []interface{}, order []ClusteringOrderColumn) (string, error) {
 	firstLine := fmt.Sprintf("CREATE TABLE %v.%v (", keySpace, cf)
 	fieldLines := []string{}
 	for i, _ := range fields {
@@ -51,14 +51,14 @@ func createTable(keySpace, cf string, partitionKeys, colKeys []string, fields []
 		")",
 	}
 
-	if order != nil && len(order.Columns) > 0 {
-		orderStrs := make([]string, (len(order.Columns)))
-		for i, cc := range order.Columns {
-			o := "ASC"
-			if !cc.Ascending {
-				o = "DESC"
+	if len(order) > 0 {
+		orderStrs := make([]string, len(order))
+		for i, o := range order {
+			dir := "ASC"
+			if o.Direction == DESC {
+				dir = "DESC"
 			}
-			orderStrs[i] = fmt.Sprintf("%v %v", cc.Column, o)
+			orderStrs[i] = fmt.Sprintf("%v %v", o.Column, dir)
 		}
 		orderLine := fmt.Sprintf("WITH CLUSTERING ORDER BY (%v)", strings.Join(orderStrs, ", "))
 		lines = append(lines, orderLine)

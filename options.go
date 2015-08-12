@@ -4,16 +4,18 @@ import (
 	"time"
 )
 
+type ColumnDirection bool
+
+const (
+	ASC  ColumnDirection = false
+	DESC                 = true
+)
+
 // ClusteringOrderColumn specifies a clustering column and whether its
 // clustering order is ASC or DESC.
 type ClusteringOrderColumn struct {
-	Ascending bool
+	Direction ColumnDirection
 	Column    string
-}
-
-// ClusteringOrder specifies the clustering order property when creating a table
-type ClusteringOrder struct {
-	Columns []ClusteringOrderColumn
 }
 
 // Options can contain table or statement specific options.
@@ -27,17 +29,17 @@ type Options struct {
 	Limit int
 	// TableName
 	TableName string
-	// Order specifies the clustering order during table creation. If nil, it is omitted and the defaults are used.
-	Order *ClusteringOrder
+	// ClusteringOrder specifies the clustering order during table creation. If empty, it is omitted and the defaults are used.
+	ClusteringOrder []ClusteringOrderColumn
 }
 
 // Returns a new Options which is a right biased merge of the two initial Options.
 func (o Options) Merge(neu Options) Options {
 	ret := Options{
-		TTL:       o.TTL,
-		Limit:     o.Limit,
-		TableName: o.TableName,
-		Order:     o.Order,
+		TTL:             o.TTL,
+		Limit:           o.Limit,
+		TableName:       o.TableName,
+		ClusteringOrder: o.ClusteringOrder,
 	}
 	if neu.TTL != time.Duration(0) {
 		ret.TTL = neu.TTL
@@ -48,24 +50,20 @@ func (o Options) Merge(neu Options) Options {
 	if len(neu.TableName) > 0 {
 		ret.TableName = neu.TableName
 	}
-	if neu.Order != nil {
-		ret.Order = neu.Order
+	if neu.ClusteringOrder != nil {
+		ret.ClusteringOrder = neu.ClusteringOrder
 	}
 	return ret
 }
 
 // AppendClusteringOrder adds a clustering order.  If there already clustering orders, the new one is added to the end.
-func (o Options) AppendClusteringOrder(column string, ascending bool) Options {
-	order := o.Order
-	if order == nil {
-		order = &ClusteringOrder{}
-	}
+func (o Options) AppendClusteringOrder(column string, direction ColumnDirection) Options {
 	col := ClusteringOrderColumn{
 		Column:    column,
-		Ascending: ascending,
+		Direction: direction,
 	}
-	order.Columns = append(order.Columns, col)
-	withOrder := Options{Order: order}
+	co := append(o.ClusteringOrder, col)
+	withOrder := Options{ClusteringOrder: co}
 
 	return o.Merge(withOrder)
 }
