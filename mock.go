@@ -17,8 +17,9 @@ type mockKeySpace struct {
 }
 
 type mockOp struct {
-	options Options
-	funcs   []func(mockOp) error
+	options      Options
+	funcs        []func(mockOp) error
+	preflightErr error
 }
 
 func newOp(f func(mockOp) error) mockOp {
@@ -28,10 +29,7 @@ func newOp(f func(mockOp) error) mockOp {
 }
 
 func (m mockOp) Add(ops ...Op) Op {
-	for _, o := range ops {
-		m.funcs = append(m.funcs, o.(mockOp).funcs...)
-	}
-	return m
+	return multiOp{m}.Add(ops...)
 }
 
 func (m mockOp) Run() error {
@@ -53,6 +51,10 @@ func (m mockOp) WithOptions(opt Options) Op {
 
 func (m mockOp) RunAtomically() error {
 	return m.Run()
+}
+
+func (m mockOp) Preflight() error {
+	return m.preflightErr
 }
 
 func (ks *mockKeySpace) NewTable(name string, entity interface{}, fields map[string]interface{}, keys Keys) Table {

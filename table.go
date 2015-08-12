@@ -162,14 +162,14 @@ func (t t) Set(i interface{}) Op {
 	if len(updFields) == 0 {
 		return newWriteOp(t.keySpace.qe, filter{
 			t: t,
-		}, insert, m)
+		}, insertOpType, m)
 	}
 	transformFields(updFields)
 	rels := relations(t.info.keys, m)
 	return newWriteOp(t.keySpace.qe, filter{
 		t:  t,
 		rs: rels,
-	}, update, updFields)
+	}, updateOpType, updFields)
 }
 
 func (t t) Create() error {

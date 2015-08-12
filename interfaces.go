@@ -137,6 +137,9 @@ type Op interface {
 	//    op1.WithOptions(Options{Limit:3}).Add(op2).WithOptions(Options{Limit:2}) // op1 and op2 both have a limit of 2
 	//
 	WithOptions(Options) Op
+	// Preflight performs any pre-execution validation that confirms the op considers itself "valid".
+	// NOTE: Run() and RunAtomically() should call this method before execution, and abort if any errors are returned.
+	Preflight() error
 }
 
 // Danger zone! Do not use this interface unless you really know what you are doing
