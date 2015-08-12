@@ -6,11 +6,11 @@ type filter struct {
 }
 
 func (f filter) Update(m map[string]interface{}) Op {
-	return newWriteOp(f.t.keySpace.qe, f, update, m)
+	return newWriteOp(f.t.keySpace.qe, f, updateOpType, m)
 }
 
 func (f filter) Delete() Op {
-	return newWriteOp(f.t.keySpace.qe, f, delete, nil)
+	return newWriteOp(f.t.keySpace.qe, f, deleteOpType, nil)
 }
 
 //
@@ -18,27 +18,17 @@ func (f filter) Delete() Op {
 //
 
 func (f filter) Read(pointerToASlice interface{}) Op {
-	return &op{
-		qe: f.t.keySpace.qe,
-		ops: []singleOp{
-			{
-				f:      f,
-				opType: read,
-				result: pointerToASlice,
-			},
-		},
-	}
+	return &singleOp{
+		qe:     f.t.keySpace.qe,
+		f:      f,
+		opType: readOpType,
+		result: pointerToASlice}
 }
 
 func (f filter) ReadOne(pointer interface{}) Op {
-	return &op{
-		qe: f.t.keySpace.qe,
-		ops: []singleOp{
-			{
-				f:      f,
-				opType: singleRead,
-				result: pointer,
-			},
-		},
-	}
+	return &singleOp{
+		qe:     f.t.keySpace.qe,
+		f:      f,
+		opType: singleReadOpType,
+		result: pointer}
 }
