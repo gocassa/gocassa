@@ -10,7 +10,7 @@ type multiFlakeSeriesT struct {
 	bucketSize time.Duration
 }
 
-func (o *multiFlakeSeriesT) Set(v interface{}) (Op, error) {
+func (o *multiFlakeSeriesT) Set(v interface{}) Op {
 	m, ok := toMap(v)
 	if !ok {
 		panic("Can't set: not able to convert")
@@ -21,44 +21,43 @@ func (o *multiFlakeSeriesT) Set(v interface{}) (Op, error) {
 	}
 
 	timestamp, err := FlakeToTime(id)
-
 	if err != nil {
-		return nil, err
+		return errOp{err: err}
 	}
 
 	m[flakeTimestampFieldName] = timestamp
 	m[bucketFieldName] = o.bucket(timestamp.Unix())
 
-	return o.Table.Set(m), nil
+	return o.Table.Set(m)
 }
 
-func (o *multiFlakeSeriesT) Update(v interface{}, id string, m map[string]interface{}) (Op, error) {
+func (o *multiFlakeSeriesT) Update(v interface{}, id string, m map[string]interface{}) Op {
 	timestamp, err := FlakeToTime(id)
 	if err != nil {
-		return nil, err
+		return errOp{err: err}
 	}
 	bucket := o.bucket(timestamp.Unix())
 
-	return o.Where(Eq(o.indexField, v), Eq(bucketFieldName, bucket), Eq(flakeTimestampFieldName, timestamp), Eq("Id", id)).Update(m), nil
+	return o.Where(Eq(o.indexField, v), Eq(bucketFieldName, bucket), Eq(flakeTimestampFieldName, timestamp), Eq("Id", id)).Update(m)
 }
 
-func (o *multiFlakeSeriesT) Delete(v interface{}, id string) (Op, error) {
+func (o *multiFlakeSeriesT) Delete(v interface{}, id string) Op {
 	timestamp, err := FlakeToTime(id)
 	if err != nil {
-		return nil, err
+		return errOp{err: err}
 	}
 	bucket := o.bucket(timestamp.Unix())
 
-	return o.Where(Eq(o.indexField, v), Eq(bucketFieldName, bucket), Eq(flakeTimestampFieldName, timestamp), Eq("Id", id)).Delete(), nil
+	return o.Where(Eq(o.indexField, v), Eq(bucketFieldName, bucket), Eq(flakeTimestampFieldName, timestamp), Eq("Id", id)).Delete()
 }
 
-func (o *multiFlakeSeriesT) Read(v interface{}, id string, pointer interface{}) (Op, error) {
+func (o *multiFlakeSeriesT) Read(v interface{}, id string, pointer interface{}) Op {
 	timestamp, err := FlakeToTime(id)
 	if err != nil {
-		return nil, err
+		return errOp{err: err}
 	}
 	bucket := o.bucket(timestamp.Unix())
-	return o.Where(Eq(o.indexField, v), Eq(bucketFieldName, bucket), Eq(flakeTimestampFieldName, timestamp), Eq("Id", id)).ReadOne(pointer), nil
+	return o.Where(Eq(o.indexField, v), Eq(bucketFieldName, bucket), Eq(flakeTimestampFieldName, timestamp), Eq("Id", id)).ReadOne(pointer)
 }
 
 func (o *multiFlakeSeriesT) List(v interface{}, startTime, endTime time.Time, pointerToASlice interface{}) Op {
@@ -68,10 +67,10 @@ func (o *multiFlakeSeriesT) List(v interface{}, startTime, endTime time.Time, po
 
 // ListSince queries the flakeSeries for the items after the specified ID but within the time window,
 // if the time window is zero then it lists up until 5 minutes in the future
-func (o *multiFlakeSeriesT) ListSince(v interface{}, id string, window time.Duration, pointerToASlice interface{}) (Op, error) {
+func (o *multiFlakeSeriesT) ListSince(v interface{}, id string, window time.Duration, pointerToASlice interface{}) Op {
 	startTime, err := FlakeToTime(id)
 	if err != nil {
-		return nil, err
+		return errOp{err: err}
 	}
 
 	var endTime time.Time
@@ -83,7 +82,7 @@ func (o *multiFlakeSeriesT) ListSince(v interface{}, id string, window time.Dura
 		endTime = startTime.Add(window)
 	}
 	buckets := o.buckets(startTime, endTime)
-	return o.Where(Eq(o.indexField, v), In(bucketFieldName, buckets), GTE(flakeTimestampFieldName, startTime), LT(flakeTimestampFieldName, endTime), GT("Id", id)).Read(pointerToASlice), nil
+	return o.Where(Eq(o.indexField, v), In(bucketFieldName, buckets), GTE(flakeTimestampFieldName, startTime), LT(flakeTimestampFieldName, endTime), GT("Id", id)).Read(pointerToASlice)
 }
 
 func (o *multiFlakeSeriesT) WithOptions(opt Options) MultiFlakeSeriesTable {
