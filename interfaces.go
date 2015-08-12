@@ -97,12 +97,12 @@ type MultiTimeSeriesTable interface {
 }
 
 type FlakeSeriesTable interface {
-	Set(v interface{}) (Op, error)
-	Update(id string, m map[string]interface{}) (Op, error)
-	Delete(id string) (Op, error)
-	Read(id string, pointer interface{}) (Op, error)
+	Set(v interface{}) Op
+	Update(id string, m map[string]interface{}) Op
+	Delete(id string) Op
+	Read(id string, pointer interface{}) Op
 	List(start, end time.Time, pointerToASlice interface{}) Op
-	ListSince(id string, window time.Duration, pointerToASlice interface{}) (Op, error)
+	ListSince(id string, window time.Duration, pointerToASlice interface{}) Op
 	WithOptions(Options) FlakeSeriesTable
 }
 
