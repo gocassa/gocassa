@@ -127,6 +127,7 @@ func (k *k) FlakeSeriesTable(name string, bucketSize time.Duration, row interfac
 		panic("Unrecognized row type")
 	}
 	m[flakeTimestampFieldName] = time.Now()
+	m[bucketFieldName] = time.Now()
 	return &flakeSeriesT{
 		Table: k.NewTable(fmt.Sprintf("%s_flakeSeries", name), row, m, Keys{
 			PartitionKeys:     []string{bucketFieldName},
@@ -142,6 +143,7 @@ func (k *k) MultiFlakeSeriesTable(name, indexField string, bucketSize time.Durat
 		panic("Unrecognized row type")
 	}
 	m[flakeTimestampFieldName] = time.Now()
+	m[bucketFieldName] = time.Now()
 	return &multiFlakeSeriesT{
 		Table: k.NewTable(fmt.Sprintf("%s_by_%s_flakeSeries", name, indexField), row, m, Keys{
 			PartitionKeys:     []string{indexField, bucketFieldName},
