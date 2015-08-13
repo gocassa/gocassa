@@ -20,7 +20,7 @@ func (o *multiFlakeSeriesT) Set(v interface{}) Op {
 		panic("Id field is not present or is not a string")
 	}
 
-	timestamp, err := FlakeToTime(id)
+	timestamp, err := flakeToTime(id)
 	if err != nil {
 		return errOp{err: err}
 	}
@@ -32,7 +32,7 @@ func (o *multiFlakeSeriesT) Set(v interface{}) Op {
 }
 
 func (o *multiFlakeSeriesT) Update(v interface{}, id string, m map[string]interface{}) Op {
-	timestamp, err := FlakeToTime(id)
+	timestamp, err := flakeToTime(id)
 	if err != nil {
 		return errOp{err: err}
 	}
@@ -42,7 +42,7 @@ func (o *multiFlakeSeriesT) Update(v interface{}, id string, m map[string]interf
 }
 
 func (o *multiFlakeSeriesT) Delete(v interface{}, id string) Op {
-	timestamp, err := FlakeToTime(id)
+	timestamp, err := flakeToTime(id)
 	if err != nil {
 		return errOp{err: err}
 	}
@@ -52,7 +52,7 @@ func (o *multiFlakeSeriesT) Delete(v interface{}, id string) Op {
 }
 
 func (o *multiFlakeSeriesT) Read(v interface{}, id string, pointer interface{}) Op {
-	timestamp, err := FlakeToTime(id)
+	timestamp, err := flakeToTime(id)
 	if err != nil {
 		return errOp{err: err}
 	}
@@ -68,7 +68,7 @@ func (o *multiFlakeSeriesT) List(v interface{}, startTime, endTime time.Time, po
 // ListSince queries the flakeSeries for the items after the specified ID but within the time window,
 // if the time window is zero then it lists up until 5 minutes in the future
 func (o *multiFlakeSeriesT) ListSince(v interface{}, id string, window time.Duration, pointerToASlice interface{}) Op {
-	startTime, err := FlakeToTime(id)
+	startTime, err := flakeToTime(id)
 	if err != nil {
 		return errOp{err: err}
 	}
