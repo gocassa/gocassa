@@ -150,6 +150,7 @@ func (k *k) MultiFlakeSeriesTable(name, indexField string, bucketSize time.Durat
 			ClusteringColumns: []string{flakeTimestampFieldName, "Id"},
 		}),
 		bucketSize: bucketSize,
+		indexField: indexField,
 	}
 }
 
