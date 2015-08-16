@@ -6,6 +6,9 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
+
+	"github.com/gocql/gocql"
 )
 
 type Customer struct {
@@ -39,11 +42,18 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	ns, err = ConnectToKeySpace(kname, getTestHosts(), "", "")
+
+	cluster := gocql.NewCluster(getTestHosts()...)
+	cluster.Consistency = gocql.One
+	cluster.Timeout = 1500 * time.Millisecond // Travis' C* is sloooow
+	cluster.RetryPolicy = &gocql.SimpleRetryPolicy{
+		NumRetries: 3}
+	sess, err := cluster.CreateSession()
 	if err != nil {
 		panic(err)
 	}
-	//ns.DebugMode(true)
+	conn := &connection{q: goCQLBackend{session: sess}}
+	ns = conn.KeySpace(kname)
 }
 
 func TestEq(t *testing.T) {
