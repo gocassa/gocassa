@@ -18,6 +18,8 @@ type KeySpace interface {
 	MultimapTable(tableName, fieldToIndexBy, uniqueKey string, row interface{}) MultimapTable
 	TimeSeriesTable(tableName, timeField, uniqueKey string, bucketSize time.Duration, row interface{}) TimeSeriesTable
 	MultiTimeSeriesTable(tableName, fieldToIndexByField, timeField, uniqueKey string, bucketSize time.Duration, row interface{}) MultiTimeSeriesTable
+	FlakeSeriesTable(tableName, idField string, bucketSize time.Duration, row interface{}) FlakeSeriesTable
+	MultiFlakeSeriesTable(tableName, indexField, idField string, bucketSize time.Duration, row interface{}) MultiFlakeSeriesTable
 	Table(tableName string, row interface{}, keys Keys) Table
 	// DebugMode enables/disables debug mode depending on the value of the input boolean.
 	// When DebugMode is enabled, all built CQL statements are printe to stdout.
@@ -92,6 +94,30 @@ type MultiTimeSeriesTable interface {
 	List(v interface{}, start, end time.Time, pointerToASlice interface{}) Op
 	WithOptions(Options) MultiTimeSeriesTable
 	TableChanger
+}
+
+type FlakeSeriesTable interface {
+	Set(v interface{}) Op
+	Update(id string, m map[string]interface{}) Op
+	Delete(id string) Op
+	Read(id string, pointer interface{}) Op
+	List(start, end time.Time, pointerToASlice interface{}) Op
+	// ListSince queries the flakeSeries for the items after the specified ID but within the time window,
+	// if the time window is zero then it lists up until 5 minutes in the future
+	ListSince(id string, window time.Duration, pointerToASlice interface{}) Op
+	WithOptions(Options) FlakeSeriesTable
+}
+
+type MultiFlakeSeriesTable interface {
+	Set(v interface{}) Op
+	Update(v interface{}, id string, m map[string]interface{}) Op
+	Delete(v interface{}, id string) Op
+	Read(v interface{}, id string, pointer interface{}) Op
+	List(v interface{}, start, end time.Time, pointerToASlice interface{}) Op
+	// ListSince queries the flakeSeries for the items after the specified ID but within the time window,
+	// if the time window is zero then it lists up until 5 minutes in the future
+	ListSince(v interface{}, id string, window time.Duration, pointerToASlice interface{}) Op
+	WithOptions(Options) MultiFlakeSeriesTable
 }
 
 //

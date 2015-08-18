@@ -121,6 +121,41 @@ func (k *k) MultiTimeSeriesTable(name, indexField, timeField, idField string, bu
 	}
 }
 
+func (k *k) FlakeSeriesTable(name, idField string, bucketSize time.Duration, row interface{}) FlakeSeriesTable {
+	m, ok := toMap(row)
+	if !ok {
+		panic("Unrecognized row type")
+	}
+	m[flakeTimestampFieldName] = time.Now()
+	m[bucketFieldName] = time.Now()
+	return &flakeSeriesT{
+		Table: k.NewTable(fmt.Sprintf("%s_flakeSeries_%s_%s", name, idField, bucketSize.String()), row, m, Keys{
+			PartitionKeys:     []string{bucketFieldName},
+			ClusteringColumns: []string{flakeTimestampFieldName, idField},
+		}),
+		idField:    idField,
+		bucketSize: bucketSize,
+	}
+}
+
+func (k *k) MultiFlakeSeriesTable(name, indexField, idField string, bucketSize time.Duration, row interface{}) MultiFlakeSeriesTable {
+	m, ok := toMap(row)
+	if !ok {
+		panic("Unrecognized row type")
+	}
+	m[flakeTimestampFieldName] = time.Now()
+	m[bucketFieldName] = time.Now()
+	return &multiFlakeSeriesT{
+		Table: k.NewTable(fmt.Sprintf("%s_multiflakeSeries_%s_%s_%s", name, indexField, idField, bucketSize.String()), row, m, Keys{
+			PartitionKeys:     []string{indexField, bucketFieldName},
+			ClusteringColumns: []string{flakeTimestampFieldName, idField},
+		}),
+		idField:    idField,
+		bucketSize: bucketSize,
+		indexField: indexField,
+	}
+}
+
 // Returns table names in a keyspace
 func (k *k) Tables() ([]string, error) {
 	const stmt = "SELECT columnfamily_name FROM system.schema_columnfamilies WHERE keyspace_name = ?"
