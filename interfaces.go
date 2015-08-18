@@ -102,6 +102,8 @@ type FlakeSeriesTable interface {
 	Delete(id string) Op
 	Read(id string, pointer interface{}) Op
 	List(start, end time.Time, pointerToASlice interface{}) Op
+	// ListSince queries the flakeSeries for the items after the specified ID but within the time window,
+	// if the time window is zero then it lists up until 5 minutes in the future
 	ListSince(id string, window time.Duration, pointerToASlice interface{}) Op
 	WithOptions(Options) FlakeSeriesTable
 }
@@ -112,6 +114,8 @@ type MultiFlakeSeriesTable interface {
 	Delete(v interface{}, id string) Op
 	Read(v interface{}, id string, pointer interface{}) Op
 	List(v interface{}, start, end time.Time, pointerToASlice interface{}) Op
+	// ListSince queries the flakeSeries for the items after the specified ID but within the time window,
+	// if the time window is zero then it lists up until 5 minutes in the future
 	ListSince(v interface{}, id string, window time.Duration, pointerToASlice interface{}) Op
 	WithOptions(Options) MultiFlakeSeriesTable
 }

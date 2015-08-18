@@ -66,8 +66,6 @@ func (o *multiFlakeSeriesT) List(v interface{}, startTime, endTime time.Time, po
 	return o.Where(Eq(o.indexField, v), In(bucketFieldName, buckets...), GTE(flakeTimestampFieldName, startTime), LT(flakeTimestampFieldName, endTime)).Read(pointerToASlice)
 }
 
-// ListSince queries the flakeSeries for the items after the specified ID but within the time window,
-// if the time window is zero then it lists up until 5 minutes in the future
 func (o *multiFlakeSeriesT) ListSince(v interface{}, id string, window time.Duration, pointerToASlice interface{}) Op {
 	startTime, err := flakeToTime(id)
 	if err != nil {

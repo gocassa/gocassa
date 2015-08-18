@@ -131,7 +131,7 @@ func (k *k) FlakeSeriesTable(name, idField string, bucketSize time.Duration, row
 	return &flakeSeriesT{
 		Table: k.NewTable(fmt.Sprintf("%s_flakeSeries_%s_%s", name, idField, bucketSize.String()), row, m, Keys{
 			PartitionKeys:     []string{bucketFieldName},
-			ClusteringColumns: []string{flakeTimestampFieldName, "Id"},
+			ClusteringColumns: []string{flakeTimestampFieldName, idField},
 		}),
 		idField:    idField,
 		bucketSize: bucketSize,
@@ -148,7 +148,7 @@ func (k *k) MultiFlakeSeriesTable(name, indexField, idField string, bucketSize t
 	return &multiFlakeSeriesT{
 		Table: k.NewTable(fmt.Sprintf("%s_multiflakeSeries_%s_%s_%s", name, indexField, idField, bucketSize.String()), row, m, Keys{
 			PartitionKeys:     []string{indexField, bucketFieldName},
-			ClusteringColumns: []string{flakeTimestampFieldName, "Id"},
+			ClusteringColumns: []string{flakeTimestampFieldName, idField},
 		}),
 		idField:    idField,
 		bucketSize: bucketSize,
