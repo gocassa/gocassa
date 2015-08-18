@@ -97,6 +97,7 @@ func (o *flakeSeriesT) ListSince(id string, window time.Duration, pointerToASlic
 func (o *flakeSeriesT) WithOptions(opt Options) FlakeSeriesTable {
 	return &flakeSeriesT{
 		Table:      o.Table.WithOptions(opt),
+		idField:    o.idField,
 		bucketSize: o.bucketSize}
 }
 

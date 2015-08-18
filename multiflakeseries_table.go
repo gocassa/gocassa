@@ -88,8 +88,9 @@ func (o *multiFlakeSeriesT) ListSince(v interface{}, id string, window time.Dura
 func (o *multiFlakeSeriesT) WithOptions(opt Options) MultiFlakeSeriesTable {
 	return &multiFlakeSeriesT{
 		Table:      o.Table.WithOptions(opt),
-		bucketSize: o.bucketSize,
 		indexField: o.indexField,
+		idField:    o.idField,
+		bucketSize: o.bucketSize,
 	}
 }
 
