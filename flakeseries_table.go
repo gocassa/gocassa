@@ -2,6 +2,7 @@ package gocassa
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -27,7 +28,7 @@ func (o *flakeSeriesT) Set(v interface{}) Op {
 	}
 	id, ok := m[o.idField].(string)
 	if !ok {
-		panic("Id field is not present or is not a string")
+		panic(fmt.Sprintf("Id field (%s) is not present or is not a string", o.idField))
 	}
 
 	timestamp, err := flakeToTime(id)
