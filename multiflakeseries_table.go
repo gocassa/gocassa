@@ -7,6 +7,7 @@ import (
 type multiFlakeSeriesT struct {
 	Table
 	indexField string
+	idField    string
 	bucketSize time.Duration
 }
 
@@ -15,7 +16,7 @@ func (o *multiFlakeSeriesT) Set(v interface{}) Op {
 	if !ok {
 		panic("Can't set: not able to convert")
 	}
-	id, ok := m["Id"].(string)
+	id, ok := m[o.idField].(string)
 	if !ok {
 		panic("Id field is not present or is not a string")
 	}
@@ -38,7 +39,7 @@ func (o *multiFlakeSeriesT) Update(v interface{}, id string, m map[string]interf
 	}
 	bucket := o.bucket(timestamp.Unix())
 
-	return o.Where(Eq(o.indexField, v), Eq(bucketFieldName, bucket), Eq(flakeTimestampFieldName, timestamp), Eq("Id", id)).Update(m)
+	return o.Where(Eq(o.indexField, v), Eq(bucketFieldName, bucket), Eq(flakeTimestampFieldName, timestamp), Eq(o.idField, id)).Update(m)
 }
 
 func (o *multiFlakeSeriesT) Delete(v interface{}, id string) Op {
@@ -48,7 +49,7 @@ func (o *multiFlakeSeriesT) Delete(v interface{}, id string) Op {
 	}
 	bucket := o.bucket(timestamp.Unix())
 
-	return o.Where(Eq(o.indexField, v), Eq(bucketFieldName, bucket), Eq(flakeTimestampFieldName, timestamp), Eq("Id", id)).Delete()
+	return o.Where(Eq(o.indexField, v), Eq(bucketFieldName, bucket), Eq(flakeTimestampFieldName, timestamp), Eq(o.idField, id)).Delete()
 }
 
 func (o *multiFlakeSeriesT) Read(v interface{}, id string, pointer interface{}) Op {
@@ -57,7 +58,7 @@ func (o *multiFlakeSeriesT) Read(v interface{}, id string, pointer interface{}) 
 		return errOp{err: err}
 	}
 	bucket := o.bucket(timestamp.Unix())
-	return o.Where(Eq(o.indexField, v), Eq(bucketFieldName, bucket), Eq(flakeTimestampFieldName, timestamp), Eq("Id", id)).ReadOne(pointer)
+	return o.Where(Eq(o.indexField, v), Eq(bucketFieldName, bucket), Eq(flakeTimestampFieldName, timestamp), Eq(o.idField, id)).ReadOne(pointer)
 }
 
 func (o *multiFlakeSeriesT) List(v interface{}, startTime, endTime time.Time, pointerToASlice interface{}) Op {
@@ -82,7 +83,7 @@ func (o *multiFlakeSeriesT) ListSince(v interface{}, id string, window time.Dura
 		endTime = startTime.Add(window)
 	}
 	buckets := o.buckets(startTime, endTime)
-	return o.Where(Eq(o.indexField, v), In(bucketFieldName, buckets), GTE(flakeTimestampFieldName, startTime), LT(flakeTimestampFieldName, endTime), GT("Id", id)).Read(pointerToASlice)
+	return o.Where(Eq(o.indexField, v), In(bucketFieldName, buckets), GTE(flakeTimestampFieldName, startTime), LT(flakeTimestampFieldName, endTime), GT(o.idField, id)).Read(pointerToASlice)
 }
 
 func (o *multiFlakeSeriesT) WithOptions(opt Options) MultiFlakeSeriesTable {

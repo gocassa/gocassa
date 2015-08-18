@@ -121,7 +121,7 @@ func (k *k) MultiTimeSeriesTable(name, indexField, timeField, idField string, bu
 	}
 }
 
-func (k *k) FlakeSeriesTable(name string, bucketSize time.Duration, row interface{}) FlakeSeriesTable {
+func (k *k) FlakeSeriesTable(name, idField string, bucketSize time.Duration, row interface{}) FlakeSeriesTable {
 	m, ok := toMap(row)
 	if !ok {
 		panic("Unrecognized row type")
@@ -133,11 +133,12 @@ func (k *k) FlakeSeriesTable(name string, bucketSize time.Duration, row interfac
 			PartitionKeys:     []string{bucketFieldName},
 			ClusteringColumns: []string{flakeTimestampFieldName, "Id"},
 		}),
+		idField:    idField,
 		bucketSize: bucketSize,
 	}
 }
 
-func (k *k) MultiFlakeSeriesTable(name, indexField string, bucketSize time.Duration, row interface{}) MultiFlakeSeriesTable {
+func (k *k) MultiFlakeSeriesTable(name, indexField, idField string, bucketSize time.Duration, row interface{}) MultiFlakeSeriesTable {
 	m, ok := toMap(row)
 	if !ok {
 		panic("Unrecognized row type")
@@ -149,6 +150,7 @@ func (k *k) MultiFlakeSeriesTable(name, indexField string, bucketSize time.Durat
 			PartitionKeys:     []string{indexField, bucketFieldName},
 			ClusteringColumns: []string{flakeTimestampFieldName, "Id"},
 		}),
+		idField:    idField,
 		bucketSize: bucketSize,
 		indexField: indexField,
 	}

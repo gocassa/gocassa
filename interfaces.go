@@ -18,8 +18,8 @@ type KeySpace interface {
 	MultimapTable(tableName, fieldToIndexBy, uniqueKey string, row interface{}) MultimapTable
 	TimeSeriesTable(tableName, timeField, uniqueKey string, bucketSize time.Duration, row interface{}) TimeSeriesTable
 	MultiTimeSeriesTable(tableName, fieldToIndexByField, timeField, uniqueKey string, bucketSize time.Duration, row interface{}) MultiTimeSeriesTable
-	FlakeSeriesTable(tableName string, bucketSize time.Duration, row interface{}) FlakeSeriesTable
-	MultiFlakeSeriesTable(tableName, indexField string, bucketSize time.Duration, row interface{}) MultiFlakeSeriesTable
+	FlakeSeriesTable(tableName, idField string, bucketSize time.Duration, row interface{}) FlakeSeriesTable
+	MultiFlakeSeriesTable(tableName, indexField, idField string, bucketSize time.Duration, row interface{}) MultiFlakeSeriesTable
 	Table(tableName string, row interface{}, keys Keys) Table
 	// DebugMode enables/disables debug mode depending on the value of the input boolean.
 	// When DebugMode is enabled, all built CQL statements are printe to stdout.

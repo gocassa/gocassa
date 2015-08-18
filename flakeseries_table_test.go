@@ -17,7 +17,7 @@ func timeToFlake(t *testing.T, time string) string {
 }
 
 func TestFlakeSeriesT(t *testing.T) {
-	tbl := ns.FlakeSeriesTable("tripFlake5", time.Minute, Trip{})
+	tbl := ns.FlakeSeriesTable("tripFlake5", "Id", time.Minute, Trip{})
 	createIf(tbl.(TableChanger), t)
 	id1 := timeToFlake(t, "2006 Jan 2 15:03:59")
 	id2 := timeToFlake(t, "2006 Jan 2 15:04:00")

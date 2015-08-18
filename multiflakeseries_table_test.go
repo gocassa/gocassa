@@ -6,7 +6,7 @@ import (
 )
 
 func TestMultiFlakeSeriesT(t *testing.T) {
-	tbl := ns.MultiFlakeSeriesTable("tripFlake6", "Tag", time.Minute, TripB{})
+	tbl := ns.MultiFlakeSeriesTable("tripFlake6", "Tag", "Id", time.Minute, TripB{})
 	createIf(tbl.(TableChanger), t)
 	id1 := timeToFlake(t, "2006 Jan 2 15:03:59")
 	id2 := timeToFlake(t, "2006 Jan 2 15:04:00")
