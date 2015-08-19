@@ -106,6 +106,7 @@ type FlakeSeriesTable interface {
 	// if the time window is zero then it lists up until 5 minutes in the future
 	ListSince(id string, window time.Duration, pointerToASlice interface{}) Op
 	WithOptions(Options) FlakeSeriesTable
+	TableChanger
 }
 
 type MultiFlakeSeriesTable interface {
@@ -118,6 +119,7 @@ type MultiFlakeSeriesTable interface {
 	// if the time window is zero then it lists up until 5 minutes in the future
 	ListSince(v interface{}, id string, window time.Duration, pointerToASlice interface{}) Op
 	WithOptions(Options) MultiFlakeSeriesTable
+	TableChanger
 }
 
 //
