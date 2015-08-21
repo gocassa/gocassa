@@ -2,6 +2,7 @@ package reflect
 
 import (
 	"github.com/gocql/gocql"
+	r "reflect"
 
 	"testing"
 )
@@ -14,114 +15,76 @@ type Tweet struct {
 }
 
 func TestStructToMap(t *testing.T) {
-	//Test that if the value is not a struct we return nil, false
-	m, ok := StructToMap("str")
-	if m != nil {
-		t.Error("map is not nil when val is a string")
-	}
-	if ok {
-		t.Error("ok result from StructToMap when the val is a string")
+	tweetUUID := gocql.TimeUUID()
 
+	empty := map[string]interface{}{
+		"Timeline":      "",
+		"id":            gocql.UUID{},
+		"teXt":          "",
+		"OriginalTweet": (*gocql.UUID)(nil),
 	}
-
-	tweet := Tweet{
-		"t",
-		gocql.TimeUUID(),
-		"hello gocassa",
-		nil,
+	withNilPointer := map[string]interface{}{
+		"Timeline":      "t",
+		"id":            gocql.UUID{},
+		"teXt":          "hello gocassa",
+		"OriginalTweet": (*gocql.UUID)(nil),
 	}
-
-	m, ok = StructToMap(tweet)
-	if !ok {
-		t.Error("ok is false for a tweet")
-	}
-
-	if m["Timeline"] != tweet.Timeline {
-		t.Errorf("Expected %s but got %s", tweet.Timeline, m["Timeline"])
+	withPointer := map[string]interface{}{
+		"Timeline":      "",
+		"id":            gocql.UUID{},
+		"teXt":          "",
+		"OriginalTweet": &tweetUUID,
 	}
 
-	if m["id"] != tweet.ID {
-		t.Errorf("Expected %s but got %s", tweet.ID, m["id"])
-	}
-	if m["teXt"] != tweet.Text {
-		t.Errorf("Expected %s but got %s", tweet.Text, m["teXt"])
-	}
-	if m["OriginalTweet"] != tweet.OriginalTweet {
-		t.Errorf("Expected %v but got %s", tweet.OriginalTweet, m["OriginalTweet"])
+	var structToMapTests = []struct {
+		in  Tweet
+		out map[string]interface{}
+	}{
+		{Tweet{}, empty},
+		{Tweet{Timeline: "t", Text: "hello gocassa"}, withNilPointer},
+		{Tweet{OriginalTweet: &tweetUUID}, withPointer},
 	}
 
-	id := gocql.TimeUUID()
-	tweet.OriginalTweet = &id
-	m, _ = StructToMap(tweet)
-	if m["OriginalTweet"] != tweet.OriginalTweet {
-		t.Errorf("Expected nil but got %s", m["OriginalTweet"])
+	for _, tt := range structToMapTests {
+		tweetMap, ok := StructToMap(tt.in)
+
+		if ok != true {
+			t.Errorf("MapToStruct(%q) =>\nGot:\t%q\nWant:\t%q", tt.in, ok, true)
+		}
+
+		if !r.DeepEqual(tweetMap, tt.out) {
+			t.Errorf("MapToStruct(%q) =>\nGot:\t%q\nWant:\t%q", tt.in, tweetMap, tt.out)
+		}
 	}
 }
 
 func TestMapToStruct(t *testing.T) {
+	type inMap map[string]interface{}
 
-	m := make(map[string]interface{})
-	assert := func() {
-		tweet := Tweet{}
-		if err := MapToStruct(m, &tweet); err != nil {
-			t.Fatal(err.Error())
-		}
-		timeline, ok := m["Timeline"]
-		if ok {
-			if timeline != tweet.Timeline {
-				t.Errorf("Expected timeline to be %s but got %s", timeline, tweet.Timeline)
-			}
-		} else {
-			if "" != tweet.Timeline {
-				t.Errorf("Expected timeline to be empty but got %s", tweet.Timeline)
-			}
-		}
-		id, ok := m["id"]
-		if ok {
-			if id != tweet.ID {
-				t.Errorf("Expected id to be %s but got %s", id, tweet.ID)
-			}
-		} else {
-			var emptyID gocql.UUID
-			if emptyID != tweet.ID {
-				t.Errorf("Expected id to be empty but got %s", tweet.ID)
-			}
-		}
-		text, ok := m["teXt"]
-		if ok {
-			if text != tweet.Text {
-				t.Errorf("Expected text to be %s but got %s", text, tweet.Text)
-			}
-		} else {
-			if "" != tweet.Text {
-				t.Errorf("Expected text to be empty but got %s", tweet.Text)
-			}
-		}
+	tweetUUID := gocql.TimeUUID()
 
-		originalTweet, ok := m["OriginalTweet"]
-		if ok {
-			if originalTweet != tweet.OriginalTweet {
-				t.Errorf("Expected original tweet to be %s but got %s",
-					originalTweet, tweet.OriginalTweet)
-			}
-		} else {
-			if nil != tweet.OriginalTweet {
-				t.Errorf("Expected original tweet to be empty but got %s",
-					tweet.OriginalTweet)
-			}
-		}
+	var mapToStructTests = []struct {
+		in  inMap
+		out Tweet
+	}{
+		{inMap{}, Tweet{}},
+		{inMap{"Timeline": "timeline"}, Tweet{Timeline: "timeline"}},
+		{inMap{"id": tweetUUID}, Tweet{ID: tweetUUID}},
+		{inMap{"text": "Hello gocassa"}, Tweet{Text: ""}},
+		{inMap{"teXt": "Hello gocassa"}, Tweet{Text: "Hello gocassa"}},
+		{inMap{"OriginalTweet": &tweetUUID}, Tweet{OriginalTweet: &tweetUUID}},
 	}
 
-	assert()
-	m["Timeline"] = "timeline"
-	assert()
-	m["id"] = gocql.TimeUUID()
-	assert()
-	m["text"] = "Hello gocassa"
-	assert()
-	id := gocql.TimeUUID()
-	m["OriginalTweet"] = &id
-	assert()
+	for _, tt := range mapToStructTests {
+		tweet := Tweet{}
+		if err := MapToStruct(tt.in, &tweet); err != nil {
+			t.Fatal(err)
+		}
+
+		if tweet != tt.out {
+			t.Errorf("MapToStruct(%q, &tweet) =>\nGot:\t%q\nWant:\t%q", tt.in, tweet, tt.out)
+		}
+	}
 }
 
 func TestFieldsAndValues(t *testing.T) {
