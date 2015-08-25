@@ -3,7 +3,6 @@ package gocassa
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"runtime"
 	"strconv"
@@ -103,7 +102,21 @@ func (o *singleOp) Run() error {
 }
 
 func (o *singleOp) RunAtomically() error {
-	return errors.New("RunAtomically() is not implemented yet")
+	return o.Run()
+}
+
+func (o *singleOp) GenerateStatement() (string, []interface{}) {
+	switch o.opType {
+	case updateOpType, insertOpType, deleteOpType:
+		return o.generateWrite(o.options)
+	case readOpType, singleReadOpType:
+		return o.generateRead(o.options)
+	}
+	return "", []interface{}{}
+}
+
+func (o *singleOp) QueryExecutor() QueryExecutor {
+	return o.qe
 }
 
 func (o *singleOp) generateWrite(opt Options) (string, []interface{}) {

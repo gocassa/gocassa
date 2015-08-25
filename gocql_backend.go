@@ -30,14 +30,15 @@ func (cb goCQLBackend) ExecuteAtomically(stmts []string, vals [][]interface{}) e
 	if len(stmts) != len(vals) {
 		return errors.New("executeBatched: stmts length != param length")
 	}
-	// THIS IS A FAKE TEMPORAL IMPLEMENTATION
-	for i, _ := range stmts {
-		err := cb.Execute(stmts[i], vals[i])
-		if err != nil {
-			return err
-		}
+
+	if len(stmts) == 0 {
+		return nil
 	}
-	return nil
+	batch := cb.session.NewBatch(gocql.LoggedBatch)
+	for i, _ := range stmts {
+		batch.Query(stmts[i], vals[i]...)
+	}
+	return cb.session.ExecuteBatch(batch)
 }
 
 // GoCQLSessionToQueryExecutor enables you to supply your own gocql session with your custom options
