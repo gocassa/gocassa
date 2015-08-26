@@ -9,6 +9,7 @@ import (
 type Tweet struct {
 	Timeline      string
 	ID            gocql.UUID  `cql:"id"`
+	Ingored       string      `cql:"-"`
 	Text          string      `teXt`
 	OriginalTweet *gocql.UUID `json:"origin"`
 }
@@ -27,6 +28,7 @@ func TestStructToMap(t *testing.T) {
 	tweet := Tweet{
 		"t",
 		gocql.TimeUUID(),
+		"ignored",
 		"hello gocassa",
 		nil,
 	}
@@ -48,6 +50,9 @@ func TestStructToMap(t *testing.T) {
 	}
 	if m["OriginalTweet"] != tweet.OriginalTweet {
 		t.Errorf("Expected %v but got %s", tweet.OriginalTweet, m["OriginalTweet"])
+	}
+	if _, ok := m["Ignore"]; ok {
+		t.Errorf("Igonred should be empty but got %s instead", m["Ignored"])
 	}
 
 	id := gocql.TimeUUID()
@@ -139,7 +144,7 @@ func TestFieldsAndValues(t *testing.T) {
 			[]interface{}{"", emptyUUID, "", nilID},
 		},
 		{
-			Tweet{"timeline1", id, "hello gocassa", &id},
+			Tweet{"timeline1", id, "ignored", "hello gocassa", &id},
 			[]string{"Timeline", "id", "teXt", "OriginalTweet"},
 			[]interface{}{"timeline1", id, "hello gocassa", &id},
 		},
