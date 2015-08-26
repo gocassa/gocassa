@@ -115,6 +115,11 @@ func TestMapToStruct(t *testing.T) {
 					tweet.OriginalTweet)
 			}
 		}
+		//Ignored should be always empty
+		if tweet.Ingored != "" {
+			t.Errorf("Expected ignored to be empty but got %s",
+				tweet.Ingored)
+		}
 	}
 
 	assert()
@@ -126,6 +131,8 @@ func TestMapToStruct(t *testing.T) {
 	assert()
 	id := gocql.TimeUUID()
 	m["OriginalTweet"] = &id
+	assert()
+	m["Ignored"] = "ignored"
 	assert()
 }
 
