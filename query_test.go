@@ -110,6 +110,37 @@ func TestMultipleRowResults(t *testing.T) {
 	}
 }
 
+func TestRunAtomically(t *testing.T) {
+	name := "customer_multipletest2"
+	cs := ns.Table(name, Customer{}, Keys{
+		PartitionKeys:     []string{"Name"},
+		ClusteringColumns: []string{"Id"},
+	})
+	err := cs.(TableChanger).Recreate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = cs.Set(Customer{
+		Id:   "12",
+		Name: "John",
+	}).Add(cs.Set(Customer{
+		Id:   "13",
+		Name: "John",
+	})).RunAtomically()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	res := []Customer{}
+	err = cs.Where(Eq("Name", "John")).Read(&res).Run()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(res) != 2 {
+		t.Fatal(res)
+	}
+}
+
 func TestIn(t *testing.T) {
 	cs := ns.Table("customer", Customer{}, Keys{
 		PartitionKeys: []string{"Id"},
