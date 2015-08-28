@@ -1,6 +1,7 @@
 package gocassa
 
 import (
+	"github.com/gocql/gocql"
 	"time"
 )
 
@@ -31,6 +32,8 @@ type Options struct {
 	TableName string
 	// ClusteringOrder specifies the clustering order during table creation. If empty, it is omitted and the defaults are used.
 	ClusteringOrder []ClusteringOrderColumn
+	// Consistency specifies the consistency level. If nil, it is considered not set
+	Consistency *gocql.Consistency
 }
 
 // Returns a new Options which is a right biased merge of the two initial Options.
@@ -53,6 +56,10 @@ func (o Options) Merge(neu Options) Options {
 	if neu.ClusteringOrder != nil {
 		ret.ClusteringOrder = neu.ClusteringOrder
 	}
+	if neu.Consistency != nil {
+		ret.Consistency = neu.Consistency
+	}
+
 	return ret
 }
 
