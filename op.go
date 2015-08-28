@@ -53,7 +53,7 @@ func newWriteOp(qe QueryExecutor, f filter, opType uint8, m map[string]interface
 
 func (w *singleOp) read() error {
 	stmt, params := w.generateRead(w.options)
-	maps, err := w.qe.Query(stmt, params...)
+	maps, err := w.qe.QueryWithOptions(w.options, stmt, params...)
 	if err != nil {
 		return err
 	}
@@ -66,7 +66,7 @@ func (w *singleOp) read() error {
 
 func (w *singleOp) readOne() error {
 	stmt, params := w.generateRead(w.options)
-	maps, err := w.qe.Query(stmt, params...)
+	maps, err := w.qe.QueryWithOptions(w.options, stmt, params...)
 	if err != nil {
 		return err
 	}
@@ -86,7 +86,7 @@ func (w *singleOp) readOne() error {
 
 func (w *singleOp) write() error {
 	stmt, params := w.generateWrite(w.options)
-	return w.qe.Execute(stmt, params...)
+	return w.qe.ExecuteWithOptions(w.options, stmt, params...)
 }
 
 func (o *singleOp) Run() error {
