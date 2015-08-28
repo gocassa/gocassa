@@ -179,8 +179,12 @@ type Table interface {
 // QueryExecutor actually executes the queries - this is mostly useful for testing/mocking purposes,
 // ignore this otherwise. This library is using github.com/gocql/gocql as the query executor by default.
 type QueryExecutor interface {
+	// Query executes a query and returns the results.  It also takes Options to do things like set consistency
+	QueryWithOptions(opts Options, stmt string, params ...interface{}) ([]map[string]interface{}, error)
 	// Query executes a query and returns the results
 	Query(stmt string, params ...interface{}) ([]map[string]interface{}, error)
+	// Execute executes a DML query. It also takes Options to do things like set consistency
+	ExecuteWithOptions(opts Options, stmt string, params ...interface{}) error
 	// Execute executes a DML query
 	Execute(stmt string, params ...interface{}) error
 	// ExecuteAtomically executs multiple DML queries with a logged batch
