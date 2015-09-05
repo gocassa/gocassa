@@ -53,6 +53,14 @@ func (m mockOp) RunAtomically() error {
 	return m.Run()
 }
 
+func (m mockOp) GenerateStatement() (string, []interface{}) {
+	return "", []interface{}{}
+}
+
+func (m mockOp) QueryExecutor() QueryExecutor {
+	return nil
+}
+
 func (m mockOp) Preflight() error {
 	return m.preflightErr
 }
