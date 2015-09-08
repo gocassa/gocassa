@@ -1,9 +1,5 @@
 package gocassa
 
-import (
-	"errors"
-)
-
 type multiOp []Op
 
 func Noop() Op {
@@ -23,7 +19,31 @@ func (mo multiOp) Run() error {
 }
 
 func (mo multiOp) RunAtomically() error {
-	return errors.New("RunAtomically() is not implemented yet")
+	if err := mo.Preflight(); err != nil {
+		return err
+	}
+	stmts := make([]string, len(mo))
+	vals := make([][]interface{}, len(mo))
+	var qe QueryExecutor
+	for i, op := range mo {
+		s, v := op.GenerateStatement()
+		qe = op.QueryExecutor()
+		stmts[i] = s
+		vals[i] = v
+	}
+
+	return qe.ExecuteAtomically(stmts, vals)
+}
+
+func (mo multiOp) GenerateStatement() (string, []interface{}) {
+	return "", []interface{}{}
+}
+
+func (mo multiOp) QueryExecutor() QueryExecutor {
+	if len(mo) == 0 {
+		return nil
+	}
+	return mo[0].QueryExecutor()
 }
 
 func (mo multiOp) Add(ops_ ...Op) Op {

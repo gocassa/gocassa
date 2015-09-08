@@ -26,7 +26,8 @@ import (
 //   PRIMARY KEY (empID, deptID)
 // );
 //
-func createTable(keySpace, cf string, partitionKeys, colKeys []string, fields []string, values []interface{}) (string, error) {
+
+func createTable(keySpace, cf string, partitionKeys, colKeys []string, fields []string, values []interface{}, order []ClusteringOrderColumn) (string, error) {
 	firstLine := fmt.Sprintf("CREATE TABLE %v.%v (", keySpace, cf)
 	fieldLines := []string{}
 	for i, _ := range fields {
@@ -41,8 +42,30 @@ func createTable(keySpace, cf string, partitionKeys, colKeys []string, fields []
 	if len(colKeys) > 0 {
 		str = "    PRIMARY KEY ((%v), %v)"
 	}
+
 	fieldLines = append(fieldLines, fmt.Sprintf(str, j(partitionKeys), j(colKeys)))
-	stmt := strings.Join([]string{firstLine, strings.Join(fieldLines, ",\n"), ");"}, "\n")
+
+	lines := []string{
+		firstLine,
+		strings.Join(fieldLines, ",\n"),
+		")",
+	}
+
+	if len(order) > 0 {
+		orderStrs := make([]string, len(order))
+		for i, o := range order {
+			dir := "ASC"
+			if o.Direction == DESC {
+				dir = "DESC"
+			}
+			orderStrs[i] = fmt.Sprintf("%v %v", o.Column, dir)
+		}
+		orderLine := fmt.Sprintf("WITH CLUSTERING ORDER BY (%v)", strings.Join(orderStrs, ", "))
+		lines = append(lines, orderLine)
+	}
+
+	lines = append(lines, ";")
+	stmt := strings.Join(lines, "\n")
 	return stmt, nil
 }
 

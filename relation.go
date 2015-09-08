@@ -49,8 +49,9 @@ func (r Relation) cql() (string, []interface{}) {
 }
 
 func anyEquals(value interface{}, terms []interface{}) bool {
+	primVal := convertToPrimitive(value)
 	for _, term := range terms {
-		if value == term {
+		if primVal == convertToPrimitive(term) {
 			return true
 		}
 	}

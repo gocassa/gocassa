@@ -168,6 +168,10 @@ type Op interface {
 	// Preflight performs any pre-execution validation that confirms the op considers itself "valid".
 	// NOTE: Run() and RunAtomically() should call this method before execution, and abort if any errors are returned.
 	Preflight() error
+	// GenerateStatement generates the statment and params to perform the operation
+	GenerateStatement() (string, []interface{})
+	// QueryExecutor returns the QueryExecutor
+	QueryExecutor() QueryExecutor
 }
 
 // Danger zone! Do not use this interface unless you really know what you are doing
