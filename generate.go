@@ -104,6 +104,24 @@ func cassaType(i interface{}) gocql.Type {
 	case Counter:
 		return gocql.TypeCounter
 	}
+
+	// Fallback to using reflection if type not recognised
+	typ := reflect.TypeOf(i)
+	switch typ.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32:
+		return gocql.TypeInt
+	case reflect.Int64:
+		return gocql.TypeBigInt
+	case reflect.String:
+		return gocql.TypeVarchar
+	case reflect.Float32:
+		return gocql.TypeFloat
+	case reflect.Float64:
+		return gocql.TypeDouble
+	case reflect.Bool:
+		return gocql.TypeBoolean
+	}
+
 	return gocql.TypeCustom
 }
 
