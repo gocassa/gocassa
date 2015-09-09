@@ -207,7 +207,6 @@ func TestAllowFiltering(t *testing.T) {
 
 	op := Options{AllowFiltering: true}
 	stAllow, _ := cs.Where(Eq("", "")).Read(&c2).WithOptions(op).GenerateStatement()
-	fmt.Printf("stAll %+v\n", stAllow)
 	if !strings.Contains(stAllow, "ALLOW FILTERING") {
 		t.Error("Allow filtering show be included in the statement")
 	}
