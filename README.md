@@ -41,7 +41,7 @@ func main() {
     if err != nil {
         panic(err)
     }
-    salesTable := keySpace.Table("sale", Sale{}, gocassa.Keys{
+    salesTable := keySpace.Table("sale", &Sale{}, gocassa.Keys{
         PartitionKeys: []string{"Id"},
     })
 
@@ -71,7 +71,7 @@ func main() {
 
 ```go
     // …
-    salesTable := keySpace.MapTable("sale", "Id", Sale{})
+    salesTable := keySpace.MapTable("sale", "Id", &Sale{})
     result := Sale{}
     salesTable.Read("sale-1", &result).Run()
 }
@@ -85,7 +85,7 @@ Read, Set, Update, and Delete all happen by "Id".
 `MultimapTable` can list rows filtered by equality of a single field (eg. list sales based on their `sellerId`):
 
 ```go
-    salesTable := keySpace.MultimapTable("sale", "SellerId", "Id", Sale{})
+    salesTable := keySpace.MultimapTable("sale", "SellerId", "Id", &Sale{})
     // …
     results := []Sale{}
     err := salesTable.List("seller-1", nil, 0, &results).Run()
@@ -99,7 +99,7 @@ For examples on how to do pagination or Update with this table, refer to the exa
 `TimeSeriesTable` provides an interface to list rows within a time interval:
 
 ```go
-    salesTable := keySpace.TimeSeriesTable("sale", "Created", "Id", Sale{}, 24 * time.Hour)
+    salesTable := keySpace.TimeSeriesTable("sale", "Created", "Id", &Sale{}, 24 * time.Hour)
     //...
     results := []Sale{}
     err := salesTable.List(yesterdayTime, todayTime, &results).Run()
@@ -110,7 +110,7 @@ For examples on how to do pagination or Update with this table, refer to the exa
 `MultiTimeSeriesTable` is like a cross between `MultimapTable` and `TimeSeriesTable`. It can list rows within a time interval, and filtered by equality of a single field. The following lists sales in a time interval, by a certain seller:
 
 ```go
-    salesTable := keySpace.MultiTimeSeriesTable("sale", "SellerId", "Created", "Id", Sale{}, 24 * time.Hour)
+    salesTable := keySpace.MultiTimeSeriesTable("sale", "SellerId", "Created", "Id", &Sale{}, 24 * time.Hour)
     //...
     results := []Sale{}
     err := salesTable.List("seller-1", yesterdayTime, todayTime, &results).Run()
