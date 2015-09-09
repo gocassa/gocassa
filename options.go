@@ -31,6 +31,8 @@ type Options struct {
 	TableName string
 	// ClusteringOrder specifies the clustering order during table creation. If empty, it is omitted and the defaults are used.
 	ClusteringOrder []ClusteringOrderColumn
+	// Indicates if allow filtering should be appeneded at the end of the query
+	AllowFiltering bool
 }
 
 // Returns a new Options which is a right biased merge of the two initial Options.
@@ -52,6 +54,9 @@ func (o Options) Merge(neu Options) Options {
 	}
 	if neu.ClusteringOrder != nil {
 		ret.ClusteringOrder = neu.ClusteringOrder
+	}
+	if neu.AllowFiltering {
+		ret.AllowFiltering = neu.AllowFiltering
 	}
 	return ret
 }

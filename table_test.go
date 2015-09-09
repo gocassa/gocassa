@@ -191,3 +191,24 @@ func TestCreateStatement(t *testing.T) {
 		t.Fatal(str)
 	}
 }
+func TestAllowFiltering(t *testing.T) {
+	name := "allow_filtering"
+	cs := ns.Table(name, Customer2{}, Keys{
+		PartitionKeys:     []string{"Name"},
+		ClusteringColumns: []string{"Tag", "Id"},
+	})
+	createIf(cs, t)
+	c2 := Customer2{}
+	//This shouldn't contain allow filtering
+	st, _ := cs.Where(Eq("Name", "Brian")).Read(&c2).GenerateStatement()
+	if strings.Contains(st, "ALLOW FILTERING") {
+		t.Error("Allow filtering should be disabled by default")
+	}
+
+	op := Options{AllowFiltering: true}
+	stAllow, _ := cs.Where(Eq("", "")).Read(&c2).WithOptions(op).GenerateStatement()
+	fmt.Printf("stAll %+v\n", stAllow)
+	if !strings.Contains(stAllow, "ALLOW FILTERING") {
+		t.Error("Allow filtering show be included in the statement")
+	}
+}
