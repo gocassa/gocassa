@@ -191,6 +191,7 @@ func TestCreateStatement(t *testing.T) {
 		t.Fatal(str)
 	}
 }
+
 func TestAllowFiltering(t *testing.T) {
 	name := "allow_filtering"
 	cs := ns.Table(name, Customer2{}, Keys{
@@ -209,5 +210,59 @@ func TestAllowFiltering(t *testing.T) {
 	stAllow, _ := cs.Where(Eq("", "")).Read(&c2).WithOptions(op).GenerateStatement()
 	if !strings.Contains(stAllow, "ALLOW FILTERING") {
 		t.Error("Allow filtering show be included in the statement")
+	}
+}
+
+func TestKeysCreation(t *testing.T) {
+	cs := ns.Table("composite_keys", Customer{}, Keys{
+		PartitionKeys: []string{"Id", "Name"},
+	})
+	str, err := cs.CreateStatement()
+	if err != nil {
+		t.Fatal(err)
+	}
+	//composite
+	if !strings.Contains(str, "PRIMARY KEY ((id, name ))") {
+		t.Fatal(str)
+	}
+
+	cs = ns.Table("compound_keys", Customer{}, Keys{
+		PartitionKeys: []string{"Id", "Name"},
+		Compound:      true,
+	})
+	str, err = cs.CreateStatement()
+	if err != nil {
+		t.Fatal(err)
+	}
+	//compound
+	if !strings.Contains(str, "PRIMARY KEY (id, name )") {
+		t.Fatal(str)
+	}
+
+	cs = ns.Table("clustering_keys", Customer{}, Keys{
+		PartitionKeys:     []string{"Id"},
+		ClusteringColumns: []string{"Name"},
+	})
+	str, err = cs.CreateStatement()
+	if err != nil {
+		t.Fatal(err)
+	}
+	//with columns
+	if !strings.Contains(str, "PRIMARY KEY ((id), name)") {
+		t.Fatal(str)
+	}
+	//compound gets ignored when using clustering columns
+	cs = ns.Table("clustering_keys", Customer{}, Keys{
+		PartitionKeys:     []string{"Id"},
+		ClusteringColumns: []string{"Name"},
+		Compound:          true,
+	})
+	str, err = cs.CreateStatement()
+	if err != nil {
+		t.Fatal(err)
+	}
+	//with columns
+	if !strings.Contains(str, "PRIMARY KEY ((id), name)") {
+		t.Fatal(str)
 	}
 }
