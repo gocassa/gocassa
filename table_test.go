@@ -191,3 +191,56 @@ func TestCreateStatement(t *testing.T) {
 		t.Fatal(str)
 	}
 }
+func TestKeysCreation(t *testing.T) {
+	cs := ns.Table("composite_keys", Customer{}, Keys{
+		PartitionKeys: []string{"Id", "Name"},
+	})
+	str, err := cs.CreateStatement()
+	if err != nil {
+		t.Fatal(err)
+	}
+	//composite
+	if !strings.Contains(str, "PRIMARY KEY ((id, name ))") {
+		t.Fatal(str)
+	}
+
+	cs = ns.Table("compound_keys", Customer{}, Keys{
+		PartitionKeys: []string{"Id", "Name"},
+		Compound:      true,
+	})
+	str, err = cs.CreateStatement()
+	if err != nil {
+		t.Fatal(err)
+	}
+	//compound
+	if !strings.Contains(str, "PRIMARY KEY (id, name )") {
+		t.Fatal(str)
+	}
+
+	cs = ns.Table("clustering_keys", Customer{}, Keys{
+		PartitionKeys:     []string{"Id"},
+		ClusteringColumns: []string{"Name"},
+	})
+	str, err = cs.CreateStatement()
+	if err != nil {
+		t.Fatal(err)
+	}
+	//with columns
+	if !strings.Contains(str, "PRIMARY KEY ((id), name)") {
+		t.Fatal(str)
+	}
+	//compound gets ignored when using clustering columns
+	cs = ns.Table("clustering_keys", Customer{}, Keys{
+		PartitionKeys:     []string{"Id"},
+		ClusteringColumns: []string{"Name"},
+		Compound:          true,
+	})
+	str, err = cs.CreateStatement()
+	if err != nil {
+		t.Fatal(err)
+	}
+	//with columns
+	if !strings.Contains(str, "PRIMARY KEY ((id), name)") {
+		t.Fatal(str)
+	}
+}
