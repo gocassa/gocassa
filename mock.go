@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"sync"
 
 	"github.com/gocql/gocql"
 	"github.com/google/btree"
@@ -83,6 +84,7 @@ func NewMockKeySpace() KeySpace {
 // MockTable implements the Table interface and stores rows in-memory.
 type MockTable struct {
 	// rows is mapping from row key to column group key to column map
+	mtx     sync.RWMutex
 	name    string
 	rows    map[rowKey]*btree.BTree
 	entity  interface{}
@@ -199,6 +201,8 @@ func (t *MockTable) Name() string {
 }
 
 func (t *MockTable) getOrCreateRow(rowKey *keyPart) *btree.BTree {
+	t.mtx.Lock()
+	defer t.mtx.Unlock()
 	row := t.rows[rowKey.RowKey()]
 	if row == nil {
 		row = btree.New(2)
@@ -381,6 +385,8 @@ func (f *MockFilter) Delete() Op {
 			return err
 		}
 
+		f.table.mtx.Lock()
+		defer f.table.mtx.Unlock()
 		for _, rowKey := range rowKeys {
 			row := f.table.rows[rowKey.RowKey()]
 			if row == nil {
@@ -408,6 +414,8 @@ func (q *MockFilter) Read(out interface{}) Op {
 			return err
 		}
 
+		q.table.mtx.RLock()
+		defer q.table.mtx.RUnlock()
 		var result []map[string]interface{}
 		for _, rowKey := range rowKeys {
 			row := q.table.rows[rowKey.RowKey()]
