@@ -165,6 +165,10 @@ func (o *singleOp) generateRead(opt Options) (string, []interface{}) {
 		buf.WriteString(lim)
 		vals = append(vals, lv...)
 	}
+	if opt.AllowFiltering {
+		buf.WriteString(" ")
+		buf.WriteString("ALLOW FILTERING")
+	}
 	if o.f.t.keySpace.debugMode {
 		fmt.Println(buf.String(), vals)
 	}
