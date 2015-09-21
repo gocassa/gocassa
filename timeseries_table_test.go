@@ -52,7 +52,7 @@ func TestTimeSeriesT(t *testing.T) {
 }
 
 func TestOptions(t *testing.T) {
-	tbl := ns.TimeSeriesTable("tripTime6", "Time", "Id", time.Hour, Trip{})
+	tbl := ns.TimeSeriesTable("tripTime6", "Time", "Id", 2*time.Hour, Trip{})
 	createIf(tbl.(TableChanger), t)
 	start := time.Now().Truncate(time.Second)
 	end := start
@@ -63,7 +63,7 @@ func TestOptions(t *testing.T) {
 			Time: tim,
 		}
 		require.NoError(t, tbl.Set(i).Run())
-		tim = tim.Add(24 * time.Hour)
+		tim = tim.Add(time.Minute)
 	}
 	res := []Trip{}
 	require.NoError(t, tbl.List(start, end, &res).Run())
