@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"runtime"
 	"strconv"
+	"strings"
 )
 
 const (
@@ -151,17 +152,17 @@ func (o *singleOp) generateRead(opt Options) (string, []interface{}) {
 	buf := new(bytes.Buffer)
 	buf.WriteString(stmt)
 	if w != "" {
-		buf.WriteString(" ")
+		buf.WriteRune(' ')
 		buf.WriteString(w)
 		vals = append(vals, wv...)
 	}
 	if ord != "" {
-		buf.WriteString(" ")
+		buf.WriteRune(' ')
 		buf.WriteString(ord)
 		vals = append(vals, ov...)
 	}
 	if lim != "" {
-		buf.WriteString(" ")
+		buf.WriteRune(' ')
 		buf.WriteString(lim)
 		vals = append(vals, lv...)
 	}
@@ -172,8 +173,24 @@ func (o *singleOp) generateRead(opt Options) (string, []interface{}) {
 }
 
 func (o *singleOp) generateOrderBy() (string, []interface{}) {
-	return "", []interface{}{}
-	// " ORDER BY %v"
+	buf := new(bytes.Buffer)
+	for i, ord := range o.options.ClusteringOrder {
+		if i == 0 {
+			buf.WriteString("ORDER BY ")
+		} else {
+			buf.WriteString(", ")
+		}
+		// Since the column name cannot appear in the bind parameters, we have to inline it into the query. CQL allows
+		// quoted identifiers for this. Since the quoted identifier is delimited by "", we can escape any *contained "
+		// character by replacing it with "". :mindblown:
+		buf.WriteRune('"')
+		buf.WriteString(strings.Replace(ord.Column, `"`, `""`, -1))
+		buf.WriteRune('"')
+		if ord.Direction == DESC {
+			buf.WriteString(" DESC")
+		}
+	}
+	return buf.String(), []interface{}{}
 }
 
 func (o *singleOp) generateLimit(opt Options) (string, []interface{}) {
