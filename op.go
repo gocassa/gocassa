@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"runtime"
 	"strconv"
+	"strings"
 )
 
 const (
@@ -179,7 +180,12 @@ func (o *singleOp) generateOrderBy() (string, []interface{}) {
 		} else {
 			buf.WriteString(", ")
 		}
-		buf.WriteString(ord.Column)
+		// Since the column name cannot appear in the bind parameters, we have to inline it into the query. CQL allows
+		// quoted identifiers for this. Since the quoted identifier is delimited by "", we can escape any *contained "
+		// character by replacing it with "". :mindblown:
+		buf.WriteRune('"')
+		buf.WriteString(strings.Replace(ord.Column, `"`, `""`, -1))
+		buf.WriteRune('"')
 		if ord.Direction == DESC {
 			buf.WriteString(" DESC")
 		}
