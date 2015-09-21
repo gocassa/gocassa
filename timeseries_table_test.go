@@ -82,11 +82,4 @@ func TestOptions(t *testing.T) {
 	require.NoError(t, listOp.WithOptions(Options{Limit: 4}).Add(listOp1.WithOptions(Options{Limit: 5})).WithOptions(Options{Limit: 6}).Run())
 	assert.Len(t, res, 6)
 	assert.Len(t, res1, 6)
-
-	// Test ordering
-	opts := (Options{}).AppendClusteringOrder("time", DESC)
-	require.NoError(t, tbl.List(start, end, &res).WithOptions(opts).Run())
-	assert.Len(t, res, 10)
-	assert.True(t, start.Equal(res[len(res)-1].Time))
-	assert.True(t, end.Equal(res[0].Time), res[0].Time.String())
 }
