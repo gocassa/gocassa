@@ -16,6 +16,7 @@ type Connection interface {
 type KeySpace interface {
 	MapTable(tableName, id string, row interface{}) MapTable
 	MultimapTable(tableName, fieldToIndexBy, uniqueKey string, row interface{}) MultimapTable
+	MultimapMultiKeyTable(tableName string, fieldToIndexBy, uniqueKey []string, row interface{}) MultimapMkTable
 	TimeSeriesTable(tableName, timeField, uniqueKey string, bucketSize time.Duration, row interface{}) TimeSeriesTable
 	MultiTimeSeriesTable(tableName, fieldToIndexByField, timeField, uniqueKey string, bucketSize time.Duration, row interface{}) MultiTimeSeriesTable
 	Table(tableName string, row interface{}, keys Keys) Table
@@ -59,6 +60,19 @@ type MultimapTable interface {
 	Read(v, id, pointer interface{}) Op
 	MultiRead(v interface{}, ids []interface{}, pointerToASlice interface{}) Op
 	WithOptions(Options) MultimapTable
+	TableChanger
+}
+
+// MultimapMkTable lets you list rows based on a field equality, eg. 'list all sales where seller id = v'.
+type MultimapMkTable interface {
+	Set(v interface{}) Op
+	Update(v, id map[string]interface{}, m map[string]interface{}) Op
+	Delete(v, id map[string]interface{}) Op
+	DeleteAll(v map[string]interface{}) Op
+	List(v, startId map[string]interface{}, limit int, pointerToASlice interface{}) Op
+	Read(v, id map[string]interface{}, pointer interface{}) Op
+	MultiRead(v map[string]interface{}, ids map[string][]interface{}, pointerToASlice interface{}) Op
+	WithOptions(Options) MultimapMkTable
 	TableChanger
 }
 
