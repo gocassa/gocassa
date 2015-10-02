@@ -63,7 +63,7 @@ type MultimapTable interface {
 	TableChanger
 }
 
-// MultimapMkTable lets you list rows based on a field equality, eg. 'list all sales where seller id = v'.
+// MultimapMkTable lets you list rows based on several fields equality, eg. 'list all sales where seller id = v and name = 'john'.
 type MultimapMkTable interface {
 	Set(v interface{}) Op
 	Update(v, id map[string]interface{}, m map[string]interface{}) Op
@@ -71,7 +71,7 @@ type MultimapMkTable interface {
 	DeleteAll(v map[string]interface{}) Op
 	List(v, startId map[string]interface{}, limit int, pointerToASlice interface{}) Op
 	Read(v, id map[string]interface{}, pointer interface{}) Op
-	MultiRead(v map[string]interface{}, ids map[string][]interface{}, pointerToASlice interface{}) Op
+	MultiRead(v map[string]interface{}, ids []interface{}, pointerToASlice interface{}) Op
 	WithOptions(Options) MultimapMkTable
 	TableChanger
 }

@@ -22,10 +22,10 @@ func (mm *multimapMkT) Read(field, id map[string]interface{}, pointer interface{
 	return mm.Where(mm.ListOfEqualRelations(field, id)...).ReadOne(pointer)
 }
 
-func (mm *multimapMkT) MultiRead(field map[string]interface{}, ids map[string][]interface{}, pointerToASlice interface{}) Op {
+func (mm *multimapMkT) MultiRead(field map[string]interface{}, ids []interface{}, pointerToASlice interface{}) Op {
 	relations := make([]Relation, 0)
 	relations = append(relations, mm.ListOfEqualRelations(field, nil)...)
-	relations = append(relations, mm.ListOfInRelations(nil, ids)...)
+	relations = append(relations, In(mm.idField[0], ids...))
 	return mm.Where(relations...).Read(pointerToASlice)
 }
 
