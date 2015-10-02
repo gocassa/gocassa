@@ -22,10 +22,9 @@ func (mm *multimapMkT) Read(field, id map[string]interface{}, pointer interface{
 	return mm.Where(mm.ListOfEqualRelations(field, id)...).ReadOne(pointer)
 }
 
-func (mm *multimapMkT) MultiRead(field map[string]interface{}, ids []interface{}, pointerToASlice interface{}) Op {
+func (mm *multimapMkT) MultiRead(field map[string]interface{}, pointerToASlice interface{}) Op {
 	relations := make([]Relation, 0)
 	relations = append(relations, mm.ListOfEqualRelations(field, nil)...)
-	relations = append(relations, In(mm.idField[0], ids...))
 	return mm.Where(relations...).Read(pointerToASlice)
 }
 
@@ -54,14 +53,14 @@ func (mm *multimapMkT) ListOfEqualRelations(fieldsToIndex, ids map[string]interf
 	relations := make([]Relation, 0)
 
 	for _, field := range mm.fieldsToIndexBy {
-		if value := fieldsToIndex[field]; value != "" {
+		if value := fieldsToIndex[field]; value != nil && value != "" {
 			relation := Eq(field, value)
 			relations = append(relations, relation)
 		}
 	}
 
 	for _, field := range mm.idField {
-		if value := ids[field]; value != "" {
+		if value := ids[field]; value != nil && value != "" {
 			relation := Eq(field, value)
 			relations = append(relations, relation)
 		}
@@ -75,14 +74,14 @@ func (mm *multimapMkT) ListOfInRelations(fieldsToIndex, ids map[string][]interfa
 	relations := make([]Relation, 0)
 
 	for _, field := range mm.fieldsToIndexBy {
-		if value := fieldsToIndex[field]; len(value) > 0 {
+		if value := fieldsToIndex[field]; value != nil && len(value) > 0 {
 			relation := In(field, value)
 			relations = append(relations, relation)
 		}
 	}
 
 	for _, field := range mm.idField {
-		if value := ids[field]; len(value) > 0 {
+		if value := ids[field]; value != nil && len(value) > 0 {
 			relation := In(field, value)
 			relations = append(relations, relation)
 		}

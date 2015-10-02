@@ -60,6 +60,7 @@ type MultimapTable interface {
 	Read(v, id, pointer interface{}) Op
 	MultiRead(v interface{}, ids []interface{}, pointerToASlice interface{}) Op
 	WithOptions(Options) MultimapTable
+	GetTable() Table
 	TableChanger
 }
 
@@ -71,7 +72,7 @@ type MultimapMkTable interface {
 	DeleteAll(v map[string]interface{}) Op
 	List(v, startId map[string]interface{}, limit int, pointerToASlice interface{}) Op
 	Read(v, id map[string]interface{}, pointer interface{}) Op
-	MultiRead(v map[string]interface{}, ids []interface{}, pointerToASlice interface{}) Op
+	MultiRead(v map[string]interface{}, pointerToASlice interface{}) Op
 	WithOptions(Options) MultimapMkTable
 	TableChanger
 }
