@@ -33,6 +33,7 @@ type Options struct {
 	ClusteringOrder []ClusteringOrderColumn
 	// Indicates if allow filtering should be appeneded at the end of the query
 	AllowFiltering bool
+	Select         []string
 }
 
 // Returns a new Options which is a right biased merge of the two initial Options.
@@ -42,6 +43,7 @@ func (o Options) Merge(neu Options) Options {
 		Limit:           o.Limit,
 		TableName:       o.TableName,
 		ClusteringOrder: o.ClusteringOrder,
+		Select:          o.Select,
 	}
 	if neu.TTL != time.Duration(0) {
 		ret.TTL = neu.TTL
@@ -57,6 +59,9 @@ func (o Options) Merge(neu Options) Options {
 	}
 	if neu.AllowFiltering {
 		ret.AllowFiltering = neu.AllowFiltering
+	}
+	if len(neu.Select) > 0 {
+		ret.Select = neu.Select
 	}
 	return ret
 }
