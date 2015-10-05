@@ -474,3 +474,19 @@ func TestNoop(t *testing.T) {
 		t.Fatal(c)
 	}
 }
+
+func TestSelect(t *testing.T) {
+	tbl := ns.MapTable("customerSelectFields", "Id", Customer3{})
+	createIf(tbl.(TableChanger), t)
+	if err := tbl.Set(newCustomer3()).Run(); err != nil {
+		t.Fatal(err)
+	}
+	c := Customer3{}
+	fields := []string{"int"}
+	if err := tbl.Read("1", &c).WithOptions(Options{Select: fields}).Run(); err != nil {
+		t.Fatal(err)
+	}
+	if c.Float32 != 0 {
+		t.Fatal(c)
+	}
+}
