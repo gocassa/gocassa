@@ -1,7 +1,6 @@
 package gocassa
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
@@ -31,11 +30,7 @@ func (r Relation) cql() (string, []interface{}) {
 		ret = key + " = ?"
 	case in:
 		// Ideally the above code should work.
-		qs := []string{}
-		for i := 0; i < len(r.terms); i++ {
-			qs = append(qs, "?")
-		}
-		return fmt.Sprintf(key+" IN (%s)", strings.Join(qs, ", ")), r.terms
+		return key + " IN ?", r.terms
 	case greaterThan:
 		ret = key + " > ?"
 	case greaterThanOrEquals:
