@@ -29,7 +29,6 @@ func (r Relation) cql() (string, []interface{}) {
 	case equality:
 		ret = key + " = ?"
 	case in:
-		// Ideally the above code should work.
 		return key + " IN ?", r.terms
 	case greaterThan:
 		ret = key + " > ?"
