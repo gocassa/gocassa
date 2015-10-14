@@ -156,15 +156,15 @@ func TestIn(t *testing.T) {
 		t.Fatal(err)
 	}
 	res := []Customer{}
-	err = cs.Where(In("Id", "100", "200")).Read(&res).Run()
-	if len(res) != 2 {
-		for _, v := range res {
-			fmt.Println(v)
+	ids := [][]interface{}{[]interface{}{"100"}, []interface{}{"100", "200"}}
+	for _, v := range ids {
+		err = cs.Where(In("Id", v...)).Read(&res).Run()
+		if len(res) != len(v) {
+			for _, v := range res {
+				fmt.Println(v)
+			}
+			t.Fatal("Not found", res, v)
 		}
-		t.Fatal("Not found", res)
-	}
-	if res[0].Id != "100" || res[1].Id != "200" {
-		t.Fatal(res[0], res[1])
 	}
 }
 
