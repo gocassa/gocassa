@@ -159,7 +159,7 @@ func TestIn(t *testing.T) {
 	ids := [][]interface{}{[]interface{}{"100"}, []interface{}{"100", "200"}}
 	for _, v := range ids {
 		err = cs.Where(In("Id", v...)).Read(&res).Run()
-		if len(res) != 2 {
+		if len(res) != len(v) {
 			for _, v := range res {
 				fmt.Println(v)
 			}

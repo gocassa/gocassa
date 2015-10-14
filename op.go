@@ -202,11 +202,11 @@ func generateWhere(rs []Relation) (string, []interface{}) {
 			}
 			s, v := r.cql()
 			buf.WriteString(s)
-			if len(v) == 1 {
-				vals = append(vals, v[0])
-			} else {
+			if r.op == in {
 				vals = append(vals, v)
+				continue
 			}
+			vals = append(vals, v...)
 		}
 	}
 	return buf.String(), vals
