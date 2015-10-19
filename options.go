@@ -27,12 +27,14 @@ type Options struct {
 	TTL time.Duration
 	// Limit query result set
 	Limit int
-	// TableName
+	// TableName overrides the default internal table name. When naming a table 'users' the internal table name becomes 'users_someTableSpecificMetaInformation'.
 	TableName string
 	// ClusteringOrder specifies the clustering order during table creation. If empty, it is omitted and the defaults are used.
 	ClusteringOrder []ClusteringOrderColumn
-	// Indicates if allow filtering should be appeneded at the end of the query
+	// Indicates if allow filtering should be appended at the end of the query
 	AllowFiltering bool
+	// Select allows you to do partial reads, ie. retrieve only a subset of fields
+	Select []string
 }
 
 // Returns a new Options which is a right biased merge of the two initial Options.
@@ -42,6 +44,7 @@ func (o Options) Merge(neu Options) Options {
 		Limit:           o.Limit,
 		TableName:       o.TableName,
 		ClusteringOrder: o.ClusteringOrder,
+		Select:          o.Select,
 	}
 	if neu.TTL != time.Duration(0) {
 		ret.TTL = neu.TTL
@@ -57,6 +60,9 @@ func (o Options) Merge(neu Options) Options {
 	}
 	if neu.AllowFiltering {
 		ret.AllowFiltering = neu.AllowFiltering
+	}
+	if len(neu.Select) > 0 {
+		ret.Select = neu.Select
 	}
 	return ret
 }
