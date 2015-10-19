@@ -43,6 +43,7 @@ type MapTable interface {
 	Read(id, pointer interface{}) Op
 	MultiRead(ids []interface{}, pointerToASlice interface{}) Op
 	WithOptions(Options) MapTable
+	GetTable() Table
 	TableChanger
 }
 
@@ -74,6 +75,7 @@ type MultimapMkTable interface {
 	Read(v, id map[string]interface{}, pointer interface{}) Op
 	MultiRead(v map[string]interface{}, pointerToASlice interface{}) Op
 	WithOptions(Options) MultimapMkTable
+	GetTable() Table
 	TableChanger
 }
 
@@ -90,6 +92,7 @@ type TimeSeriesTable interface {
 	Read(timeStamp time.Time, id, pointer interface{}) Op
 	List(start, end time.Time, pointerToASlice interface{}) Op
 	WithOptions(Options) TimeSeriesTable
+	GetTable() Table
 	TableChanger
 }
 
@@ -106,6 +109,7 @@ type MultiTimeSeriesTable interface {
 	Read(v interface{}, timeStamp time.Time, id, pointer interface{}) Op
 	List(v interface{}, start, end time.Time, pointerToASlice interface{}) Op
 	WithOptions(Options) MultiTimeSeriesTable
+	GetTable() Table
 	TableChanger
 }
 

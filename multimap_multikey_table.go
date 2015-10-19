@@ -89,3 +89,6 @@ func (mm *multimapMkT) ListOfInRelations(fieldsToIndex, ids map[string][]interfa
 
 	return relations
 }
+func (mm *multimapMkT) GetTable() Table {
+	return mm.Table
+}
