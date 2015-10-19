@@ -25,6 +25,7 @@ func (mm *multimapMkT) Read(field, id map[string]interface{}, pointer interface{
 func (mm *multimapMkT) MultiRead(field map[string]interface{}, pointerToASlice interface{}) Op {
 	relations := make([]Relation, 0)
 	relations = append(relations, mm.ListOfEqualRelations(field, nil)...)
+
 	return mm.Where(relations...).Read(pointerToASlice)
 }
 
