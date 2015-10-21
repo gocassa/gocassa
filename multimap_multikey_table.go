@@ -22,11 +22,8 @@ func (mm *multimapMkT) Read(field, id map[string]interface{}, pointer interface{
 	return mm.Where(mm.ListOfEqualRelations(field, id)...).ReadOne(pointer)
 }
 
-func (mm *multimapMkT) MultiRead(field map[string]interface{}, pointerToASlice interface{}) Op {
-	relations := make([]Relation, 0)
-	relations = append(relations, mm.ListOfEqualRelations(field, nil)...)
-
-	return mm.Where(relations...).Read(pointerToASlice)
+func (mm *multimapMkT) MultiRead(field, id map[string]interface{}, pointerToASlice interface{}) Op {
+	return mm.Where(mm.ListOfEqualRelations(field, id)...).Read(pointerToASlice)
 }
 
 func (mm *multimapMkT) List(field, startId map[string]interface{}, limit int, pointerToASlice interface{}) Op {
