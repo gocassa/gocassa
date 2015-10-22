@@ -27,7 +27,3 @@ func (m *mapT) WithOptions(o Options) MapTable {
 		idField: m.idField,
 	}
 }
-
-func (mm *mapT) GetTable() Table {
-	return mm.Table
-}
