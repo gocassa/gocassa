@@ -86,6 +86,21 @@ func (k *k) MultimapTable(name, fieldToIndexBy, id string, row interface{}) Mult
 	}
 }
 
+func (k *k) MultimapMultiKeyTable(name string, fieldToIndexBy, id []string, row interface{}) MultimapMkTable {
+	m, ok := toMap(row)
+	if !ok {
+		panic("Unrecognized row type")
+	}
+	return &multimapMkT{
+		Table: k.NewTable(fmt.Sprintf("%s_multimapMk", name), row, m, Keys{
+			PartitionKeys:     fieldToIndexBy,
+			ClusteringColumns: id,
+		}),
+		idField:         id,
+		fieldsToIndexBy: fieldToIndexBy,
+	}
+}
+
 func (k *k) TimeSeriesTable(name, timeField, idField string, bucketSize time.Duration, row interface{}) TimeSeriesTable {
 	m, ok := toMap(row)
 	if !ok {
