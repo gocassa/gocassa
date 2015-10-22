@@ -66,6 +66,3 @@ func (o *multiTimeSeriesT) WithOptions(opt Options) MultiTimeSeriesTable {
 		bucketSize: o.bucketSize,
 	}
 }
-func (mm *multiTimeSeriesT) GetTable() Table {
-	return mm.Table
-}

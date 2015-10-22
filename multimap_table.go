@@ -41,7 +41,3 @@ func (mm *multimapT) WithOptions(o Options) MultimapTable {
 		idField:        mm.idField,
 	}
 }
-
-func (mm *multimapT) GetTable() Table {
-	return mm.Table
-}
