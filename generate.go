@@ -27,8 +27,8 @@ import (
 // );
 //
 
-func createTable(keySpace, cf string, partitionKeys, colKeys []string, fields []string, values []interface{}, order []ClusteringOrderColumn) (string, error) {
-	firstLine := fmt.Sprintf("CREATE TABLE %v.%v (", keySpace, cf)
+func createTable(keySpace, cf string, partitionKeys, colKeys []string, fields []string, values []interface{}, order []ClusteringOrderColumn, compact bool, compressor string) (string, error) {
+	firstLine := fmt.Sprintf("CREATE TABLE \"%v\".\"%v\" (", keySpace, cf)
 	fieldLines := []string{}
 	for i, _ := range fields {
 		typeStr, err := stringTypeOf(values[i])
@@ -60,10 +60,15 @@ func createTable(keySpace, cf string, partitionKeys, colKeys []string, fields []
 			}
 			orderStrs[i] = fmt.Sprintf("%v %v", o.Column, dir)
 		}
-		orderLine := fmt.Sprintf("WITH CLUSTERING ORDER BY (%v)", strings.Join(orderStrs, ", "))
+		properties := "WITH"
+		if compact {
+			properties = "WITH COMPACT STORAGE AND"
+		}
+		orderLine := fmt.Sprintf("%v CLUSTERING ORDER BY (%v)", properties, strings.Join(orderStrs, ", "))
 		lines = append(lines, orderLine)
 	}
-
+	compressionLine := fmt.Sprintf("AND compression = {'sstable_compression': '%v'}", compressor)
+	lines = append(lines, compressionLine)
 	lines = append(lines, ";")
 	stmt := strings.Join(lines, "\n")
 	return stmt, nil

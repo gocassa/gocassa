@@ -142,7 +142,7 @@ func insertStatement(keySpaceName, cfName string, fieldNames []string, opts Opti
 
 	buf := new(bytes.Buffer)
 	buf.WriteString(fmt.Sprintf("INSERT INTO %s.%s (%s) VALUES (%s)",
-		keySpaceName,
+		"\"" + keySpaceName + "\"",
 		cfName,
 		strings.Join(lowerFieldNames, ", "),
 		strings.Join(placeHolders, ", ")))
@@ -203,6 +203,8 @@ func (t t) CreateStatement() (string, error) {
 		t.info.fields,
 		t.info.fieldValues,
 		t.options.ClusteringOrder,
+		t.options.CompactStorage,
+		t.options.Compressor,
 	)
 }
 

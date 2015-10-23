@@ -35,6 +35,10 @@ type Options struct {
 	AllowFiltering bool
 	// Select allows you to do partial reads, ie. retrieve only a subset of fields
 	Select []string
+	// Setting CompactStorage to true enables table creation with compact storage
+	CompactStorage bool
+	// Compressor specifies the compressor (if any) to use on a newly created table
+	Compressor     string
 }
 
 // Returns a new Options which is a right biased merge of the two initial Options.
@@ -45,6 +49,8 @@ func (o Options) Merge(neu Options) Options {
 		TableName:       o.TableName,
 		ClusteringOrder: o.ClusteringOrder,
 		Select:          o.Select,
+		CompactStorage:  o.CompactStorage,
+		Compressor:			 o.Compressor,
 	}
 	if neu.TTL != time.Duration(0) {
 		ret.TTL = neu.TTL
@@ -63,6 +69,12 @@ func (o Options) Merge(neu Options) Options {
 	}
 	if len(neu.Select) > 0 {
 		ret.Select = neu.Select
+	}
+	if neu.CompactStorage {
+		ret.CompactStorage = neu.CompactStorage
+	}
+	if neu.Compressor != "" {
+		ret.Compressor = neu.Compressor
 	}
 	return ret
 }
