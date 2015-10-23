@@ -14,7 +14,7 @@ For docs, see: [https://godoc.org/github.com/hailocab/gocassa](https://godoc.org
 
 Gocassa provides multiple table types with their own unique interfaces:
 - a raw CQL table called simply `Table` - this lets you do pretty much any query imaginable
-- and a number of single purpose 'recipe' tables (`Map`, `Multimap`, `TimeSeries`, `MultiTimeSeries`), which aims to help the user by having a simplified interface tailored to a given common query use case
+- and a number of single purpose 'recipe' tables (`Map`, `Multimap`, `TimeSeries`, `MultiTimeSeries`, `MultiMapMultiKey`), which aims to help the user by having a simplified interface tailored to a given common query use case
 
 ##### `Table`
 
@@ -114,6 +114,32 @@ For examples on how to do pagination or Update with this table, refer to the exa
     //...
     results := []Sale{}
     err := salesTable.List("seller-1", yesterdayTime, todayTime, &results).Run()
+```
+
+
+##### `MultiMapMultiKey`
+
+`MultiMapMultiKey` can perform CRUD operations on rows filtered by equality of multiple fields (eg. read sales based on their `sellerId`, `city` and `Id` of the sale):
+
+```go
+    salePartitionKeys := []Sale{"City"}
+    saleClusteringKeys := []Sale{"SellerId","Id"}
+    salesTable := keySpace.MultiMapMultiKey("sale", salePartitionKeys, saleClusteringKeys, Sale{})
+    // …
+    results := []Sale{}
+    saleFieldCity = salePartitionKeys[0]
+    saleFieldSellerId = saleClusteringKeys[0]
+    saleFieldSaleId = saleClusteringKeys[1]
+
+    field := make(map[string]interface{})
+    id := make(map[string]interface{})
+
+
+    field[saleFieldCity] = "London"
+    id[saleFieldSellerId] = "141-dasf1-124"
+    id[saleFieldSaleId] = "512hha232"
+
+    err := salesTable.MultiRead(field, id , &results).Run()
 ```
 
 ##### Rough edges
