@@ -126,7 +126,7 @@ For examples on how to do pagination or Update with this table, refer to the exa
     saleClusteringKeys := []Sale{"SellerId","Id"}
     salesTable := keySpace.MultiMapMultiKey("sale", salePartitionKeys, saleClusteringKeys, Sale{})
     // …
-    results := Sale{}
+    result := Sale{}
     saleFieldCity = salePartitionKeys[0]
     saleFieldSellerId = saleClusteringKeys[0]
     saleFieldSaleId = saleClusteringKeys[1]
@@ -139,7 +139,7 @@ For examples on how to do pagination or Update with this table, refer to the exa
     id[saleFieldSellerId] = "141-dasf1-124"
     id[saleFieldSaleId] = "512hha232"
 
-    err := salesTable.Read(field, id , &results).Run()
+    err := salesTable.Read(field, id , &result).Run()
 ```
 
 ##### Rough edges
