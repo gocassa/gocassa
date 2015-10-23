@@ -119,14 +119,14 @@ For examples on how to do pagination or Update with this table, refer to the exa
 
 ##### `MultiMapMultiKey`
 
-`MultiMapMultiKey` can perform CRUD operations on rows filtered by equality of multiple fields (eg. read sales based on their `sellerId`, `city` and `Id` of the sale):
+`MultiMapMultiKey` can perform CRUD operations on rows filtered by equality of multiple fields (eg. read a sale based on their `city` , `sellerId` and `Id` of the sale):
 
 ```go
     salePartitionKeys := []Sale{"City"}
     saleClusteringKeys := []Sale{"SellerId","Id"}
     salesTable := keySpace.MultiMapMultiKey("sale", salePartitionKeys, saleClusteringKeys, Sale{})
     // …
-    results := []Sale{}
+    results := Sale{}
     saleFieldCity = salePartitionKeys[0]
     saleFieldSellerId = saleClusteringKeys[0]
     saleFieldSaleId = saleClusteringKeys[1]
@@ -139,7 +139,7 @@ For examples on how to do pagination or Update with this table, refer to the exa
     id[saleFieldSellerId] = "141-dasf1-124"
     id[saleFieldSaleId] = "512hha232"
 
-    err := salesTable.MultiRead(field, id , &results).Run()
+    err := salesTable.Read(field, id , &results).Run()
 ```
 
 ##### Rough edges
