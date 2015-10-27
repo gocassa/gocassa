@@ -116,6 +116,34 @@ For examples on how to do pagination or Update with this table, refer to the exa
     err := salesTable.List("seller-1", yesterdayTime, todayTime, &results).Run()
 ```
 
+#### Encoding/Decoding data structures
+
+When setting `structs` in gocassa the library first converts your value to a map. Each exported field is added to the map unless
+
+- the field's tag is "-", or
+- the field is empty and its tag specifies the "omitempty" option
+
+Each fields default name in the map is the field name but can be specified in the struct field's tag value. The "cql" key in the struct field's tag value is the key name, followed by an optional comma and options. Examples:
+
+```
+// Field is ignored by this package.
+Field int `cql:"-"`
+// Field appears as key "myName".
+Field int `cql:"myName"`
+// Field appears as key "myName" and
+// the field is omitted from the object if its value is empty,
+// as defined above.
+Field int `cql:"myName,omitempty"`
+// Field appears as key "Field" (the default), but
+// the field is skipped if empty.
+// Note the leading comma.
+Field int `cql:",omitempty"`
+// All fields in the EmbeddedType are squashed into the parent type.
+EmbeddedType `cql:",squash"`
+```
+
+When encoding maps with non-string keys the key values are automatically converted to strings where possible, however it is recommended that you use strings where possible (for example map[string]T).
+
 ##### Rough edges
 
 ###### Too long table names
