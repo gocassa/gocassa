@@ -146,8 +146,9 @@ func (o *singleOp) generateWrite(opt Options) (string, []interface{}) {
 func (o *singleOp) generateRead(opt Options) (string, []interface{}) {
 	w, wv := generateWhere(o.f.rs)
 	ord, ov := o.generateOrderBy()
-	lim, lv := o.generateLimit(o.f.t.options.Merge(opt))
-	stmt := fmt.Sprintf("SELECT %s FROM %s.%s", o.f.t.generateFieldNames(), o.f.t.keySpace.name, o.f.t.Name())
+	mopt := o.f.t.options.Merge(opt)
+	lim, lv := o.generateLimit(mopt)
+	stmt := fmt.Sprintf("SELECT %s FROM %s.%s", o.f.t.generateFieldNames(mopt.Select), o.f.t.keySpace.name, o.f.t.Name())
 	vals := []interface{}{}
 	buf := new(bytes.Buffer)
 	buf.WriteString(stmt)
@@ -165,6 +166,10 @@ func (o *singleOp) generateRead(opt Options) (string, []interface{}) {
 		buf.WriteRune(' ')
 		buf.WriteString(lim)
 		vals = append(vals, lv...)
+	}
+	if opt.AllowFiltering {
+		buf.WriteString(" ")
+		buf.WriteString("ALLOW FILTERING")
 	}
 	if o.f.t.keySpace.debugMode {
 		fmt.Println(buf.String(), vals)
@@ -214,6 +219,10 @@ func generateWhere(rs []Relation) (string, []interface{}) {
 			}
 			s, v := r.cql()
 			buf.WriteString(s)
+			if r.op == in {
+				vals = append(vals, v)
+				continue
+			}
 			vals = append(vals, v...)
 		}
 	}

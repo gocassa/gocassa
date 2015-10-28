@@ -3,10 +3,11 @@ package gocassa
 import (
 	"errors"
 	"fmt"
-	"github.com/gocql/gocql"
 	"reflect"
 	"strings"
 	"time"
+
+	"github.com/gocql/gocql"
 )
 
 // CREATE TABLE users (
@@ -87,6 +88,8 @@ func cassaType(i interface{}) gocql.Type {
 		return gocql.TypeInt
 	case int64:
 		return gocql.TypeBigInt
+	case int8, int16, uint, uint8, uint16, uint32, uint64:
+		return gocql.TypeVarint
 	case string:
 		return gocql.TypeVarchar
 	case float32:
@@ -143,6 +146,8 @@ func cassaTypeToString(t gocql.Type) (string, error) {
 		return "int", nil
 	case gocql.TypeBigInt:
 		return "bigint", nil
+	case gocql.TypeVarint:
+		return "varint", nil
 	case gocql.TypeVarchar:
 		return "varchar", nil
 	case gocql.TypeFloat:
