@@ -83,10 +83,14 @@ func (t t) Where(rs ...Relation) Filter {
 	}
 }
 
-func (t t) generateFieldNames() string {
+func (t t) generateFieldNames(sel []string) string {
 	xs := make([]string, len(t.info.fields))
-	for i, v := range t.info.fields {
-		xs[i] = strings.ToLower(v)
+	if len(sel) > 0 {
+		xs = sel
+	} else {
+		for i, v := range t.info.fields {
+			xs[i] = strings.ToLower(v)
+		}
 	}
 	return strings.Join(xs, ", ")
 }

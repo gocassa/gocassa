@@ -156,15 +156,15 @@ func TestIn(t *testing.T) {
 		t.Fatal(err)
 	}
 	res := []Customer{}
-	err = cs.Where(In("Id", "100", "200")).Read(&res).Run()
-	if len(res) != 2 {
-		for _, v := range res {
-			fmt.Println(v)
+	ids := [][]interface{}{[]interface{}{"100"}, []interface{}{"100", "200"}}
+	for _, v := range ids {
+		err = cs.Where(In("Id", v...)).Read(&res).Run()
+		if len(res) != len(v) {
+			for _, v := range res {
+				fmt.Println(v)
+			}
+			t.Fatal("Not found", res, v)
 		}
-		t.Fatal("Not found", res)
-	}
-	if res[0].Id != "100" || res[1].Id != "200" {
-		t.Fatal(res[0], res[1])
 	}
 }
 
@@ -471,6 +471,22 @@ func TestNoop(t *testing.T) {
 		t.Fatal(err)
 	}
 	if c.Id != "1" {
+		t.Fatal(c)
+	}
+}
+
+func TestSelect(t *testing.T) {
+	tbl := ns.MapTable("customerSelectFields", "Id", Customer3{})
+	createIf(tbl.(TableChanger), t)
+	if err := tbl.Set(newCustomer3()).Run(); err != nil {
+		t.Fatal(err)
+	}
+	c := Customer3{}
+	fields := []string{"int"}
+	if err := tbl.Read("1", &c).WithOptions(Options{Select: fields}).Run(); err != nil {
+		t.Fatal(err)
+	}
+	if c.Float32 != 0 {
 		t.Fatal(c)
 	}
 }
