@@ -117,14 +117,14 @@ For examples on how to do pagination or Update with this table, refer to the exa
 ```
 
 
-##### `MultiMapMultiKey`
+##### `MultiMapMultiKeyTable`
 
-`MultiMapMultiKey` can perform CRUD operations on rows filtered by equality of multiple fields (eg. read a sale based on their `city` , `sellerId` and `Id` of the sale):
+`MultiMapMultiKeyTable` can perform CRUD operations on rows filtered by equality of multiple fields (eg. read a sale based on their `city` , `sellerId` and `Id` of the sale):
 
 ```go
     salePartitionKeys := []Sale{"City"}
     saleClusteringKeys := []Sale{"SellerId","Id"}
-    salesTable := keySpace.MultiMapMultiKey("sale", salePartitionKeys, saleClusteringKeys, Sale{})
+    salesTable := keySpace.MultimapMultiKeyTable("sale", salePartitionKeys, saleClusteringKeys, Sale{})
     // …
     result := Sale{}
     saleFieldCity = salePartitionKeys[0]
