@@ -28,7 +28,7 @@ import (
 // );
 //
 
-func createTable(keySpace, cf string, partitionKeys, colKeys []string, fields []string, values []interface{}, order []ClusteringOrderColumn) (string, error) {
+func createTable(keySpace, cf string, partitionKeys, colKeys []string, fields []string, values []interface{}, order []ClusteringOrderColumn, compoundKey bool) (string, error) {
 	firstLine := fmt.Sprintf("CREATE TABLE %v.%v (", keySpace, cf)
 	fieldLines := []string{}
 	for i, _ := range fields {
@@ -39,9 +39,14 @@ func createTable(keySpace, cf string, partitionKeys, colKeys []string, fields []
 		l := "    " + strings.ToLower(fields[i]) + " " + typeStr
 		fieldLines = append(fieldLines, l)
 	}
-	str := "    PRIMARY KEY ((%v) %v)"
-	if len(colKeys) > 0 {
+	//key generation
+	str := ""
+	if len(colKeys) > 0 { //key (or composite key) + clustering columns
 		str = "    PRIMARY KEY ((%v), %v)"
+	} else if compoundKey { //compound key just one set of parenthesis
+		str = "    PRIMARY KEY (%v %v)"
+	} else { //otherwise is a composite key without colKeys
+		str = "    PRIMARY KEY ((%v %v))"
 	}
 
 	fieldLines = append(fieldLines, fmt.Sprintf(str, j(partitionKeys), j(colKeys)))
@@ -107,6 +112,24 @@ func cassaType(i interface{}) gocql.Type {
 	case Counter:
 		return gocql.TypeCounter
 	}
+
+	// Fallback to using reflection if type not recognised
+	typ := reflect.TypeOf(i)
+	switch typ.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32:
+		return gocql.TypeInt
+	case reflect.Int64:
+		return gocql.TypeBigInt
+	case reflect.String:
+		return gocql.TypeVarchar
+	case reflect.Float32:
+		return gocql.TypeFloat
+	case reflect.Float64:
+		return gocql.TypeDouble
+	case reflect.Bool:
+		return gocql.TypeBoolean
+	}
+
 	return gocql.TypeCustom
 }
 

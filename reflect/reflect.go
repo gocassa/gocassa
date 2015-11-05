@@ -2,10 +2,7 @@
 package reflect
 
 import (
-	"fmt"
 	r "reflect"
-	"strings"
-	"sync"
 )
 
 // StructToMap converts a struct to map. The object's default key string
@@ -28,10 +25,11 @@ func StructToMap(val interface{}) (map[string]interface{}, bool) {
 	if kind != r.Struct {
 		return nil, false
 	}
-	sinfo := getStructInfo(structVal)
-	mapVal := make(map[string]interface{}, len(sinfo.FieldsList))
-	for _, field := range sinfo.FieldsList {
-		mapVal[field.Key] = structVal.Field(field.Num).Interface()
+	structFields := cachedTypeFields(structVal.Type())
+	mapVal := make(map[string]interface{}, len(structFields))
+	for _, info := range structFields {
+		field := fieldByIndex(structVal, info.index)
+		mapVal[info.name] = field.Interface()
 	}
 	return mapVal, true
 }
@@ -40,10 +38,17 @@ func StructToMap(val interface{}) (map[string]interface{}, bool) {
 // function. For details see StructToMap.
 func MapToStruct(m map[string]interface{}, struc interface{}) error {
 	val := r.Indirect(r.ValueOf(struc))
-	sinfo := getStructInfo(val)
+	structFields := cachedTypeFields(val.Type())
+
+	// Create fields map for faster lookup
+	fieldsMap := make(map[string]field)
+	for _, field := range structFields {
+		fieldsMap[field.name] = field
+	}
+
 	for k, v := range m {
-		if info, ok := sinfo.FieldsMap[k]; ok {
-			structField := val.Field(info.Num)
+		if info, ok := fieldsMap[k]; ok {
+			structField := fieldByIndex(val, info.index)
 			if structField.Type().Name() == r.TypeOf(v).Name() {
 				structField.Set(r.ValueOf(v))
 			}
@@ -62,76 +67,31 @@ func FieldsAndValues(val interface{}) ([]string, []interface{}, bool) {
 	if kind != r.Struct {
 		return nil, nil, false
 	}
-	sinfo := getStructInfo(structVal)
-	fields := make([]string, len(sinfo.FieldsList))
-	values := make([]interface{}, len(sinfo.FieldsList))
-	for i, info := range sinfo.FieldsList {
-		field := structVal.Field(info.Num)
-		fields[i] = info.Key
+	structFields := cachedTypeFields(structVal.Type())
+	fields := make([]string, len(structFields))
+	values := make([]interface{}, len(structFields))
+	for i, info := range structFields {
+		field := fieldByIndex(structVal, info.index)
+		fields[i] = info.name
 		values[i] = field.Interface()
 	}
 	return fields, values, true
 }
 
-var structMapMutex sync.RWMutex
-var structMap = make(map[r.Type]*structInfo)
-
-type fieldInfo struct {
-	Key string
-	Num int
-}
-
-type structInfo struct {
-	// FieldsMap is used to access fields by their key
-	FieldsMap map[string]fieldInfo
-	// FieldsList allows iteration over the fields in their struct order.
-	FieldsList []fieldInfo
-}
-
-func getStructInfo(v r.Value) *structInfo {
-	st := r.Indirect(v).Type()
-	structMapMutex.RLock()
-	sinfo, found := structMap[st]
-	structMapMutex.RUnlock()
-	if found {
-		return sinfo
+func fieldByIndex(v r.Value, index []int) r.Value {
+	for _, i := range index {
+		if v.Kind() == r.Ptr {
+			if v.IsNil() {
+				if v.CanSet() {
+					v.Set(r.New(v.Type().Elem()))
+				} else {
+					return r.Value{}
+				}
+			}
+			v = v.Elem()
+		}
+		v = v.Field(i)
 	}
 
-	n := st.NumField()
-	fieldsMap := make(map[string]fieldInfo, n)
-	fieldsList := make([]fieldInfo, 0, n)
-	for i := 0; i != n; i++ {
-		field := st.Field(i)
-		info := fieldInfo{Num: i}
-		tag := field.Tag.Get("cql")
-		if tag == "-" {
-			continue
-		}
-		// If there is no cql specific tag and there are no other tags
-		// set the cql tag to the whole field tag
-		if tag == "" && strings.Index(string(field.Tag), ":") < 0 {
-			tag = string(field.Tag)
-		}
-		if tag != "" {
-			info.Key = tag
-		} else {
-			info.Key = field.Name
-		}
-
-		if _, found = fieldsMap[info.Key]; found {
-			msg := fmt.Sprintf("Duplicated key '%s' in struct %s", info.Key, st.String())
-			panic(msg)
-		}
-
-		fieldsList = append(fieldsList, info)
-		fieldsMap[info.Key] = info
-	}
-	sinfo = &structInfo{
-		fieldsMap,
-		fieldsList,
-	}
-	structMapMutex.Lock()
-	structMap[st] = sinfo
-	structMapMutex.Unlock()
-	return sinfo
+	return v
 }

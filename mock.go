@@ -83,6 +83,8 @@ func NewMockKeySpace() KeySpace {
 
 // MockTable implements the Table interface and stores rows in-memory.
 type MockTable struct {
+	sync.RWMutex
+
 	// rows is mapping from row key to column group key to column map
 	mtx     sync.RWMutex
 	name    string
@@ -226,6 +228,9 @@ func (t *MockTable) getOrCreateColumnGroup(rowKey, superColumnKey *keyPart) map[
 
 func (t *MockTable) SetWithOptions(i interface{}, options Options) Op {
 	return newOp(func(m mockOp) error {
+		t.Lock()
+		defer t.Unlock()
+
 		columns, ok := toMap(i)
 		if !ok {
 			return errors.New("Can't create: value not understood")
@@ -344,6 +349,9 @@ func (f *MockFilter) keysFromRelations(keys []string) ([]*keyPart, error) {
 
 func (f *MockFilter) UpdateWithOptions(m map[string]interface{}, options Options) Op {
 	return newOp(func(mock mockOp) error {
+		f.table.Lock()
+		defer f.table.Unlock()
+
 		rowKeys, err := f.keysFromRelations(f.table.keys.PartitionKeys)
 		if err != nil {
 			return err
@@ -380,6 +388,9 @@ func (f *MockFilter) Update(m map[string]interface{}) Op {
 
 func (f *MockFilter) Delete() Op {
 	return newOp(func(m mockOp) error {
+		f.table.Lock()
+		defer f.table.Unlock()
+
 		rowKeys, err := f.keysFromRelations(f.table.keys.PartitionKeys)
 		if err != nil {
 			return err
@@ -409,6 +420,9 @@ func (f *MockFilter) Delete() Op {
 
 func (q *MockFilter) Read(out interface{}) Op {
 	return newOp(func(m mockOp) error {
+		q.table.Lock()
+		defer q.table.Unlock()
+
 		rowKeys, err := q.keysFromRelations(q.table.keys.PartitionKeys)
 		if err != nil {
 			return err
