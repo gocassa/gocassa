@@ -28,7 +28,7 @@ import (
 // );
 //
 
-func createTable(keySpace, cf string, partitionKeys, colKeys []string, fields []string, values []interface{}, order []ClusteringOrderColumn) (string, error) {
+func createTable(keySpace, cf string, partitionKeys, colKeys []string, fields []string, values []interface{}, order []ClusteringOrderColumn, compoundKey bool) (string, error) {
 	firstLine := fmt.Sprintf("CREATE TABLE %v.%v (", keySpace, cf)
 	fieldLines := []string{}
 	for i, _ := range fields {
@@ -39,9 +39,14 @@ func createTable(keySpace, cf string, partitionKeys, colKeys []string, fields []
 		l := "    " + strings.ToLower(fields[i]) + " " + typeStr
 		fieldLines = append(fieldLines, l)
 	}
-	str := "    PRIMARY KEY ((%v) %v)"
-	if len(colKeys) > 0 {
+	//key generation
+	str := ""
+	if len(colKeys) > 0 { //key (or composite key) + clustering columns
 		str = "    PRIMARY KEY ((%v), %v)"
+	} else if compoundKey { //compound key just one set of parenthesis
+		str = "    PRIMARY KEY (%v %v)"
+	} else { //otherwise is a composite key without colKeys
+		str = "    PRIMARY KEY ((%v %v))"
 	}
 
 	fieldLines = append(fieldLines, fmt.Sprintf(str, j(partitionKeys), j(colKeys)))

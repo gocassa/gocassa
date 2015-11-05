@@ -129,6 +129,7 @@ type Filter interface {
 type Keys struct {
 	PartitionKeys     []string
 	ClusteringColumns []string
+	Compound          bool //indicates if the partitions keys are gereated as compound key when no clustering columns are set
 }
 
 // Op is returned by both read and write methods, you have to run them explicitly to take effect.
