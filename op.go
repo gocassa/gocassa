@@ -2,10 +2,12 @@ package gocassa
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"runtime"
 	"strconv"
+
+	"github.com/hailocab/gocassa/reflect"
+	"github.com/mitchellh/mapstructure"
 )
 
 const (
@@ -57,11 +59,8 @@ func (w *singleOp) read() error {
 	if err != nil {
 		return err
 	}
-	bytes, err := json.Marshal(maps)
-	if err != nil {
-		return err
-	}
-	return json.Unmarshal(bytes, w.result)
+
+	return decodeResult(maps, w.result)
 }
 
 func (w *singleOp) readOne() error {
@@ -77,11 +76,7 @@ func (w *singleOp) readOne() error {
 			line: n,
 		}
 	}
-	bytes, err := json.Marshal(maps[0])
-	if err != nil {
-		return err
-	}
-	return json.Unmarshal(bytes, w.result)
+	return decodeResult(maps[0], w.result)
 }
 
 func (w *singleOp) write() error {
@@ -243,4 +238,18 @@ func updateStatement(kn, cfName string, fields map[string]interface{}, opts Opti
 	}
 
 	return buf.String(), ret
+}
+
+func decodeResult(m, result interface{}) error {
+	dec, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+		ZeroFields:       true,
+		WeaklyTypedInput: true,
+		Result:           result,
+		TagName:          reflect.TagName,
+	})
+	if err != nil {
+		return err
+	}
+
+	return dec.Decode(m)
 }
