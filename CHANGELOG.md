@@ -10,6 +10,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
  - Improved how gocassa handles encoding+decoding, no longer uses the `encoding/json` package and now supports embedded types and type aliases.
+ - Added new functions to `QueryExecutor` interface (`QueryWithOptions` and `ExecuteWithOptions`)
 
 ### Fixed
  - Mock tables are now safe for concurrent use
