@@ -6,6 +6,8 @@ gocassa
 
 Gocassa is a high-level library on top of [gocql](https://github.com/gocql/gocql).
 
+Current version: v1.0.0
+
 Compared to gocql it provides query building, adds data binding, and provides easy-to-use "recipe" tables for common query use-cases. Unlike [cqlc](https://github.com/relops/cqlc), it does not use code generation.
 
 For docs, see: [https://godoc.org/github.com/hailocab/gocassa](https://godoc.org/github.com/hailocab/gocassa)
@@ -169,7 +171,7 @@ EmbeddedType `cql:",squash"`
 
 When encoding maps with non-string keys the key values are automatically converted to strings where possible, however it is recommended that you use strings where possible (for example map[string]T).
 
-##### Rough edges
+##### Troubleshooting
 
 ###### Too long table names
 
