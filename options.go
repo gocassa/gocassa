@@ -2,6 +2,8 @@ package gocassa
 
 import (
 	"time"
+
+	"github.com/gocql/gocql"
 )
 
 type ColumnDirection bool
@@ -35,6 +37,8 @@ type Options struct {
 	AllowFiltering bool
 	// Select allows you to do partial reads, ie. retrieve only a subset of fields
 	Select []string
+	// Consistency specifies the consistency level. If nil, it is considered not set
+	Consistency *gocql.Consistency
 }
 
 // Returns a new Options which is a right biased merge of the two initial Options.
@@ -64,6 +68,10 @@ func (o Options) Merge(neu Options) Options {
 	if len(neu.Select) > 0 {
 		ret.Select = neu.Select
 	}
+	if neu.Consistency != nil {
+		ret.Consistency = neu.Consistency
+	}
+
 	return ret
 }
 
