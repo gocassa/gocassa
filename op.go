@@ -3,10 +3,12 @@ package gocassa
 import (
 	"bytes"
 	"fmt"
+	"math/big"
+	"reflect"
 	"runtime"
 	"strconv"
 
-	"github.com/hailocab/gocassa/reflect"
+	rreflect "github.com/hailocab/gocassa/reflect"
 	"github.com/mitchellh/mapstructure"
 )
 
@@ -245,11 +247,46 @@ func decodeResult(m, result interface{}) error {
 		ZeroFields:       true,
 		WeaklyTypedInput: true,
 		Result:           result,
-		TagName:          reflect.TagName,
+		TagName:          rreflect.TagName,
+		DecodeHook: mapstructure.ComposeDecodeHookFunc(
+			decodeBigIntHook,
+		),
 	})
 	if err != nil {
 		return err
 	}
 
 	return dec.Decode(m)
+}
+
+func decodeBigIntHook(f reflect.Kind, t reflect.Kind, data interface{}) (interface{}, error) {
+	if f != reflect.Ptr {
+		return data, nil
+	}
+
+	if i, ok := data.(*big.Int); ok {
+		if t == reflect.Uint64 {
+			return i.Uint64(), nil
+		}
+		if t == reflect.Uint32 {
+			return uint32(i.Uint64()), nil
+		}
+		if t == reflect.Uint16 {
+			return uint16(i.Uint64()), nil
+		}
+		if t == reflect.Uint8 {
+			return uint8(i.Uint64()), nil
+		}
+		if t == reflect.Uint {
+			return uint(i.Uint64()), nil
+		}
+		if t == reflect.Int16 {
+			return int16(i.Int64()), nil
+		}
+		if t == reflect.Int8 {
+			return int8(i.Int64()), nil
+		}
+	}
+
+	return data, nil
 }
