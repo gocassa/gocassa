@@ -265,25 +265,20 @@ func decodeBigIntHook(f reflect.Kind, t reflect.Kind, data interface{}) (interfa
 	}
 
 	if i, ok := data.(*big.Int); ok {
-		if t == reflect.Uint64 {
+		switch t {
+		case reflect.Uint64:
 			return i.Uint64(), nil
-		}
-		if t == reflect.Uint32 {
+		case reflect.Uint32:
 			return uint32(i.Uint64()), nil
-		}
-		if t == reflect.Uint16 {
+		case reflect.Uint16:
 			return uint16(i.Uint64()), nil
-		}
-		if t == reflect.Uint8 {
+		case reflect.Uint8:
 			return uint8(i.Uint64()), nil
-		}
-		if t == reflect.Uint {
+		case reflect.Uint:
 			return uint(i.Uint64()), nil
-		}
-		if t == reflect.Int16 {
+		case reflect.Int16:
 			return int16(i.Int64()), nil
-		}
-		if t == reflect.Int8 {
+		case reflect.Int8:
 			return int8(i.Int64()), nil
 		}
 	}
