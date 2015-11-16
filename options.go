@@ -38,7 +38,7 @@ type Options struct {
 	// Setting CompactStorage to true enables table creation with compact storage
 	CompactStorage bool
 	// Compressor specifies the compressor (if any) to use on a newly created table
-	Compressor     string
+	Compressor string
 }
 
 // Returns a new Options which is a right biased merge of the two initial Options.
@@ -50,7 +50,7 @@ func (o Options) Merge(neu Options) Options {
 		ClusteringOrder: o.ClusteringOrder,
 		Select:          o.Select,
 		CompactStorage:  o.CompactStorage,
-		Compressor:			 o.Compressor,
+		Compressor:      o.Compressor,
 	}
 	if neu.TTL != time.Duration(0) {
 		ret.TTL = neu.TTL
@@ -73,7 +73,7 @@ func (o Options) Merge(neu Options) Options {
 	if neu.CompactStorage {
 		ret.CompactStorage = neu.CompactStorage
 	}
-	if neu.Compressor != "" {
+	if len(neu.Compressor) > 0 {
 		ret.Compressor = neu.Compressor
 	}
 	return ret

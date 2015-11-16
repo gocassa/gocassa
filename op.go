@@ -147,7 +147,7 @@ func (o *singleOp) generateRead(opt Options) (string, []interface{}) {
 	ord, ov := o.generateOrderBy()
 	mopt := o.f.t.options.Merge(opt)
 	lim, lv := o.generateLimit(mopt)
-	stmt := fmt.Sprintf("SELECT %s FROM \"%s\".\"%s\"", o.f.t.generateFieldNames(mopt.Select), o.f.t.keySpace.name, o.f.t.Name())
+	stmt := fmt.Sprintf("SELECT %s FROM %s.%s", o.f.t.generateFieldNames(mopt.Select), o.f.t.keySpace.name, o.f.t.Name())
 	vals := []interface{}{}
 	buf := new(bytes.Buffer)
 	buf.WriteString(stmt)

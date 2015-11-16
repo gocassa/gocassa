@@ -28,7 +28,7 @@ import (
 //
 
 func createTable(keySpace, cf string, partitionKeys, colKeys []string, fields []string, values []interface{}, order []ClusteringOrderColumn, compact bool, compressor string) (string, error) {
-	firstLine := fmt.Sprintf("CREATE TABLE \"%v\".\"%v\" (", keySpace, cf)
+	firstLine := fmt.Sprintf("CREATE TABLE %v.%v (", keySpace, cf)
 	fieldLines := []string{}
 	for i, _ := range fields {
 		typeStr, err := stringTypeOf(values[i])
@@ -60,15 +60,28 @@ func createTable(keySpace, cf string, partitionKeys, colKeys []string, fields []
 			}
 			orderStrs[i] = fmt.Sprintf("%v %v", o.Column, dir)
 		}
-		properties := "WITH"
-		if compact {
-			properties = "WITH COMPACT STORAGE AND"
-		}
-		orderLine := fmt.Sprintf("%v CLUSTERING ORDER BY (%v)", properties, strings.Join(orderStrs, ", "))
+		orderLine := fmt.Sprintf("WITH CLUSTERING ORDER BY (%v)", strings.Join(orderStrs, ", "))
 		lines = append(lines, orderLine)
 	}
-	compressionLine := fmt.Sprintf("AND compression = {'sstable_compression': '%v'}", compressor)
-	lines = append(lines, compressionLine)
+
+	if compact {
+		compactLineStart := "WITH"
+		if len(order) > 0 {
+			compactLineStart = "AND"
+		}
+		compactLine := fmt.Sprintf("%v COMPACT STORAGE", compactLineStart)
+		lines = append(lines, compactLine)
+	}
+
+	if len(compressor) > 0 {
+		compressionLineStart := "WITH"
+		if len(order) > 0 || compact {
+			compressionLineStart = "AND"
+		}
+		compressionLine := fmt.Sprintf("%v compression = {'sstable_compression': '%v'}", compressionLineStart, compressor)
+		lines = append(lines, compressionLine)
+	}
+
 	lines = append(lines, ";")
 	stmt := strings.Join(lines, "\n")
 	return stmt, nil
