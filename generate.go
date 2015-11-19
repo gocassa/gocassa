@@ -3,10 +3,11 @@ package gocassa
 import (
 	"errors"
 	"fmt"
-	"github.com/gocql/gocql"
 	"reflect"
 	"strings"
 	"time"
+
+	"github.com/gocql/gocql"
 )
 
 // CREATE TABLE users (
@@ -27,15 +28,15 @@ import (
 // );
 //
 
-func createTableIfNotExist(keySpace, cf string, partitionKeys, colKeys []string, fields []string, values []interface{}, order []ClusteringOrderColumn) (string, error) {
-	return createTableStmt("CREATE TABLE IF NOT EXISTS", keySpace, cf, partitionKeys, colKeys, fields, values, order)
+func createTableIfNotExist(keySpace, cf string, partitionKeys, colKeys []string, fields []string, values []interface{}, order []ClusteringOrderColumn, compoundKey bool) (string, error) {
+	return createTableStmt("CREATE TABLE IF NOT EXISTS", keySpace, cf, partitionKeys, colKeys, fields, values, order, compoundKey)
 }
 
-func createTable(keySpace, cf string, partitionKeys, colKeys []string, fields []string, values []interface{}, order []ClusteringOrderColumn) (string, error) {
-	return createTableStmt("CREATE TABLE", keySpace, cf, partitionKeys, colKeys, fields, values, order)
+func createTable(keySpace, cf string, partitionKeys, colKeys []string, fields []string, values []interface{}, order []ClusteringOrderColumn, compoundKey bool) (string, error) {
+	return createTableStmt("CREATE TABLE", keySpace, cf, partitionKeys, colKeys, fields, values, order, compoundKey)
 }
 
-func createTableStmt(createStmt, keySpace, cf string, partitionKeys, colKeys []string, fields []string, values []interface{}, order []ClusteringOrderColumn) (string, error) {
+func createTableStmt(createStmt, keySpace, cf string, partitionKeys, colKeys []string, fields []string, values []interface{}, order []ClusteringOrderColumn, compoundKey bool) (string, error) {
 	firstLine := fmt.Sprintf("%s %v.%v (", createStmt, keySpace, cf)
 	fieldLines := []string{}
 	for i, _ := range fields {
@@ -46,9 +47,14 @@ func createTableStmt(createStmt, keySpace, cf string, partitionKeys, colKeys []s
 		l := "    " + strings.ToLower(fields[i]) + " " + typeStr
 		fieldLines = append(fieldLines, l)
 	}
-	str := "    PRIMARY KEY ((%v) %v)"
-	if len(colKeys) > 0 {
+	//key generation
+	str := ""
+	if len(colKeys) > 0 { //key (or composite key) + clustering columns
 		str = "    PRIMARY KEY ((%v), %v)"
+	} else if compoundKey { //compound key just one set of parenthesis
+		str = "    PRIMARY KEY (%v %v)"
+	} else { //otherwise is a composite key without colKeys
+		str = "    PRIMARY KEY ((%v %v))"
 	}
 
 	fieldLines = append(fieldLines, fmt.Sprintf(str, j(partitionKeys), j(colKeys)))
@@ -95,6 +101,8 @@ func cassaType(i interface{}) gocql.Type {
 		return gocql.TypeInt
 	case int64:
 		return gocql.TypeBigInt
+	case int8, int16, uint, uint8, uint16, uint32, uint64:
+		return gocql.TypeVarint
 	case string:
 		return gocql.TypeVarchar
 	case float32:
@@ -112,6 +120,24 @@ func cassaType(i interface{}) gocql.Type {
 	case Counter:
 		return gocql.TypeCounter
 	}
+
+	// Fallback to using reflection if type not recognised
+	typ := reflect.TypeOf(i)
+	switch typ.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32:
+		return gocql.TypeInt
+	case reflect.Int64:
+		return gocql.TypeBigInt
+	case reflect.String:
+		return gocql.TypeVarchar
+	case reflect.Float32:
+		return gocql.TypeFloat
+	case reflect.Float64:
+		return gocql.TypeDouble
+	case reflect.Bool:
+		return gocql.TypeBoolean
+	}
+
 	return gocql.TypeCustom
 }
 
@@ -151,6 +177,8 @@ func cassaTypeToString(t gocql.Type) (string, error) {
 		return "int", nil
 	case gocql.TypeBigInt:
 		return "bigint", nil
+	case gocql.TypeVarint:
+		return "varint", nil
 	case gocql.TypeVarchar:
 		return "varchar", nil
 	case gocql.TypeFloat:

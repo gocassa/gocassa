@@ -3,8 +3,6 @@ package gocassa
 import (
 	"strings"
 	"time"
-
-	"github.com/surgebase/compare"
 )
 
 const (
@@ -75,15 +73,15 @@ func (r Relation) accept(i interface{}) bool {
 
 	switch r.op {
 	case greaterThan:
-		result, err = compare.BuiltinGreaterThan(a, b)
+		result, err = builtinGreaterThan(a, b)
 	case greaterThanOrEquals:
-		result, err = compare.BuiltinGreaterThan(a, b)
+		result, err = builtinGreaterThan(a, b)
 		result = result || a == b
 	case lesserThanOrEquals:
-		result, err = compare.BuiltinLessThan(a, b)
+		result, err = builtinLessThan(a, b)
 		result = result || a == b
 	case lesserThan:
-		result, err = compare.BuiltinLessThan(a, b)
+		result, err = builtinLessThan(a, b)
 	}
 
 	return err == nil && result
