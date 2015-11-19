@@ -206,6 +206,17 @@ func (t t) CreateStatement() (string, error) {
 	)
 }
 
+func (t t) CreateIfNotExistStatement() (string, error) {
+	return createTableIfNotExist(t.keySpace.name,
+		t.Name(),
+		t.info.keys.PartitionKeys,
+		t.info.keys.ClusteringColumns,
+		t.info.fields,
+		t.info.fieldValues,
+		t.options.ClusteringOrder,
+	)
+}
+
 func (t t) Name() string {
 	if len(t.options.TableName) > 0 {
 		return t.options.TableName
