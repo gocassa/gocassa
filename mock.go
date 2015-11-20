@@ -274,6 +274,14 @@ func (t *MockTable) CreateStatement() (string, error) {
 	return "", nil
 }
 
+func (t *MockTable) CreateIfNotExist() error {
+	return nil
+}
+
+func (t *MockTable) CreateIfNotExistStatement() (string, error) {
+	return "", nil
+}
+
 func (t *MockTable) Recreate() error {
 	return nil
 }
