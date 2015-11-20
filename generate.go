@@ -28,8 +28,16 @@ import (
 // );
 //
 
+func createTableIfNotExist(keySpace, cf string, partitionKeys, colKeys []string, fields []string, values []interface{}, order []ClusteringOrderColumn, compoundKey bool) (string, error) {
+	return createTableStmt("CREATE TABLE IF NOT EXISTS", keySpace, cf, partitionKeys, colKeys, fields, values, order, compoundKey)
+}
+
 func createTable(keySpace, cf string, partitionKeys, colKeys []string, fields []string, values []interface{}, order []ClusteringOrderColumn, compoundKey bool) (string, error) {
-	firstLine := fmt.Sprintf("CREATE TABLE %v.%v (", keySpace, cf)
+	return createTableStmt("CREATE TABLE", keySpace, cf, partitionKeys, colKeys, fields, values, order, compoundKey)
+}
+
+func createTableStmt(createStmt, keySpace, cf string, partitionKeys, colKeys []string, fields []string, values []interface{}, order []ClusteringOrderColumn, compoundKey bool) (string, error) {
+	firstLine := fmt.Sprintf("%s %v.%v (", createStmt, keySpace, cf)
 	fieldLines := []string{}
 	for i, _ := range fields {
 		typeStr, err := stringTypeOf(values[i])
