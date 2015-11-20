@@ -166,8 +166,13 @@ type TableChanger interface {
 	// Create creates the table in the keySpace, but only if it does not exist already.
 	// If the table already exists, it returns an error.
 	Create() error
-	// CreateStatement returns you the CQL query which can be used to create the tably manually in cqlsh
+	// CreateStatement returns you the CQL query which can be used to create the table manually in cqlsh
 	CreateStatement() (string, error)
+	// Create creates the table in the keySpace, but only if it does not exist already.
+	// If the table already exists, then nothing is creted.
+	CreateIfNotExist() error
+	// CreateStatement returns you the CQL query which can be used to create the table manually in cqlsh
+	CreateIfNotExistStatement() (string, error)
 	// Recreate drops the table if exists and creates it again.
 	// This is useful for test purposes only.
 	Recreate() error
