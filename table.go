@@ -184,6 +184,14 @@ func (t t) Create() error {
 	}
 }
 
+func (t t) CreateIfNotExist() error {
+	if stmt, err := t.CreateIfNotExistStatement(); err != nil {
+		return err
+	} else {
+		return t.keySpace.qe.Execute(stmt)
+	}
+}
+
 func (t t) Recreate() error {
 	if ex, err := t.keySpace.Exists(t.Name()); ex && err == nil {
 		if err := t.keySpace.DropTable(t.Name()); err != nil {
