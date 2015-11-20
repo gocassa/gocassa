@@ -28,15 +28,15 @@ import (
 // );
 //
 
-func createTableIfNotExist(keySpace, cf string, partitionKeys, colKeys []string, fields []string, values []interface{}, order []ClusteringOrderColumn, compoundKey bool) (string, error) {
-	return createTableStmt("CREATE TABLE IF NOT EXISTS", keySpace, cf, partitionKeys, colKeys, fields, values, order, compoundKey)
+func createTableIfNotExist(keySpace, cf string, partitionKeys, colKeys []string, fields []string, values []interface{}, order []ClusteringOrderColumn, compoundKey, compact bool, compressor string) (string, error) {
+	return createTableStmt("CREATE TABLE IF NOT EXISTS", keySpace, cf, partitionKeys, colKeys, fields, values, order, compoundKey, compact, compressor)
 }
 
-func createTable(keySpace, cf string, partitionKeys, colKeys []string, fields []string, values []interface{}, order []ClusteringOrderColumn, compoundKey bool) (string, error) {
-	return createTableStmt("CREATE TABLE", keySpace, cf, partitionKeys, colKeys, fields, values, order, compoundKey)
+func createTable(keySpace, cf string, partitionKeys, colKeys []string, fields []string, values []interface{}, order []ClusteringOrderColumn, compoundKey, compact bool, compressor string) (string, error) {
+	return createTableStmt("CREATE TABLE", keySpace, cf, partitionKeys, colKeys, fields, values, order, compoundKey, compact, compressor)
 }
 
-func createTableStmt(createStmt, keySpace, cf string, partitionKeys, colKeys []string, fields []string, values []interface{}, order []ClusteringOrderColumn, compoundKey bool) (string, error) {
+func createTableStmt(createStmt, keySpace, cf string, partitionKeys, colKeys []string, fields []string, values []interface{}, order []ClusteringOrderColumn, compoundKey, compact bool, compressor string) (string, error) {
 	firstLine := fmt.Sprintf("%s %v.%v (", createStmt, keySpace, cf)
 	fieldLines := []string{}
 	for i, _ := range fields {
@@ -76,6 +76,24 @@ func createTableStmt(createStmt, keySpace, cf string, partitionKeys, colKeys []s
 		}
 		orderLine := fmt.Sprintf("WITH CLUSTERING ORDER BY (%v)", strings.Join(orderStrs, ", "))
 		lines = append(lines, orderLine)
+	}
+
+	if compact {
+		compactLineStart := "WITH"
+		if len(order) > 0 {
+			compactLineStart = "AND"
+		}
+		compactLine := fmt.Sprintf("%v COMPACT STORAGE", compactLineStart)
+		lines = append(lines, compactLine)
+	}
+
+	if len(compressor) > 0 {
+		compressionLineStart := "WITH"
+		if len(order) > 0 || compact {
+			compressionLineStart = "AND"
+		}
+		compressionLine := fmt.Sprintf("%v compression = {'sstable_compression': '%v'}", compressionLineStart, compressor)
+		lines = append(lines, compressionLine)
 	}
 
 	lines = append(lines, ";")

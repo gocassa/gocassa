@@ -204,6 +204,8 @@ func (t t) CreateStatement() (string, error) {
 		t.info.fieldValues,
 		t.options.ClusteringOrder,
 		t.info.keys.Compound,
+		t.options.CompactStorage,
+		t.options.Compressor,
 	)
 }
 
@@ -216,6 +218,8 @@ func (t t) CreateIfNotExistStatement() (string, error) {
 		t.info.fieldValues,
 		t.options.ClusteringOrder,
 		t.info.keys.Compound,
+		t.options.CompactStorage,
+		t.options.Compressor,
 	)
 }
 
