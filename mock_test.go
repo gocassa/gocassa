@@ -65,13 +65,13 @@ func (s *MockSuite) TestTableRead() {
 
 	var users []user
 	s.NoError(s.tbl.Where(Eq("Pk1", 1), Eq("Pk2", 1)).Read(&users).Run())
-	s.Equal([]user{u1, u3, u4}, users)
+	s.Equal([]user{u1, u4, u3}, users)
 
 	s.NoError(s.tbl.Where(Eq("Pk1", 1), Eq("Pk2", 2)).Read(&users).Run())
 	s.Equal([]user{u2}, users)
 
 	s.NoError(s.tbl.Where(Eq("Pk1", 1), In("Pk2", 1, 2)).Read(&users).Run())
-	s.Equal([]user{u1, u3, u4, u2}, users)
+	s.Equal([]user{u1, u4, u3, u2}, users)
 
 	s.NoError(s.tbl.Where(Eq("Pk1", 1), Eq("Pk2", 1), Eq("Ck1", 1)).Read(&users).Run())
 	s.Equal([]user{u1, u4}, users)
