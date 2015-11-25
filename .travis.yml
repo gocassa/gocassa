@@ -6,6 +6,3 @@ go:
 
 services:
   - cassandra
-
-before_script:
-  - sleep 10

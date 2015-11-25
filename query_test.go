@@ -30,22 +30,10 @@ func init() {
 	kname := "test_ihopeudonthaveakeyspacenamedlikedthis"
 	var err error
 
-	c, err := Connect(getTestHosts(), "", "")
-	if err != nil {
-		panic(err)
-	}
-	err = c.DropKeySpace(kname)
-	if err != nil {
-		panic(err)
-	}
-	err = c.CreateKeySpace(kname)
-	if err != nil {
-		panic(err)
-	}
-
 	cluster := gocql.NewCluster(getTestHosts()...)
 	cluster.Consistency = gocql.One
-	cluster.Timeout = 1500 * time.Millisecond // Travis' C* is sloooow
+	cluster.Timeout = 10 * time.Second               // Travis' C* is sloooow
+	cluster.MaxWaitSchemaAgreement = 2 * time.Minute // travis might be slow
 	cluster.RetryPolicy = &gocql.SimpleRetryPolicy{
 		NumRetries: 3}
 	sess, err := cluster.CreateSession()
@@ -54,6 +42,15 @@ func init() {
 	}
 	conn := &connection{q: goCQLBackend{session: sess}}
 	ns = conn.KeySpace(kname)
+
+	err = conn.DropKeySpace(kname)
+	if err != nil {
+		panic(err)
+	}
+	err = conn.CreateKeySpace(kname)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func TestEq(t *testing.T) {
