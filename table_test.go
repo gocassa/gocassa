@@ -315,10 +315,10 @@ func TestQueryWithConsistency(t *testing.T) {
 		t.Fatal(err)
 	}
 	if resultOpts.Consistency == nil {
-		t.Fatal(fmt.Sprintf("Expected consistency:", cons, "got: nil"))
+		t.Fatal(fmt.Sprint("Expected consistency:", cons, "got: nil"))
 	}
 	if resultOpts.Consistency != nil && *resultOpts.Consistency != cons {
-		t.Fatal(fmt.Sprintf("Expected consistency:", cons, "got:", resultOpts.Consistency))
+		t.Fatal(fmt.Sprint("Expected consistency:", cons, "got:", resultOpts.Consistency))
 	}
 }
 
@@ -340,9 +340,9 @@ func TestExecuteWithConsistency(t *testing.T) {
 		t.Fatal(err)
 	}
 	if resultOpts.Consistency == nil {
-		t.Fatal(fmt.Sprintf("Expected consistency:", cons, "got: nil"))
+		t.Fatal(fmt.Sprint("Expected consistency:", cons, "got: nil"))
 	}
 	if resultOpts.Consistency != nil && *resultOpts.Consistency != cons {
-		t.Fatal(fmt.Sprintf("Expected consistency:", cons, "got:", resultOpts.Consistency))
+		t.Fatal(fmt.Sprint("Expected consistency:", cons, "got:", resultOpts.Consistency))
 	}
 }
