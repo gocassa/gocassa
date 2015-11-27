@@ -66,14 +66,15 @@ func keyValues(m map[string]interface{}) ([]string, []interface{}) {
 	return keys, values
 }
 
-func toMap(i interface{}) (map[string]interface{}, bool) {
+func toMap(i interface{}) (m map[string]interface{}, ok bool) {
 	switch v := i.(type) {
-	//case M:
-	//	return map[string]interface{}(v), true
 	case map[string]interface{}:
-		return v, true
+		m, ok = v, true
+	default:
+		m, ok = r.StructToMap(i)
 	}
-	return r.StructToMap(i)
+
+	return
 }
 
 func (t t) Where(rs ...Relation) Filter {
@@ -106,10 +107,12 @@ func relations(keys Keys, m map[string]interface{}) []Relation {
 func removeFields(m map[string]interface{}, s []string) map[string]interface{} {
 	keys := map[string]bool{}
 	for _, v := range s {
+		v = strings.ToLower(v)
 		keys[v] = true
 	}
 	ret := map[string]interface{}{}
 	for k, v := range m {
+		k = strings.ToLower(k)
 		if !keys[k] {
 			ret[k] = v
 		}
