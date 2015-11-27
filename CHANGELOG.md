@@ -6,6 +6,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
  - Fixed incorrect ordering of results in `MockTable`
+ - Fixed issue causing `Set` to fail with "PRIMARY KEY part user found in SET part" if keys are lower-case.
 
 ## v1.0.0 - 2015-11-13
 
