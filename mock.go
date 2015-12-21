@@ -2,7 +2,6 @@ package gocassa
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
@@ -456,11 +455,7 @@ func (q *MockFilter) Read(out interface{}) Op {
 }
 
 func (q *MockFilter) assignResult(records interface{}, out interface{}) error {
-	bytes, err := json.Marshal(records)
-	if err != nil {
-		return err
-	}
-	return json.Unmarshal(bytes, out)
+	return decodeResult(records, out)
 }
 
 func (q *MockFilter) ReadOne(out interface{}) Op {
