@@ -24,6 +24,16 @@ type point struct {
 	Y    float64
 }
 
+type PostalCode string
+
+type address struct {
+	Time            time.Time
+	Id              string
+	LocationPrice   map[string]int       // json compatible map
+	LocationHistory map[time.Time]string // not json compatible map
+	PostCode        PostalCode           // embedded type
+}
+
 func TestRunMockSuite(t *testing.T) {
 	suite.Run(t, new(MockSuite))
 }
@@ -31,12 +41,14 @@ func TestRunMockSuite(t *testing.T) {
 type MockSuite struct {
 	suite.Suite
 	*require.Assertions
-	tbl     Table
-	ks      KeySpace
-	mapTbl  MapTable
-	mmapTbl MultimapTable
-	tsTbl   TimeSeriesTable
-	mtsTbl  MultiTimeSeriesTable
+	tbl       Table
+	ks        KeySpace
+	mapTbl    MapTable
+	mmapTbl   MultimapTable
+	tsTbl     TimeSeriesTable
+	mtsTbl    MultiTimeSeriesTable
+	embMapTbl MapTable
+	embTsTbl  TimeSeriesTable
 }
 
 func (s *MockSuite) SetupTest() {
@@ -51,6 +63,9 @@ func (s *MockSuite) SetupTest() {
 	s.mmapTbl = s.ks.MultimapTable("users", "Pk1", "Pk2", user{})
 	s.tsTbl = s.ks.TimeSeriesTable("points", "Time", "Id", 1*time.Minute, point{})
 	s.mtsTbl = s.ks.MultiTimeSeriesTable("points", "User", "Time", "Id", 1*time.Minute, point{})
+
+	s.embMapTbl = s.ks.MapTable("addresses", "Id", address{})
+	s.embTsTbl = s.ks.TimeSeriesTable("addresses", "Time", "Id", 1*time.Minute, address{})
 }
 
 // Table tests
@@ -348,6 +363,17 @@ func (s *MockSuite) TestNoop() {
 	s.Equal("Jill", users[1].Name)
 }
 
+func (s *MockSuite) TestEmbedMapRead() {
+	expectedAddresses := s.insertAddresses()
+
+	var actualAddress address
+	s.NoError(s.embMapTbl.Read("1", &actualAddress).Run())
+	s.Equal(expectedAddresses[0], actualAddress)
+
+	s.NoError(s.embMapTbl.Read("2", &actualAddress).Run())
+	s.Equal(expectedAddresses[1], actualAddress)
+}
+
 // Helper functions
 func (s *MockSuite) insertPoints() []point {
 	points := []point{
@@ -426,6 +452,32 @@ func (s *MockSuite) insertUsers() (user, user, user, user) {
 	}
 
 	return u1, u2, u3, u4
+}
+
+func (s *MockSuite) insertAddresses() []address {
+	addresses := []address{
+		address{
+			Id:              "1",
+			Time:            s.parseTime("2015-01-01 00:00:00"),
+			LocationPrice:   map[string]int{"A": 1},
+			LocationHistory: map[time.Time]string{time.Now().UTC(): "A"},
+			PostCode:        "ABC",
+		},
+		address{
+			Id:              "2",
+			Time:            s.parseTime("2015-01-02 00:00:00"),
+			LocationPrice:   map[string]int{"F": 1},
+			LocationHistory: map[time.Time]string{time.Now().UTC(): "F"},
+			PostCode:        "FGH",
+		},
+	}
+
+	for _, addr := range addresses {
+		s.NoError(s.embMapTbl.Set(addr).Run())
+		s.NoError(s.embTsTbl.Set(addr).Run())
+	}
+
+	return addresses
 }
 
 func (s *MockSuite) parseTime(value string) time.Time {
