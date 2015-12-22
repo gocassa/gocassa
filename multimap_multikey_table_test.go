@@ -164,3 +164,63 @@ func TestMultimapMultiKeyTableMultiRead(t *testing.T) {
 		t.Fatalf("Expected to find london_soho, got %v", (*stores)[1])
 	}
 }
+
+func TestMultimapMultiKeyTableListOrder(t *testing.T) {
+	tbl := ns.MultimapMultiKeyTable(tablename+"93", StorePK, StoreIndex, Store{})
+	createIf(tbl.(TableChanger), t)
+	store1 := Store{
+		City:    "London",
+		Manager: "Joe",
+		Id:      "12412-afa-16955",
+		Address: "Somerset House",
+	}
+	err := tbl.Set(store1).Run()
+	if err != nil {
+		t.Fatal(err)
+	}
+	store2 := Store{
+		City:    "London",
+		Manager: "Joe",
+		Id:      "12412-afa-16956",
+		Address: "Waterloo",
+	}
+	err = tbl.Set(store2).Run()
+	if err != nil {
+		t.Fatal(err)
+	}
+	store3 := Store{
+		City:    "London",
+		Manager: "Jane",
+		Id:      "12412-afa-16957",
+		Address: "Charing Cross",
+	}
+	err = tbl.Set(store3).Run()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	list := []Store{}
+	op := tbl.List(map[string]interface{}{"City": "London"}, nil, 20, &list).WithOptions(Options{
+		ClusteringOrder: []ClusteringOrderColumn{
+			{DESC, "Manager"},
+			{DESC, "Id"},
+		},
+	})
+
+	err = op.Run()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(list) != 3 {
+		t.Fatalf("Expected to list 3 records, got %d", len(list))
+	}
+	if !reflect.DeepEqual(list[0], store2) {
+		t.Fatalf("Expected to find waterloo, got %v", list[0].Address)
+	}
+	if !reflect.DeepEqual(list[1], store1) {
+		t.Fatalf("Expected to find somerset house, got %v", list[1].Address)
+	}
+	if !reflect.DeepEqual(list[2], store3) {
+		t.Fatalf("Expected to find charing cross, got %v", list[2].Address)
+	}
+}
