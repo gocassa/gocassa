@@ -13,6 +13,17 @@ const (
 	DESC                 = true
 )
 
+func (d ColumnDirection) String() string {
+	switch d {
+	case ASC:
+		return "ASC"
+	case DESC:
+		return "DESC"
+	default:
+		return ""
+	}
+}
+
 // ClusteringOrderColumn specifies a clustering column and whether its
 // clustering order is ASC or DESC.
 type ClusteringOrderColumn struct {
