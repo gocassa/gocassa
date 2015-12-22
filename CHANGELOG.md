@@ -2,7 +2,7 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## Unreleased
+## v1.2.0 - 2015-12-22
 
 ### Added
  - Implemented `ORDER BY` for read queries
