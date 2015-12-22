@@ -487,3 +487,48 @@ func TestSelect(t *testing.T) {
 		t.Fatal(c)
 	}
 }
+
+func TestSelectWithOrderBy(t *testing.T) {
+	tbl := ns.MapTable("customerSelectOrderBy", "Id", Customer3{})
+	c := Customer3{}
+	fields := []string{"int"}
+	op := tbl.Read("1", &c).WithOptions(Options{
+		Select: fields,
+		ClusteringOrder: []ClusteringOrderColumn{
+			{ASC, "String"},
+		},
+	})
+	query, vals := op.GenerateStatement()
+	expectedQuery := "SELECT int FROM test_ihopeudonthaveakeyspacenamedlikedthis.customerSelectOrderBy_map_Id  WHERE id = ? ORDER BY String ASC"
+	expectedVals := []interface{}{"1"}
+
+	if query != expectedQuery {
+		t.Fatalf("Expected query %s, got %s", expectedQuery, query)
+	}
+	if !reflect.DeepEqual(vals, expectedVals) {
+		t.Fatalf("Expected query %s, got %s", expectedQuery, query)
+	}
+}
+
+func TestSelectWithMultipleOrderBy(t *testing.T) {
+	tbl := ns.MapTable("customerSelectMultipleOrderBy", "Id", Customer3{})
+	c := Customer3{}
+	fields := []string{"int"}
+	op := tbl.Read("1", &c).WithOptions(Options{
+		Select: fields,
+		ClusteringOrder: []ClusteringOrderColumn{
+			{ASC, "String"},
+			{DESC, "Int"},
+		},
+	})
+	query, vals := op.GenerateStatement()
+	expectedQuery := "SELECT int FROM test_ihopeudonthaveakeyspacenamedlikedthis.customerSelectMultipleOrderBy_map_Id  WHERE id = ? ORDER BY String ASC, Int DESC"
+	expectedVals := []interface{}{"1"}
+
+	if query != expectedQuery {
+		t.Fatalf("Expected query %s, got %s", expectedQuery, query)
+	}
+	if !reflect.DeepEqual(vals, expectedVals) {
+		t.Fatalf("Expected query %s, got %s", expectedQuery, query)
+	}
+}

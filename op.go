@@ -141,8 +141,8 @@ func (o *singleOp) generateWrite(opt Options) (string, []interface{}) {
 
 func (o *singleOp) generateRead(opt Options) (string, []interface{}) {
 	w, wv := generateWhere(o.f.rs)
-	ord, ov := o.generateOrderBy()
 	mopt := o.f.t.options.Merge(opt)
+	ord, ov := o.generateOrderBy(mopt)
 	lim, lv := o.generateLimit(mopt)
 	stmt := fmt.Sprintf("SELECT %s FROM %s.%s", o.f.t.generateFieldNames(mopt.Select), o.f.t.keySpace.name, o.f.t.Name())
 	vals := []interface{}{}
@@ -173,9 +173,23 @@ func (o *singleOp) generateRead(opt Options) (string, []interface{}) {
 	return buf.String(), vals
 }
 
-func (o *singleOp) generateOrderBy() (string, []interface{}) {
-	return "", []interface{}{}
-	// " ORDER BY %v"
+func (o *singleOp) generateOrderBy(opt Options) (string, []interface{}) {
+	if len(opt.ClusteringOrder) < 1 {
+		return "", []interface{}{}
+	}
+
+	buf := new(bytes.Buffer)
+	buf.WriteString("ORDER BY ")
+	for i, co := range opt.ClusteringOrder {
+		if i > 0 {
+			buf.WriteString(", ")
+		}
+
+		buf.WriteString(co.Column)
+		buf.WriteString(" ")
+		buf.WriteString(co.Direction.String())
+	}
+	return buf.String(), []interface{}{}
 }
 
 func (o *singleOp) generateLimit(opt Options) (string, []interface{}) {

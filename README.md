@@ -12,13 +12,9 @@ Compared to gocql it provides query building, adds data binding, and provides ea
 
 For docs, see: [https://godoc.org/github.com/hailocab/gocassa](https://godoc.org/github.com/hailocab/gocassa)
 
-#### Table types
+## Usage
 
-Gocassa provides multiple table types with their own unique interfaces:
-- a raw CQL table called simply `Table` - this lets you do pretty much any query imaginable
-- and a number of single purpose 'recipe' tables (`Map`, `Multimap`, `TimeSeries`, `MultiTimeSeries`, `MultiMapMultiKey`), which aims to help the user by having a simplified interface tailored to a given common query use case
-
-##### `Table`
+Below is a basic example showing how to connect to a Cassandra cluster and setup a simple table. For more advanced examples see the "Table Types" section below.
 
 ```go
 package main
@@ -65,9 +61,36 @@ func main() {
     fmt.Println(result)
 }
 ```
+
+You can pass additional options to a gocassa `Op` to further configure your queries, for example the following query orders the results by the field "Name" in descending order and limits the results to a total of 100.
+
+```go
+err := salesTable.List("seller-1", nil, 0, &results).WithOptions(gocassa.Options{
+    ClusteringOrder: []ClusteringOrderColumn{
+        {DESC, "Name"},
+    },
+    Limit: 100,
+}).Run()
+```
+
+### Table Types
+
+Gocassa provides multiple table types with their own unique interfaces:
+- a raw CQL table called simply `Table` - this lets you do pretty much any query imaginable
+- and a number of single purpose 'recipe' tables (`Map`, `Multimap`, `TimeSeries`, `MultiTimeSeries`, `MultiMapMultiKey`), which aims to help the user by having a simplified interface tailored to a given common query use case
+
+#### Table
+
+```go
+    salesTable := keySpace.Table("sale", &Sale{}, gocassa.Keys{
+        PartitionKeys: []string{"Id"},
+    })
+    result := Sale{}
+    err := salesTable.Where(gocassa.Eq("Id", "sale-1")).ReadOne(&result).Run()
+```
 [link to this example](https://github.com/hailocab/gocassa/blob/master/examples/table1/table1.go)
 
-##### `MapTable`
+#### MapTable
 
 `MapTable` provides only very simple [CRUD](http://en.wikipedia.org/wiki/Create,_read,_update_and_delete) functionality:
 
@@ -82,7 +105,7 @@ func main() {
 
 Read, Set, Update, and Delete all happen by "Id".
 
-##### `MultimapTable`
+#### MultimapTable
 
 `MultimapTable` can list rows filtered by equality of a single field (eg. list sales based on their `sellerId`):
 
@@ -96,7 +119,7 @@ Read, Set, Update, and Delete all happen by "Id".
 
 For examples on how to do pagination or Update with this table, refer to the example (linked under code snippet). 
 
-##### `TimeSeriesTable`
+#### TimeSeriesTable
 
 `TimeSeriesTable` provides an interface to list rows within a time interval:
 
@@ -107,7 +130,7 @@ For examples on how to do pagination or Update with this table, refer to the exa
     err := salesTable.List(yesterdayTime, todayTime, &results).Run()
 ```
 
-##### `MultiTimeSeriesTable`
+#### MultiTimeSeriesTable
 
 `MultiTimeSeriesTable` is like a cross between `MultimapTable` and `TimeSeriesTable`. It can list rows within a time interval, and filtered by equality of a single field. The following lists sales in a time interval, by a certain seller:
 
@@ -118,7 +141,7 @@ For examples on how to do pagination or Update with this table, refer to the exa
     err := salesTable.List("seller-1", yesterdayTime, todayTime, &results).Run()
 ```
 
-##### `MultiMapMultiKeyTable`
+#### MultiMapMultiKeyTable
 
 `MultiMapMultiKeyTable` can perform CRUD operations on rows filtered by equality of multiple fields (eg. read a sale based on their `city` , `sellerId` and `Id` of the sale):
 
@@ -143,7 +166,7 @@ For examples on how to do pagination or Update with this table, refer to the exa
     err := salesTable.Read(field, id , &result).Run()
 ```
 
-#### Encoding/Decoding data structures
+## Encoding/Decoding data structures
 
 When setting `structs` in gocassa the library first converts your value to a map. Each exported field is added to the map unless
 
@@ -152,7 +175,7 @@ When setting `structs` in gocassa the library first converts your value to a map
 
 Each fields default name in the map is the field name but can be specified in the struct field's tag value. The "cql" key in the struct field's tag value is the key name, followed by an optional comma and options. Examples:
 
-```
+```go
 // Field is ignored by this package.
 Field int `cql:"-"`
 // Field appears as key "myName".
@@ -171,9 +194,9 @@ EmbeddedType `cql:",squash"`
 
 When encoding maps with non-string keys the key values are automatically converted to strings where possible, however it is recommended that you use strings where possible (for example map[string]T).
 
-##### Troubleshooting
+## Troubleshooting
 
-###### Too long table names
+### Too long table names
 
 In case you get the following error: 
 
@@ -183,6 +206,6 @@ Column family names shouldn't be more than 48 characters long (got "somelongisht
 
 You can use the TableName options to override the default internal ones:
 
-```
+```go
 tbl = tbl.WithOptions(Options{TableName: "somelongishtablename_mts_start_id_24h0m0s"})
 ```
