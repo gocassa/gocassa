@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## Unreleased
+
+### Changed
+
+- Updated mock tables to use new method of decoding, now also supports embedded and non-key map types.
+
 ## v1.1.0 - 2015-11-27
 
 ### Fixed
