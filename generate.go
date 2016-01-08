@@ -28,8 +28,16 @@ import (
 // );
 //
 
-func createTable(keySpace, cf string, partitionKeys, colKeys []string, fields []string, values []interface{}, order []ClusteringOrderColumn) (string, error) {
-	firstLine := fmt.Sprintf("CREATE TABLE %v.%v (", keySpace, cf)
+func createTableIfNotExist(keySpace, cf string, partitionKeys, colKeys []string, fields []string, values []interface{}, order []ClusteringOrderColumn, compoundKey, compact bool, compressor string) (string, error) {
+	return createTableStmt("CREATE TABLE IF NOT EXISTS", keySpace, cf, partitionKeys, colKeys, fields, values, order, compoundKey, compact, compressor)
+}
+
+func createTable(keySpace, cf string, partitionKeys, colKeys []string, fields []string, values []interface{}, order []ClusteringOrderColumn, compoundKey, compact bool, compressor string) (string, error) {
+	return createTableStmt("CREATE TABLE", keySpace, cf, partitionKeys, colKeys, fields, values, order, compoundKey, compact, compressor)
+}
+
+func createTableStmt(createStmt, keySpace, cf string, partitionKeys, colKeys []string, fields []string, values []interface{}, order []ClusteringOrderColumn, compoundKey, compact bool, compressor string) (string, error) {
+	firstLine := fmt.Sprintf("%s %v.%v (", createStmt, keySpace, cf)
 	fieldLines := []string{}
 	for i, _ := range fields {
 		typeStr, err := stringTypeOf(values[i])
@@ -39,9 +47,14 @@ func createTable(keySpace, cf string, partitionKeys, colKeys []string, fields []
 		l := "    " + strings.ToLower(fields[i]) + " " + typeStr
 		fieldLines = append(fieldLines, l)
 	}
-	str := "    PRIMARY KEY ((%v) %v)"
-	if len(colKeys) > 0 {
+	//key generation
+	str := ""
+	if len(colKeys) > 0 { //key (or composite key) + clustering columns
 		str = "    PRIMARY KEY ((%v), %v)"
+	} else if compoundKey { //compound key just one set of parenthesis
+		str = "    PRIMARY KEY (%v %v)"
+	} else { //otherwise is a composite key without colKeys
+		str = "    PRIMARY KEY ((%v %v))"
 	}
 
 	fieldLines = append(fieldLines, fmt.Sprintf(str, j(partitionKeys), j(colKeys)))
@@ -55,14 +68,28 @@ func createTable(keySpace, cf string, partitionKeys, colKeys []string, fields []
 	if len(order) > 0 {
 		orderStrs := make([]string, len(order))
 		for i, o := range order {
-			dir := "ASC"
-			if o.Direction == DESC {
-				dir = "DESC"
-			}
-			orderStrs[i] = fmt.Sprintf("%v %v", o.Column, dir)
+			orderStrs[i] = fmt.Sprintf("%v %v", o.Column, o.Direction.String())
 		}
 		orderLine := fmt.Sprintf("WITH CLUSTERING ORDER BY (%v)", strings.Join(orderStrs, ", "))
 		lines = append(lines, orderLine)
+	}
+
+	if compact {
+		compactLineStart := "WITH"
+		if len(order) > 0 {
+			compactLineStart = "AND"
+		}
+		compactLine := fmt.Sprintf("%v COMPACT STORAGE", compactLineStart)
+		lines = append(lines, compactLine)
+	}
+
+	if len(compressor) > 0 {
+		compressionLineStart := "WITH"
+		if len(order) > 0 || compact {
+			compressionLineStart = "AND"
+		}
+		compressionLine := fmt.Sprintf("%v compression = {'sstable_compression': '%v'}", compressionLineStart, compressor)
+		lines = append(lines, compressionLine)
 	}
 
 	lines = append(lines, ";")
@@ -107,6 +134,24 @@ func cassaType(i interface{}) gocql.Type {
 	case Counter:
 		return gocql.TypeCounter
 	}
+
+	// Fallback to using reflection if type not recognised
+	typ := reflect.TypeOf(i)
+	switch typ.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32:
+		return gocql.TypeInt
+	case reflect.Int64:
+		return gocql.TypeBigInt
+	case reflect.String:
+		return gocql.TypeVarchar
+	case reflect.Float32:
+		return gocql.TypeFloat
+	case reflect.Float64:
+		return gocql.TypeDouble
+	case reflect.Bool:
+		return gocql.TypeBoolean
+	}
+
 	return gocql.TypeCustom
 }
 

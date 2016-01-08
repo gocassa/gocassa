@@ -2,11 +2,14 @@ package gocassa
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
+	"math/big"
+	"reflect"
 	"runtime"
 	"strconv"
-	"strings"
+
+	"github.com/mitchellh/mapstructure"
+	rreflect "github.com/mondough/gocassa/reflect"
 )
 
 const (
@@ -54,20 +57,17 @@ func newWriteOp(qe QueryExecutor, f filter, opType uint8, m map[string]interface
 
 func (w *singleOp) read() error {
 	stmt, params := w.generateRead(w.options)
-	maps, err := w.qe.Query(stmt, params...)
+	maps, err := w.qe.QueryWithOptions(w.options, stmt, params...)
 	if err != nil {
 		return err
 	}
-	bytes, err := json.Marshal(maps)
-	if err != nil {
-		return err
-	}
-	return json.Unmarshal(bytes, w.result)
+
+	return decodeResult(maps, w.result)
 }
 
 func (w *singleOp) readOne() error {
 	stmt, params := w.generateRead(w.options)
-	maps, err := w.qe.Query(stmt, params...)
+	maps, err := w.qe.QueryWithOptions(w.options, stmt, params...)
 	if err != nil {
 		return err
 	}
@@ -78,16 +78,12 @@ func (w *singleOp) readOne() error {
 			line: n,
 		}
 	}
-	bytes, err := json.Marshal(maps[0])
-	if err != nil {
-		return err
-	}
-	return json.Unmarshal(bytes, w.result)
+	return decodeResult(maps[0], w.result)
 }
 
 func (w *singleOp) write() error {
 	stmt, params := w.generateWrite(w.options)
-	return w.qe.Execute(stmt, params...)
+	return w.qe.ExecuteWithOptions(w.options, stmt, params...)
 }
 
 func (o *singleOp) Run() error {
@@ -145,8 +141,8 @@ func (o *singleOp) generateWrite(opt Options) (string, []interface{}) {
 
 func (o *singleOp) generateRead(opt Options) (string, []interface{}) {
 	w, wv := generateWhere(o.f.rs)
-	ord, ov := o.generateOrderBy()
 	mopt := o.f.t.options.Merge(opt)
+	ord, ov := o.generateOrderBy(mopt)
 	lim, lv := o.generateLimit(mopt)
 	stmt := fmt.Sprintf("SELECT %s FROM %s.%s", o.f.t.generateFieldNames(mopt.Select), o.f.t.keySpace.name, o.f.t.Name())
 	vals := []interface{}{}
@@ -177,23 +173,21 @@ func (o *singleOp) generateRead(opt Options) (string, []interface{}) {
 	return buf.String(), vals
 }
 
-func (o *singleOp) generateOrderBy() (string, []interface{}) {
+func (o *singleOp) generateOrderBy(opt Options) (string, []interface{}) {
+	if len(opt.ClusteringOrder) < 1 {
+		return "", []interface{}{}
+	}
+
 	buf := new(bytes.Buffer)
-	for i, ord := range o.options.ClusteringOrder {
-		if i == 0 {
-			buf.WriteString("ORDER BY ")
-		} else {
+	buf.WriteString("ORDER BY ")
+	for i, co := range opt.ClusteringOrder {
+		if i > 0 {
 			buf.WriteString(", ")
 		}
-		// Since the column name cannot appear in the bind parameters, we have to inline it into the query. CQL allows
-		// quoted identifiers for this. Since the quoted identifier is delimited by "", we can escape any *contained "
-		// character by replacing it with "". :mindblown:
-		buf.WriteRune('"')
-		buf.WriteString(strings.Replace(ord.Column, `"`, `""`, -1))
-		buf.WriteRune('"')
-		if ord.Direction == DESC {
-			buf.WriteString(" DESC")
-		}
+
+		buf.WriteString(co.Column)
+		buf.WriteString(" ")
+		buf.WriteString(co.Direction.String())
 	}
 	return buf.String(), []interface{}{}
 }
@@ -260,4 +254,48 @@ func updateStatement(kn, cfName string, fields map[string]interface{}, opts Opti
 	}
 
 	return buf.String(), ret
+}
+
+func decodeResult(m, result interface{}) error {
+	dec, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+		ZeroFields:       true,
+		WeaklyTypedInput: true,
+		Result:           result,
+		TagName:          rreflect.TagName,
+		DecodeHook: mapstructure.ComposeDecodeHookFunc(
+			decodeBigIntHook,
+		),
+	})
+	if err != nil {
+		return err
+	}
+
+	return dec.Decode(m)
+}
+
+func decodeBigIntHook(f reflect.Kind, t reflect.Kind, data interface{}) (interface{}, error) {
+	if f != reflect.Ptr {
+		return data, nil
+	}
+
+	if i, ok := data.(*big.Int); ok {
+		switch t {
+		case reflect.Uint64:
+			return i.Uint64(), nil
+		case reflect.Uint32:
+			return uint32(i.Uint64()), nil
+		case reflect.Uint16:
+			return uint16(i.Uint64()), nil
+		case reflect.Uint8:
+			return uint8(i.Uint64()), nil
+		case reflect.Uint:
+			return uint(i.Uint64()), nil
+		case reflect.Int16:
+			return int16(i.Int64()), nil
+		case reflect.Int8:
+			return int8(i.Int64()), nil
+		}
+	}
+
+	return data, nil
 }

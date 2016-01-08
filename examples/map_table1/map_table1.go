@@ -22,7 +22,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	salesTable := keySpace.MapTable("sale", "Id", Sale{})
+	salesTable := keySpace.MapTable("sale", "Id", &Sale{})
 	// Create the table - we ignore error intentionally
 	salesTable.Create()
 

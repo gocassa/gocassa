@@ -157,6 +157,7 @@ type Filter interface {
 type Keys struct {
 	PartitionKeys     []string
 	ClusteringColumns []string
+	Compound          bool //indicates if the partitions keys are gereated as compound key when no clustering columns are set
 }
 
 // Op is returned by both read and write methods, you have to run them explicitly to take effect.
@@ -193,8 +194,13 @@ type TableChanger interface {
 	// Create creates the table in the keySpace, but only if it does not exist already.
 	// If the table already exists, it returns an error.
 	Create() error
-	// CreateStatement returns you the CQL query which can be used to create the tably manually in cqlsh
+	// CreateStatement returns you the CQL query which can be used to create the table manually in cqlsh
 	CreateStatement() (string, error)
+	// Create creates the table in the keySpace, but only if it does not exist already.
+	// If the table already exists, then nothing is created.
+	CreateIfNotExist() error
+	// CreateStatement returns you the CQL query which can be used to create the table manually in cqlsh
+	CreateIfNotExistStatement() (string, error)
 	// Recreate drops the table if exists and creates it again.
 	// This is useful for test purposes only.
 	Recreate() error
@@ -221,8 +227,12 @@ type Table interface {
 // QueryExecutor actually executes the queries - this is mostly useful for testing/mocking purposes,
 // ignore this otherwise. This library is using github.com/gocql/gocql as the query executor by default.
 type QueryExecutor interface {
+	// Query executes a query and returns the results.  It also takes Options to do things like set consistency
+	QueryWithOptions(opts Options, stmt string, params ...interface{}) ([]map[string]interface{}, error)
 	// Query executes a query and returns the results
 	Query(stmt string, params ...interface{}) ([]map[string]interface{}, error)
+	// Execute executes a DML query. It also takes Options to do things like set consistency
+	ExecuteWithOptions(opts Options, stmt string, params ...interface{}) error
 	// Execute executes a DML query
 	Execute(stmt string, params ...interface{}) error
 	// ExecuteAtomically executs multiple DML queries with a logged batch

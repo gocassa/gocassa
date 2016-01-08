@@ -2,6 +2,8 @@ package gocassa
 
 import (
 	"time"
+
+	"github.com/gocql/gocql"
 )
 
 type ColumnDirection bool
@@ -10,6 +12,17 @@ const (
 	ASC  ColumnDirection = false
 	DESC                 = true
 )
+
+func (d ColumnDirection) String() string {
+	switch d {
+	case ASC:
+		return "ASC"
+	case DESC:
+		return "DESC"
+	default:
+		return ""
+	}
+}
 
 // ClusteringOrderColumn specifies a clustering column and whether its
 // clustering order is ASC or DESC.
@@ -35,6 +48,12 @@ type Options struct {
 	AllowFiltering bool
 	// Select allows you to do partial reads, ie. retrieve only a subset of fields
 	Select []string
+	// Consistency specifies the consistency level. If nil, it is considered not set
+	Consistency *gocql.Consistency
+	// Setting CompactStorage to true enables table creation with compact storage
+	CompactStorage bool
+	// Compressor specifies the compressor (if any) to use on a newly created table
+	Compressor string
 }
 
 // Returns a new Options which is a right biased merge of the two initial Options.
@@ -45,6 +64,8 @@ func (o Options) Merge(neu Options) Options {
 		TableName:       o.TableName,
 		ClusteringOrder: o.ClusteringOrder,
 		Select:          o.Select,
+		CompactStorage:  o.CompactStorage,
+		Compressor:      o.Compressor,
 	}
 	if neu.TTL != time.Duration(0) {
 		ret.TTL = neu.TTL
@@ -63,6 +84,15 @@ func (o Options) Merge(neu Options) Options {
 	}
 	if len(neu.Select) > 0 {
 		ret.Select = neu.Select
+	}
+	if neu.Consistency != nil {
+		ret.Consistency = neu.Consistency
+	}
+	if neu.CompactStorage {
+		ret.CompactStorage = neu.CompactStorage
+	}
+	if len(neu.Compressor) > 0 {
+		ret.Compressor = neu.Compressor
 	}
 	return ret
 }

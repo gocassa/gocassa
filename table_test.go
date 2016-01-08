@@ -6,6 +6,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/gocql/gocql"
 )
 
 func createIf(cs TableChanger, tes *testing.T) {
@@ -191,6 +193,7 @@ func TestCreateStatement(t *testing.T) {
 		t.Fatal(str)
 	}
 }
+
 func TestAllowFiltering(t *testing.T) {
 	name := "allow_filtering"
 	cs := ns.Table(name, Customer2{}, Keys{
@@ -209,5 +212,137 @@ func TestAllowFiltering(t *testing.T) {
 	stAllow, _ := cs.Where(Eq("", "")).Read(&c2).WithOptions(op).GenerateStatement()
 	if !strings.Contains(stAllow, "ALLOW FILTERING") {
 		t.Error("Allow filtering show be included in the statement")
+	}
+}
+
+func TestKeysCreation(t *testing.T) {
+	cs := ns.Table("composite_keys", Customer{}, Keys{
+		PartitionKeys: []string{"Id", "Name"},
+	})
+	str, err := cs.CreateStatement()
+	if err != nil {
+		t.Fatal(err)
+	}
+	//composite
+	if !strings.Contains(str, "PRIMARY KEY ((id, name ))") {
+		t.Fatal(str)
+	}
+
+	cs = ns.Table("compound_keys", Customer{}, Keys{
+		PartitionKeys: []string{"Id", "Name"},
+		Compound:      true,
+	})
+	str, err = cs.CreateStatement()
+	if err != nil {
+		t.Fatal(err)
+	}
+	//compound
+	if !strings.Contains(str, "PRIMARY KEY (id, name )") {
+		t.Fatal(str)
+	}
+
+	cs = ns.Table("clustering_keys", Customer{}, Keys{
+		PartitionKeys:     []string{"Id"},
+		ClusteringColumns: []string{"Name"},
+	})
+	str, err = cs.CreateStatement()
+	if err != nil {
+		t.Fatal(err)
+	}
+	//with columns
+	if !strings.Contains(str, "PRIMARY KEY ((id), name)") {
+		t.Fatal(str)
+	}
+	//compound gets ignored when using clustering columns
+	cs = ns.Table("clustering_keys", Customer{}, Keys{
+		PartitionKeys:     []string{"Id"},
+		ClusteringColumns: []string{"Name"},
+		Compound:          true,
+	})
+	str, err = cs.CreateStatement()
+	if err != nil {
+		t.Fatal(err)
+	}
+	//with columns
+	if !strings.Contains(str, "PRIMARY KEY ((id), name)") {
+		t.Fatal(str)
+	}
+}
+
+// Mock QueryExecutor that keeps track of options passed to it
+type OptionCheckingQE struct {
+	opts *Options
+}
+
+func (qe OptionCheckingQE) QueryWithOptions(opts Options, stmt string, params ...interface{}) ([]map[string]interface{}, error) {
+	qe.opts.Consistency = opts.Consistency
+	return []map[string]interface{}{}, nil
+}
+
+func (qe OptionCheckingQE) Query(stmt string, params ...interface{}) ([]map[string]interface{}, error) {
+	return qe.QueryWithOptions(Options{}, stmt, params...)
+}
+
+func (qe OptionCheckingQE) ExecuteWithOptions(opts Options, stmt string, params ...interface{}) error {
+	qe.opts.Consistency = opts.Consistency
+	return nil
+}
+
+func (qe OptionCheckingQE) Execute(stmt string, params ...interface{}) error {
+	return qe.ExecuteWithOptions(Options{}, stmt, params...)
+}
+
+func (qe OptionCheckingQE) ExecuteAtomically(stmt []string, params [][]interface{}) error {
+	return nil
+}
+
+func TestQueryWithConsistency(t *testing.T) {
+	// It's tricky to verify this against a live DB, so mock out the
+	// query executor and make sure the right options get passed
+	// through
+	resultOpts := Options{}
+	qe := OptionCheckingQE{opts: &resultOpts}
+	conn := &connection{q: qe}
+	ks := conn.KeySpace("some ks")
+	cs := ks.Table("customerWithConsistency", Customer{}, Keys{PartitionKeys: []string{"Id"}})
+	res := &[]Customer{}
+	cons := gocql.Quorum
+	opts := Options{Consistency: &cons}
+
+	q := cs.Where(Eq("Id", 1)).Read(res).WithOptions(opts)
+
+	if err := q.Run(); err != nil {
+		t.Fatal(err)
+	}
+	if resultOpts.Consistency == nil {
+		t.Fatal(fmt.Sprint("Expected consistency:", cons, "got: nil"))
+	}
+	if resultOpts.Consistency != nil && *resultOpts.Consistency != cons {
+		t.Fatal(fmt.Sprint("Expected consistency:", cons, "got:", resultOpts.Consistency))
+	}
+}
+
+func TestExecuteWithConsistency(t *testing.T) {
+	resultOpts := Options{}
+	qe := OptionCheckingQE{opts: &resultOpts}
+	conn := &connection{q: qe}
+	ks := conn.KeySpace("some ks")
+	cs := ks.Table("customerWithConsistency2", Customer{}, Keys{PartitionKeys: []string{"Id"}})
+	cons := gocql.All
+	opts := Options{Consistency: &cons}
+
+	// This calls Execute() under the covers
+	err := cs.Set(Customer{
+		Id:   "100",
+		Name: "Joe",
+	}).WithOptions(opts).Run()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resultOpts.Consistency == nil {
+		t.Fatal(fmt.Sprint("Expected consistency:", cons, "got: nil"))
+	}
+	if resultOpts.Consistency != nil && *resultOpts.Consistency != cons {
+		t.Fatal(fmt.Sprint("Expected consistency:", cons, "got:", resultOpts.Consistency))
 	}
 }

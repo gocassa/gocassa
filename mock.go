@@ -2,7 +2,6 @@ package gocassa
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
@@ -83,6 +82,8 @@ func NewMockKeySpace() KeySpace {
 
 // MockTable implements the Table interface and stores rows in-memory.
 type MockTable struct {
+	sync.RWMutex
+
 	// rows is mapping from row key to column group key to column map
 	mtx     sync.RWMutex
 	name    string
@@ -94,7 +95,7 @@ type MockTable struct {
 
 type rowKey string
 type superColumn struct {
-	Key     *keyPart
+	Key     key
 	Columns map[string]interface{}
 }
 
@@ -131,16 +132,25 @@ func (t gocqlTypeInfo) Custom() string {
 type keyPart struct {
 	Key   string
 	Value interface{}
-	Tail  *keyPart
 }
 
-func (k *keyPart) Prepend(key string, value interface{}) *keyPart {
-	return &keyPart{Key: key, Value: value, Tail: k}
+func (k *keyPart) Bytes() []byte {
+	typeInfo := &gocqlTypeInfo{
+		proto: 0x03,
+		typ:   cassaType(k.Value),
+	}
+	marshalled, err := gocql.Marshal(typeInfo, k.Value)
+	if err != nil {
+		panic(err)
+	}
+	return marshalled
 }
 
-func (k *keyPart) Less(other *keyPart) bool {
-	for part, other := k, other; part != nil && other != nil; part, other = part.Tail, other.Tail {
-		cmp := bytes.Compare(part.Bytes(), other.Bytes())
+type key []keyPart
+
+func (k key) Less(other key) bool {
+	for i := 0; i < len(k) && i < len(other); i++ {
+		cmp := bytes.Compare(k[i].Bytes(), other[i].Bytes())
 		if cmp == 0 {
 			continue
 		}
@@ -150,44 +160,41 @@ func (k *keyPart) Less(other *keyPart) bool {
 	return false
 }
 
-func (k *keyPart) Bytes() []byte {
-	typeInfo := &gocqlTypeInfo{
-		proto: 0x03,
-		typ:   cassaType(k.Value),
-	}
-	// FIXME handle err
-	marshalled, _ := gocql.Marshal(typeInfo, k.Value)
-	return marshalled
-}
-
-func (k *keyPart) RowKey() rowKey {
+func (k key) RowKey() rowKey {
 	buf := bytes.Buffer{}
 
-	for part := k; part != nil; part = part.Tail {
+	for _, part := range k {
 		buf.Write(part.Bytes())
 	}
 
 	return rowKey(buf.String())
 }
 
-func (k *keyPart) ToSuperColumn() *superColumn {
+func (k key) ToSuperColumn() *superColumn {
 	return &superColumn{Key: k}
+}
+
+func (k key) Append(column string, value interface{}) key {
+	newKey := make([]keyPart, len(k)+1)
+	copy(newKey, k)
+	newKey[len(k)] = keyPart{column, value}
+	return newKey
 }
 
 func (t *MockTable) zero() interface{} {
 	return reflect.New(reflect.TypeOf(t.entity)).Interface()
 }
 
-func (t *MockTable) keyFromColumnValues(columns map[string]interface{}, keys []string) (*keyPart, error) {
-	var key *keyPart
+func (t *MockTable) keyFromColumnValues(values map[string]interface{}, keyNames []string) (key, error) {
+	var key key
 
-	for _, column := range keys {
-		value, ok := columns[column]
+	for _, keyName := range keyNames {
+		value, ok := values[keyName]
 
 		if !ok {
-			return nil, fmt.Errorf("Missing mandatory PRIMARY KEY part %s", column)
+			return nil, fmt.Errorf("Missing mandatory PRIMARY KEY part %s", keyName)
 		}
-		key = key.Prepend(column, value)
+		key = key.Append(keyName, value)
 	}
 
 	return key, nil
@@ -200,7 +207,7 @@ func (t *MockTable) Name() string {
 	return t.name
 }
 
-func (t *MockTable) getOrCreateRow(rowKey *keyPart) *btree.BTree {
+func (t *MockTable) getOrCreateRow(rowKey key) *btree.BTree {
 	t.mtx.Lock()
 	defer t.mtx.Unlock()
 	row := t.rows[rowKey.RowKey()]
@@ -211,7 +218,7 @@ func (t *MockTable) getOrCreateRow(rowKey *keyPart) *btree.BTree {
 	return row
 }
 
-func (t *MockTable) getOrCreateColumnGroup(rowKey, superColumnKey *keyPart) map[string]interface{} {
+func (t *MockTable) getOrCreateColumnGroup(rowKey, superColumnKey key) map[string]interface{} {
 	row := t.getOrCreateRow(rowKey)
 	scol := superColumnKey.ToSuperColumn()
 
@@ -226,6 +233,9 @@ func (t *MockTable) getOrCreateColumnGroup(rowKey, superColumnKey *keyPart) map[
 
 func (t *MockTable) SetWithOptions(i interface{}, options Options) Op {
 	return newOp(func(m mockOp) error {
+		t.Lock()
+		defer t.Unlock()
+
 		columns, ok := toMap(i)
 		if !ok {
 			return errors.New("Can't create: value not understood")
@@ -269,6 +279,14 @@ func (t *MockTable) CreateStatement() (string, error) {
 	return "", nil
 }
 
+func (t *MockTable) CreateIfNotExist() error {
+	return nil
+}
+
+func (t *MockTable) CreateIfNotExistStatement() (string, error) {
+	return "", nil
+}
+
 func (t *MockTable) Recreate() error {
 	return nil
 }
@@ -309,32 +327,32 @@ func (f *MockFilter) keyRelationMap() map[string]Relation {
 	return result
 }
 
-func (f *MockFilter) keysFromRelations(keys []string) ([]*keyPart, error) {
+func (f *MockFilter) keysFromRelations(keyNames []string) ([]key, error) {
 	keyRelationMap := f.keyRelationMap()
-	var rowKey *keyPart
-	var result []*keyPart
+	var rowKey key
+	var result []key
 
-	if len(keys) == 0 {
-		return []*keyPart{nil}, nil
+	if len(keyNames) == 0 {
+		return []key{key{}}, nil
 	}
 
-	for i, key := range keys {
-		lastKey := i == len(keys)-1
-		relation, ok := keyRelationMap[key]
+	for i, keyName := range keyNames {
+		lastKey := i == len(keyNames)-1
+		relation, ok := keyRelationMap[keyName]
 
 		if !ok {
-			return nil, fmt.Errorf("Missing mandatory PRIMARY KEY part %s", key)
+			return nil, fmt.Errorf("Missing mandatory PRIMARY KEY part `%s`", keyName)
 		}
 
 		if relation.op != equality && !(lastKey && relation.op == in) {
-			return nil, fmt.Errorf("Invalid use of PK %s", key)
+			return nil, fmt.Errorf("Invalid use of PK `%s`", keyName)
 		}
 
 		if !lastKey {
-			rowKey = rowKey.Prepend(key, relation.terms[0])
+			rowKey = rowKey.Append(keyName, relation.terms[0])
 		} else {
 			for _, term := range relation.terms {
-				result = append(result, rowKey.Prepend(relation.key, term))
+				result = append(result, rowKey.Append(relation.key, term))
 			}
 		}
 	}
@@ -344,6 +362,9 @@ func (f *MockFilter) keysFromRelations(keys []string) ([]*keyPart, error) {
 
 func (f *MockFilter) UpdateWithOptions(m map[string]interface{}, options Options) Op {
 	return newOp(func(mock mockOp) error {
+		f.table.Lock()
+		defer f.table.Unlock()
+
 		rowKeys, err := f.keysFromRelations(f.table.keys.PartitionKeys)
 		if err != nil {
 			return err
@@ -358,9 +379,9 @@ func (f *MockFilter) UpdateWithOptions(m map[string]interface{}, options Options
 			for _, superColumnKey := range superColumnKeys {
 				superColumn := f.table.getOrCreateColumnGroup(rowKey, superColumnKey)
 
-				for _, keyPart := range []*keyPart{rowKey, superColumnKey} {
-					for k := keyPart; k != nil; k = k.Tail {
-						superColumn[k.Key] = k.Value
+				for _, key := range []key{rowKey, superColumnKey} {
+					for _, keyPart := range key {
+						superColumn[keyPart.Key] = keyPart.Value
 					}
 				}
 
@@ -380,6 +401,9 @@ func (f *MockFilter) Update(m map[string]interface{}) Op {
 
 func (f *MockFilter) Delete() Op {
 	return newOp(func(m mockOp) error {
+		f.table.Lock()
+		defer f.table.Unlock()
+
 		rowKeys, err := f.keysFromRelations(f.table.keys.PartitionKeys)
 		if err != nil {
 			return err
@@ -409,6 +433,9 @@ func (f *MockFilter) Delete() Op {
 
 func (q *MockFilter) Read(out interface{}) Op {
 	return newOp(func(m mockOp) error {
+		q.table.Lock()
+		defer q.table.Unlock()
+
 		rowKeys, err := q.keysFromRelations(q.table.keys.PartitionKeys)
 		if err != nil {
 			return err
@@ -442,11 +469,7 @@ func (q *MockFilter) Read(out interface{}) Op {
 }
 
 func (q *MockFilter) assignResult(records interface{}, out interface{}) error {
-	bytes, err := json.Marshal(records)
-	if err != nil {
-		return err
-	}
-	return json.Unmarshal(bytes, out)
+	return decodeResult(records, out)
 }
 
 func (q *MockFilter) ReadOne(out interface{}) Op {

@@ -8,9 +8,9 @@ import (
 
 type Tweet struct {
 	Timeline      string
-	ID            gocql.UUID  `cql:"id"`
-	Ingored       string      `cql:"-"`
-	Text          string      `teXt`
+	ID            gocql.UUID `cql:"id"`
+	Ingored       string     `cql:"-"`
+	Text          string
 	OriginalTweet *gocql.UUID `json:"origin"`
 }
 
@@ -45,8 +45,8 @@ func TestStructToMap(t *testing.T) {
 	if m["id"] != tweet.ID {
 		t.Errorf("Expected %s but got %s", tweet.ID, m["id"])
 	}
-	if m["teXt"] != tweet.Text {
-		t.Errorf("Expected %s but got %s", tweet.Text, m["teXt"])
+	if m["Text"] != tweet.Text {
+		t.Errorf("Expected %s but got %s", tweet.Text, m["Text"])
 	}
 	if m["OriginalTweet"] != tweet.OriginalTweet {
 		t.Errorf("Expected %v but got %s", tweet.OriginalTweet, m["OriginalTweet"])
@@ -147,12 +147,12 @@ func TestFieldsAndValues(t *testing.T) {
 	}{
 		{
 			Tweet{},
-			[]string{"Timeline", "id", "teXt", "OriginalTweet"},
+			[]string{"Timeline", "id", "Text", "OriginalTweet"},
 			[]interface{}{"", emptyUUID, "", nilID},
 		},
 		{
 			Tweet{"timeline1", id, "ignored", "hello gocassa", &id},
-			[]string{"Timeline", "id", "teXt", "OriginalTweet"},
+			[]string{"Timeline", "id", "Text", "OriginalTweet"},
 			[]interface{}{"timeline1", id, "hello gocassa", &id},
 		},
 	}
