@@ -7,10 +7,9 @@ import (
 	"reflect"
 	"runtime"
 	"strconv"
-	"strings"
 
-	rreflect "github.com/hailocab/gocassa/reflect"
 	"github.com/mitchellh/mapstructure"
+	rreflect "github.com/mondough/gocassa/reflect"
 )
 
 const (
