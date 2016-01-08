@@ -54,6 +54,8 @@ type Options struct {
 	CompactStorage bool
 	// Compressor specifies the compressor (if any) to use on a newly created table
 	Compressor string
+	// PageSize will tell the iterator to fetch the result in pages of size n.
+	PageSize int
 }
 
 // Returns a new Options which is a right biased merge of the two initial Options.
@@ -66,6 +68,7 @@ func (o Options) Merge(neu Options) Options {
 		Select:          o.Select,
 		CompactStorage:  o.CompactStorage,
 		Compressor:      o.Compressor,
+		PageSize:        o.PageSize,
 	}
 	if neu.TTL != time.Duration(0) {
 		ret.TTL = neu.TTL
@@ -93,6 +96,9 @@ func (o Options) Merge(neu Options) Options {
 	}
 	if len(neu.Compressor) > 0 {
 		ret.Compressor = neu.Compressor
+	}
+	if neu.PageSize != 0 {
+		ret.PageSize = neu.PageSize
 	}
 	return ret
 }

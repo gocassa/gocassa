@@ -15,6 +15,12 @@ func (cb goCQLBackend) QueryWithOptions(opts Options, stmt string, vals ...inter
 	if opts.Consistency != nil {
 		qu = qu.Consistency(*opts.Consistency)
 	}
+	if opts.PageSize == -1 {
+		qu = qu.PageSize(0)
+	} else if opts.PageSize > 0 {
+		qu = qu.PageSize(opts.PageSize)
+	}
+
 	iter := qu.Iter()
 	ret := []map[string]interface{}{}
 	m := &map[string]interface{}{}
@@ -33,6 +39,11 @@ func (cb goCQLBackend) ExecuteWithOptions(opts Options, stmt string, vals ...int
 	qu := cb.session.Query(stmt, vals...)
 	if opts.Consistency != nil {
 		qu = qu.Consistency(*opts.Consistency)
+	}
+	if opts.PageSize == -1 {
+		qu = qu.PageSize(0)
+	} else if opts.PageSize > 0 {
+		qu = qu.PageSize(opts.PageSize)
 	}
 	return qu.Exec()
 }
