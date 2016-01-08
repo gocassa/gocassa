@@ -66,14 +66,15 @@ func keyValues(m map[string]interface{}) ([]string, []interface{}) {
 	return keys, values
 }
 
-func toMap(i interface{}) (map[string]interface{}, bool) {
+func toMap(i interface{}) (m map[string]interface{}, ok bool) {
 	switch v := i.(type) {
-	//case M:
-	//	return map[string]interface{}(v), true
 	case map[string]interface{}:
-		return v, true
+		m, ok = v, true
+	default:
+		m, ok = r.StructToMap(i)
 	}
-	return r.StructToMap(i)
+
+	return
 }
 
 func (t t) Where(rs ...Relation) Filter {
@@ -106,10 +107,12 @@ func relations(keys Keys, m map[string]interface{}) []Relation {
 func removeFields(m map[string]interface{}, s []string) map[string]interface{} {
 	keys := map[string]bool{}
 	for _, v := range s {
+		v = strings.ToLower(v)
 		keys[v] = true
 	}
 	ret := map[string]interface{}{}
 	for k, v := range m {
+		k = strings.ToLower(k)
 		if !keys[k] {
 			ret[k] = v
 		}
@@ -184,6 +187,14 @@ func (t t) Create() error {
 	}
 }
 
+func (t t) CreateIfNotExist() error {
+	if stmt, err := t.CreateIfNotExistStatement(); err != nil {
+		return err
+	} else {
+		return t.keySpace.qe.Execute(stmt)
+	}
+}
+
 func (t t) Recreate() error {
 	if ex, err := t.keySpace.Exists(t.Name()); ex && err == nil {
 		if err := t.keySpace.DropTable(t.Name()); err != nil {
@@ -203,6 +214,23 @@ func (t t) CreateStatement() (string, error) {
 		t.info.fields,
 		t.info.fieldValues,
 		t.options.ClusteringOrder,
+		t.info.keys.Compound,
+		t.options.CompactStorage,
+		t.options.Compressor,
+	)
+}
+
+func (t t) CreateIfNotExistStatement() (string, error) {
+	return createTableIfNotExist(t.keySpace.name,
+		t.Name(),
+		t.info.keys.PartitionKeys,
+		t.info.keys.ClusteringColumns,
+		t.info.fields,
+		t.info.fieldValues,
+		t.options.ClusteringOrder,
+		t.info.keys.Compound,
+		t.options.CompactStorage,
+		t.options.Compressor,
 	)
 }
 

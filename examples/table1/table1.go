@@ -22,7 +22,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	salesTable := keySpace.Table("sale", Sale{}, gocassa.Keys{
+	salesTable := keySpace.Table("sale", &Sale{}, gocassa.Keys{
 		PartitionKeys: []string{"Id"},
 	})
 	// Create the table - we ignore error intentionally

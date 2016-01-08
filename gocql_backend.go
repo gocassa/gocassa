@@ -10,8 +10,11 @@ type goCQLBackend struct {
 	session *gocql.Session
 }
 
-func (cb goCQLBackend) Query(stmt string, vals ...interface{}) ([]map[string]interface{}, error) {
+func (cb goCQLBackend) QueryWithOptions(opts Options, stmt string, vals ...interface{}) ([]map[string]interface{}, error) {
 	qu := cb.session.Query(stmt, vals...)
+	if opts.Consistency != nil {
+		qu = qu.Consistency(*opts.Consistency)
+	}
 	iter := qu.Iter()
 	ret := []map[string]interface{}{}
 	m := &map[string]interface{}{}
@@ -22,8 +25,20 @@ func (cb goCQLBackend) Query(stmt string, vals ...interface{}) ([]map[string]int
 	return ret, iter.Close()
 }
 
+func (cb goCQLBackend) Query(stmt string, vals ...interface{}) ([]map[string]interface{}, error) {
+	return cb.QueryWithOptions(Options{}, stmt, vals...)
+}
+
+func (cb goCQLBackend) ExecuteWithOptions(opts Options, stmt string, vals ...interface{}) error {
+	qu := cb.session.Query(stmt, vals...)
+	if opts.Consistency != nil {
+		qu = qu.Consistency(*opts.Consistency)
+	}
+	return qu.Exec()
+}
+
 func (cb goCQLBackend) Execute(stmt string, vals ...interface{}) error {
-	return cb.session.Query(stmt, vals...).Exec()
+	return cb.ExecuteWithOptions(Options{}, stmt, vals...)
 }
 
 func (cb goCQLBackend) ExecuteAtomically(stmts []string, vals [][]interface{}) error {
