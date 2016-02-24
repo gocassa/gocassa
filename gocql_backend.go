@@ -56,6 +56,10 @@ func (cb goCQLBackend) ExecuteAtomically(stmts []string, vals [][]interface{}) e
 	return cb.session.ExecuteBatch(batch)
 }
 
+func (cb goCQLBackend) Close() {
+	cb.session.Close()
+}
+
 // GoCQLSessionToQueryExecutor enables you to supply your own gocql session with your custom options
 // Then you can use NewConnection to mint your own thing
 // See #90 for more details
