@@ -16,9 +16,19 @@ import (
 const flakeTimestampFieldName = "flake_created"
 
 type flakeSeriesT struct {
-	Table
+	t          Table
 	idField    string
 	bucketSize time.Duration
+}
+
+func (o *flakeSeriesT) Table() Table                     { return o.t }
+func (o *flakeSeriesT) Create() error                    { return o.Table().Create() }
+func (o *flakeSeriesT) CreateIfNotExist() error          { return o.Table().CreateIfNotExist() }
+func (o *flakeSeriesT) Name() string                     { return o.Table().Name() }
+func (o *flakeSeriesT) Recreate() error                  { return o.Table().Recreate() }
+func (o *flakeSeriesT) CreateStatement() (string, error) { return o.Table().CreateStatement() }
+func (o *flakeSeriesT) CreateIfNotExistStatement() (string, error) {
+	return o.Table().CreateIfNotExistStatement()
 }
 
 func (o *flakeSeriesT) Set(v interface{}) Op {
@@ -39,7 +49,7 @@ func (o *flakeSeriesT) Set(v interface{}) Op {
 	m[flakeTimestampFieldName] = timestamp
 	m[bucketFieldName] = o.bucket(timestamp.Unix())
 
-	return o.Table.Set(m)
+	return o.Table().Set(m)
 }
 
 func (o *flakeSeriesT) Update(id string, m map[string]interface{}) Op {
@@ -49,7 +59,11 @@ func (o *flakeSeriesT) Update(id string, m map[string]interface{}) Op {
 	}
 	bucket := o.bucket(timestamp.Unix())
 
-	return o.Where(Eq(bucketFieldName, bucket), Eq(flakeTimestampFieldName, timestamp), Eq(o.idField, id)).Update(m)
+	return o.Table().
+		Where(Eq(bucketFieldName, bucket),
+			Eq(flakeTimestampFieldName, timestamp),
+			Eq(o.idField, id)).
+		Update(m)
 }
 
 func (o *flakeSeriesT) Delete(id string) Op {
@@ -59,7 +73,11 @@ func (o *flakeSeriesT) Delete(id string) Op {
 	}
 	bucket := o.bucket(timestamp.Unix())
 
-	return o.Where(Eq(bucketFieldName, bucket), Eq(flakeTimestampFieldName, timestamp), Eq(o.idField, id)).Delete()
+	return o.Table().
+		Where(Eq(bucketFieldName, bucket),
+			Eq(flakeTimestampFieldName, timestamp),
+			Eq(o.idField, id)).
+		Delete()
 }
 
 func (o *flakeSeriesT) Read(id string, pointer interface{}) Op {
@@ -68,12 +86,20 @@ func (o *flakeSeriesT) Read(id string, pointer interface{}) Op {
 		return errOp{err: err}
 	}
 	bucket := o.bucket(timestamp.Unix())
-	return o.Where(Eq(bucketFieldName, bucket), Eq(flakeTimestampFieldName, timestamp), Eq(o.idField, id)).ReadOne(pointer)
+	return o.Table().
+		Where(Eq(bucketFieldName, bucket),
+			Eq(flakeTimestampFieldName, timestamp),
+			Eq(o.idField, id)).
+		ReadOne(pointer)
 }
 
 func (o *flakeSeriesT) List(startTime, endTime time.Time, pointerToASlice interface{}) Op {
 	buckets := o.buckets(startTime, endTime)
-	return o.Where(In(bucketFieldName, buckets...), GTE(flakeTimestampFieldName, startTime), LT(flakeTimestampFieldName, endTime)).Read(pointerToASlice)
+	return o.Table().
+		Where(In(bucketFieldName, buckets...),
+			GTE(flakeTimestampFieldName, startTime),
+			LT(flakeTimestampFieldName, endTime)).
+		Read(pointerToASlice)
 }
 
 func (o *flakeSeriesT) ListSince(id string, window time.Duration, pointerToASlice interface{}) Op {
@@ -91,12 +117,17 @@ func (o *flakeSeriesT) ListSince(id string, window time.Duration, pointerToASlic
 		endTime = startTime.Add(window)
 	}
 	buckets := o.buckets(startTime, endTime)
-	return o.Where(In(bucketFieldName, buckets), GTE(flakeTimestampFieldName, startTime), LT(flakeTimestampFieldName, endTime), GT(o.idField, id)).Read(pointerToASlice)
+	return o.Table().
+		Where(In(bucketFieldName, buckets),
+			GTE(flakeTimestampFieldName, startTime),
+			LT(flakeTimestampFieldName, endTime),
+			GT(o.idField, id)).
+		Read(pointerToASlice)
 }
 
 func (o *flakeSeriesT) WithOptions(opt Options) FlakeSeriesTable {
 	return &flakeSeriesT{
-		Table:      o.Table.WithOptions(opt),
+		t:          o.Table().WithOptions(opt),
 		idField:    o.idField,
 		bucketSize: o.bucketSize}
 }

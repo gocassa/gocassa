@@ -45,6 +45,7 @@ type MapTable interface {
 	Read(id, pointer interface{}) Op
 	MultiRead(ids []interface{}, pointerToASlice interface{}) Op
 	WithOptions(Options) MapTable
+	Table() Table
 	TableChanger
 }
 
@@ -62,6 +63,7 @@ type MultimapTable interface {
 	Read(v, id, pointer interface{}) Op
 	MultiRead(v interface{}, ids []interface{}, pointerToASlice interface{}) Op
 	WithOptions(Options) MultimapTable
+	Table() Table
 	TableChanger
 }
 
@@ -75,6 +77,7 @@ type MultimapMkTable interface {
 	Read(v, id map[string]interface{}, pointer interface{}) Op
 	MultiRead(v, id map[string]interface{}, pointerToASlice interface{}) Op
 	WithOptions(Options) MultimapMkTable
+	Table() Table
 	TableChanger
 }
 
@@ -91,6 +94,7 @@ type TimeSeriesTable interface {
 	Read(timeStamp time.Time, id, pointer interface{}) Op
 	List(start, end time.Time, pointerToASlice interface{}) Op
 	WithOptions(Options) TimeSeriesTable
+	Table() Table
 	TableChanger
 }
 
@@ -107,6 +111,7 @@ type MultiTimeSeriesTable interface {
 	Read(v interface{}, timeStamp time.Time, id, pointer interface{}) Op
 	List(v interface{}, start, end time.Time, pointerToASlice interface{}) Op
 	WithOptions(Options) MultiTimeSeriesTable
+	Table() Table
 	TableChanger
 }
 
@@ -120,6 +125,7 @@ type FlakeSeriesTable interface {
 	// if the time window is zero then it lists up until 5 minutes in the future
 	ListSince(id string, window time.Duration, pointerToASlice interface{}) Op
 	WithOptions(Options) FlakeSeriesTable
+	Table() Table
 	TableChanger
 }
 
@@ -133,6 +139,7 @@ type MultiFlakeSeriesTable interface {
 	// if the time window is zero then it lists up until 5 minutes in the future
 	ListSince(v interface{}, id string, window time.Duration, pointerToASlice interface{}) Op
 	WithOptions(Options) MultiFlakeSeriesTable
+	Table() Table
 	TableChanger
 }
 
@@ -206,8 +213,6 @@ type TableChanger interface {
 	Recreate() error
 	// Name returns the name of the table, as in C*
 	Name() string
-	//Drop() error
-	//CreateIfDoesNotExist() error
 }
 
 // Table is the only non-recipe table, it is the "raw CQL table", it lets you do pretty much whatever you want

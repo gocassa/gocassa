@@ -5,11 +5,21 @@ import (
 )
 
 type multiTimeSeriesT struct {
-	Table
+	t          Table
 	indexField string
 	timeField  string
 	idField    string
 	bucketSize time.Duration
+}
+
+func (o *multiTimeSeriesT) Table() Table                     { return o.t }
+func (o *multiTimeSeriesT) Create() error                    { return o.Table().Create() }
+func (o *multiTimeSeriesT) CreateIfNotExist() error          { return o.Table().CreateIfNotExist() }
+func (o *multiTimeSeriesT) Name() string                     { return o.Table().Name() }
+func (o *multiTimeSeriesT) Recreate() error                  { return o.Table().Recreate() }
+func (o *multiTimeSeriesT) CreateStatement() (string, error) { return o.Table().CreateStatement() }
+func (o *multiTimeSeriesT) CreateIfNotExistStatement() (string, error) {
+	return o.Table().CreateIfNotExistStatement()
 }
 
 func (o *multiTimeSeriesT) Set(v interface{}) Op {
@@ -22,7 +32,8 @@ func (o *multiTimeSeriesT) Set(v interface{}) Op {
 	} else {
 		m[bucketFieldName] = o.bucket(tim.Unix())
 	}
-	return o.Table.Set(m)
+	return o.Table().
+		Set(m)
 }
 
 func (o *multiTimeSeriesT) bucket(secs int64) int64 {
@@ -31,17 +42,32 @@ func (o *multiTimeSeriesT) bucket(secs int64) int64 {
 
 func (o *multiTimeSeriesT) Update(v interface{}, timeStamp time.Time, id interface{}, m map[string]interface{}) Op {
 	bucket := o.bucket(timeStamp.Unix())
-	return o.Where(Eq(o.indexField, v), Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Update(m)
+	return o.Table().
+		Where(Eq(o.indexField, v),
+			Eq(bucketFieldName, bucket),
+			Eq(o.timeField, timeStamp),
+			Eq(o.idField, id)).
+		Update(m)
 }
 
 func (o *multiTimeSeriesT) Delete(v interface{}, timeStamp time.Time, id interface{}) Op {
 	bucket := o.bucket(timeStamp.Unix())
-	return o.Where(Eq(o.indexField, v), Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Delete()
+	return o.Table().
+		Where(Eq(o.indexField, v),
+			Eq(bucketFieldName, bucket),
+			Eq(o.timeField, timeStamp),
+			Eq(o.idField, id)).
+		Delete()
 }
 
 func (o *multiTimeSeriesT) Read(v interface{}, timeStamp time.Time, id, pointer interface{}) Op {
 	bucket := o.bucket(timeStamp.Unix())
-	return o.Where(Eq(o.indexField, v), Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).ReadOne(pointer)
+	return o.Table().
+		Where(Eq(o.indexField, v),
+			Eq(bucketFieldName, bucket),
+			Eq(o.timeField, timeStamp),
+			Eq(o.idField, id)).
+		ReadOne(pointer)
 
 }
 
@@ -54,12 +80,17 @@ func (o *multiTimeSeriesT) List(v interface{}, startTime time.Time, endTime time
 		}
 		buckets = append(buckets, i)
 	}
-	return o.Where(Eq(o.indexField, v), In(bucketFieldName, buckets...), GTE(o.timeField, startTime), LTE(o.timeField, endTime)).Read(pointerToASlice)
+	return o.Table().
+		Where(Eq(o.indexField, v),
+			In(bucketFieldName, buckets...),
+			GTE(o.timeField, startTime),
+			LTE(o.timeField, endTime)).
+		Read(pointerToASlice)
 }
 
 func (o *multiTimeSeriesT) WithOptions(opt Options) MultiTimeSeriesTable {
 	return &multiTimeSeriesT{
-		Table:      o.Table.WithOptions(opt),
+		t:          o.Table().WithOptions(opt),
 		indexField: o.indexField,
 		timeField:  o.timeField,
 		idField:    o.idField,

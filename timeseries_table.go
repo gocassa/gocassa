@@ -7,10 +7,20 @@ import (
 const bucketFieldName = "bucket"
 
 type timeSeriesT struct {
-	Table
+	t          Table
 	timeField  string
 	idField    string
 	bucketSize time.Duration
+}
+
+func (o *timeSeriesT) Table() Table                     { return o.t }
+func (o *timeSeriesT) Create() error                    { return o.Table().Create() }
+func (o *timeSeriesT) CreateIfNotExist() error          { return o.Table().CreateIfNotExist() }
+func (o *timeSeriesT) Name() string                     { return o.Table().Name() }
+func (o *timeSeriesT) Recreate() error                  { return o.Table().Recreate() }
+func (o *timeSeriesT) CreateStatement() (string, error) { return o.Table().CreateStatement() }
+func (o *timeSeriesT) CreateIfNotExistStatement() (string, error) {
+	return o.Table().CreateIfNotExistStatement()
 }
 
 func (o *timeSeriesT) Set(v interface{}) Op {
@@ -23,7 +33,7 @@ func (o *timeSeriesT) Set(v interface{}) Op {
 	} else {
 		m[bucketFieldName] = o.bucket(tim.Unix())
 	}
-	return o.Table.Set(m)
+	return o.Table().Set(m)
 }
 
 func (o *timeSeriesT) bucket(secs int64) int64 {
@@ -32,17 +42,29 @@ func (o *timeSeriesT) bucket(secs int64) int64 {
 
 func (o *timeSeriesT) Update(timeStamp time.Time, id interface{}, m map[string]interface{}) Op {
 	bucket := o.bucket(timeStamp.Unix())
-	return o.Where(Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Update(m)
+	return o.Table().
+		Where(Eq(bucketFieldName, bucket),
+			Eq(o.timeField, timeStamp),
+			Eq(o.idField, id)).
+		Update(m)
 }
 
 func (o *timeSeriesT) Delete(timeStamp time.Time, id interface{}) Op {
 	bucket := o.bucket(timeStamp.Unix())
-	return o.Where(Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).Delete()
+	return o.Table().
+		Where(Eq(bucketFieldName, bucket),
+			Eq(o.timeField, timeStamp),
+			Eq(o.idField, id)).
+		Delete()
 }
 
 func (o *timeSeriesT) Read(timeStamp time.Time, id, pointer interface{}) Op {
 	bucket := o.bucket(timeStamp.Unix())
-	return o.Where(Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id)).ReadOne(pointer)
+	return o.Table().
+		Where(Eq(bucketFieldName, bucket),
+			Eq(o.timeField, timeStamp),
+			Eq(o.idField, id)).
+		ReadOne(pointer)
 }
 
 func (o *timeSeriesT) List(startTime time.Time, endTime time.Time, pointerToASlice interface{}) Op {
@@ -54,12 +76,16 @@ func (o *timeSeriesT) List(startTime time.Time, endTime time.Time, pointerToASli
 		}
 		buckets = append(buckets, i)
 	}
-	return o.Where(In(bucketFieldName, buckets...), GTE(o.timeField, startTime), LTE(o.timeField, endTime)).Read(pointerToASlice)
+	return o.Table().
+		Where(In(bucketFieldName, buckets...),
+			GTE(o.timeField, startTime),
+			LTE(o.timeField, endTime)).
+		Read(pointerToASlice)
 }
 
 func (o *timeSeriesT) WithOptions(opt Options) TimeSeriesTable {
 	return &timeSeriesT{
-		Table:      o.Table.WithOptions(opt),
+		t:          o.Table().WithOptions(opt),
 		timeField:  o.timeField,
 		idField:    o.idField,
 		bucketSize: o.bucketSize,
