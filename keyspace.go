@@ -60,7 +60,7 @@ func (k *k) MapTable(name, id string, row interface{}) MapTable {
 		panic("Unrecognized row type")
 	}
 	return &mapT{
-		Table: k.NewTable(fmt.Sprintf("%s_map_%s", name, id), row, m, Keys{
+		t: k.NewTable(fmt.Sprintf("%s_map_%s", name, id), row, m, Keys{
 			PartitionKeys: []string{id},
 		}),
 		idField: id,
@@ -77,7 +77,7 @@ func (k *k) MultimapTable(name, fieldToIndexBy, id string, row interface{}) Mult
 		panic("Unrecognized row type")
 	}
 	return &multimapT{
-		Table: k.NewTable(fmt.Sprintf("%s_multimap_%s_%s", name, fieldToIndexBy, id), row, m, Keys{
+		t: k.NewTable(fmt.Sprintf("%s_multimap_%s_%s", name, fieldToIndexBy, id), row, m, Keys{
 			PartitionKeys:     []string{fieldToIndexBy},
 			ClusteringColumns: []string{id},
 		}),
@@ -92,7 +92,7 @@ func (k *k) MultimapMultiKeyTable(name string, fieldToIndexBy, id []string, row 
 		panic("Unrecognized row type")
 	}
 	return &multimapMkT{
-		Table: k.NewTable(fmt.Sprintf("%s_multimapMk", name), row, m, Keys{
+		t: k.NewTable(fmt.Sprintf("%s_multimapMk", name), row, m, Keys{
 			PartitionKeys:     fieldToIndexBy,
 			ClusteringColumns: id,
 		}),
@@ -108,7 +108,7 @@ func (k *k) TimeSeriesTable(name, timeField, idField string, bucketSize time.Dur
 	}
 	m[bucketFieldName] = time.Now()
 	return &timeSeriesT{
-		Table: k.NewTable(fmt.Sprintf("%s_timeSeries_%s_%s_%s", name, timeField, idField, bucketSize), row, m, Keys{
+		t: k.NewTable(fmt.Sprintf("%s_timeSeries_%s_%s_%s", name, timeField, idField, bucketSize), row, m, Keys{
 			PartitionKeys:     []string{bucketFieldName},
 			ClusteringColumns: []string{timeField, idField},
 		}),
@@ -125,7 +125,7 @@ func (k *k) MultiTimeSeriesTable(name, indexField, timeField, idField string, bu
 	}
 	m[bucketFieldName] = time.Now()
 	return &multiTimeSeriesT{
-		Table: k.NewTable(fmt.Sprintf("%s_multiTimeSeries_%s_%s_%s_%s", name, indexField, timeField, idField, bucketSize.String()), row, m, Keys{
+		t: k.NewTable(fmt.Sprintf("%s_multiTimeSeries_%s_%s_%s_%s", name, indexField, timeField, idField, bucketSize.String()), row, m, Keys{
 			PartitionKeys:     []string{indexField, bucketFieldName},
 			ClusteringColumns: []string{timeField, idField},
 		}),
@@ -144,7 +144,7 @@ func (k *k) FlakeSeriesTable(name, idField string, bucketSize time.Duration, row
 	m[flakeTimestampFieldName] = time.Now()
 	m[bucketFieldName] = time.Now()
 	return &flakeSeriesT{
-		Table: k.NewTable(fmt.Sprintf("%s_flakeSeries_%s_%s", name, idField, bucketSize.String()), row, m, Keys{
+		t: k.NewTable(fmt.Sprintf("%s_flakeSeries_%s_%s", name, idField, bucketSize.String()), row, m, Keys{
 			PartitionKeys:     []string{bucketFieldName},
 			ClusteringColumns: []string{flakeTimestampFieldName, idField},
 		}),
@@ -161,7 +161,7 @@ func (k *k) MultiFlakeSeriesTable(name, indexField, idField string, bucketSize t
 	m[flakeTimestampFieldName] = time.Now()
 	m[bucketFieldName] = time.Now()
 	return &multiFlakeSeriesT{
-		Table: k.NewTable(fmt.Sprintf("%s_multiflakeSeries_%s_%s_%s", name, indexField, idField, bucketSize.String()), row, m, Keys{
+		t: k.NewTable(fmt.Sprintf("%s_multiflakeSeries_%s_%s_%s", name, indexField, idField, bucketSize.String()), row, m, Keys{
 			PartitionKeys:     []string{indexField, bucketFieldName},
 			ClusteringColumns: []string{flakeTimestampFieldName, idField},
 		}),
