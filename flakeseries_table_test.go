@@ -16,7 +16,7 @@ func timeToFlake(t *testing.T, time string) string {
 	return "id_" + base62.EncodeBigInt(bf)
 }
 
-func TestFlakeSeriesT(t *testing.T) {
+func TestFlakeSeriesTable(t *testing.T) {
 	tbl := ns.FlakeSeriesTable("tripFlake5", "Id", time.Minute, Trip{})
 	createIf(tbl.(TableChanger), t)
 	id1 := timeToFlake(t, "2006 Jan 2 15:03:59")
