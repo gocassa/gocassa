@@ -93,6 +93,7 @@ type TimeSeriesTable interface {
 	Delete(timeStamp time.Time, id interface{}) Op
 	Read(timeStamp time.Time, id, pointer interface{}) Op
 	List(start, end time.Time, pointerToASlice interface{}) Op
+	ListBucketed(start time.Time) Buckets
 	WithOptions(Options) TimeSeriesTable
 	Table() Table
 	TableChanger
@@ -122,6 +123,7 @@ type FlakeSeriesTable interface {
 	Delete(id string) Op
 	Read(id string, pointer interface{}) Op
 	List(start, end time.Time, pointerToASlice interface{}) Op
+	// ListBucketed(v interface{}, start time.Time) Buckets
 	// ListSince queries the flakeSeries for the items after the specified ID but within the time window,
 	// if the time window is zero then it lists up until 5 minutes in the future
 	ListSince(id string, window time.Duration, pointerToASlice interface{}) Op
@@ -136,6 +138,7 @@ type MultiFlakeSeriesTable interface {
 	Delete(v interface{}, id string) Op
 	Read(v interface{}, id string, pointer interface{}) Op
 	List(v interface{}, start, end time.Time, pointerToASlice interface{}) Op
+	// ListBucketed(v interface{}, start time.Time) Buckets
 	// ListSince queries the flakeSeries for the items after the specified ID but within the time window,
 	// if the time window is zero then it lists up until 5 minutes in the future
 	ListSince(v interface{}, id string, window time.Duration, pointerToASlice interface{}) Op

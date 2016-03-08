@@ -31,17 +31,13 @@ func (o *timeSeriesT) Set(v interface{}) Op {
 	if tim, ok := m[o.timeField].(time.Time); !ok {
 		panic("timeField is not actually a time.Time")
 	} else {
-		m[bucketFieldName] = o.bucket(tim.Unix())
+		m[bucketFieldName] = bucket(tim, o.bucketSize)
 	}
 	return o.Table().Set(m)
 }
 
-func (o *timeSeriesT) bucket(secs int64) int64 {
-	return (secs - secs%int64(o.bucketSize/time.Second)) * 1000
-}
-
 func (o *timeSeriesT) Update(timeStamp time.Time, id interface{}, m map[string]interface{}) Op {
-	bucket := o.bucket(timeStamp.Unix())
+	bucket := bucket(timeStamp, o.bucketSize)
 	return o.Table().
 		Where(Eq(bucketFieldName, bucket),
 			Eq(o.timeField, timeStamp),
@@ -50,7 +46,7 @@ func (o *timeSeriesT) Update(timeStamp time.Time, id interface{}, m map[string]i
 }
 
 func (o *timeSeriesT) Delete(timeStamp time.Time, id interface{}) Op {
-	bucket := o.bucket(timeStamp.Unix())
+	bucket := bucket(timeStamp, o.bucketSize)
 	return o.Table().
 		Where(Eq(bucketFieldName, bucket),
 			Eq(o.timeField, timeStamp),
@@ -59,7 +55,7 @@ func (o *timeSeriesT) Delete(timeStamp time.Time, id interface{}) Op {
 }
 
 func (o *timeSeriesT) Read(timeStamp time.Time, id, pointer interface{}) Op {
-	bucket := o.bucket(timeStamp.Unix())
+	bucket := bucket(timeStamp, o.bucketSize)
 	return o.Table().
 		Where(Eq(bucketFieldName, bucket),
 			Eq(o.timeField, timeStamp),
@@ -69,18 +65,22 @@ func (o *timeSeriesT) Read(timeStamp time.Time, id, pointer interface{}) Op {
 
 func (o *timeSeriesT) List(startTime time.Time, endTime time.Time, pointerToASlice interface{}) Op {
 	buckets := []interface{}{}
-	start := o.bucket(startTime.Unix())
-	for i := start; ; i += int64(o.bucketSize/time.Second) * 1000 {
-		if i >= endTime.Unix()*1000 {
-			break
-		}
-		buckets = append(buckets, i)
+	for bucket := o.ListBucketed(startTime); bucket.Bucket().Before(endTime); bucket = bucket.Next() {
+		buckets = append(buckets, bucket.Bucket())
 	}
 	return o.Table().
 		Where(In(bucketFieldName, buckets...),
 			GTE(o.timeField, startTime),
 			LTE(o.timeField, endTime)).
 		Read(pointerToASlice)
+}
+
+func (o *timeSeriesT) ListBucketed(start time.Time) Buckets {
+	return bucketIter{
+		v:         start,
+		step:      o.bucketSize,
+		field:     bucketFieldName,
+		invariant: o.Table().Where().(filter)}
 }
 
 func (o *timeSeriesT) WithOptions(opt Options) TimeSeriesTable {
