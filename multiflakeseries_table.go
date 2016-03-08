@@ -106,7 +106,7 @@ func (o *multiFlakeSeriesT) ListBucketed(v interface{}, start time.Time) Buckets
 		v:         start,
 		step:      o.bucketSize,
 		field:     bucketFieldName,
-		invariant: o.Table().Where(Eq(o.indexField, v)).(filter)}
+		invariant: o.Table().Where(Eq(o.indexField, v))}
 }
 
 func (o *multiFlakeSeriesT) ListSince(v interface{}, id string, window time.Duration, pointerToASlice interface{}) Op {

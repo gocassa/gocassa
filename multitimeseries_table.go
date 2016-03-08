@@ -85,7 +85,7 @@ func (o *multiTimeSeriesT) ListBucketed(v interface{}, start time.Time) Buckets 
 		v:         start,
 		step:      o.bucketSize,
 		field:     bucketFieldName,
-		invariant: o.Table().Where(Eq(o.indexField, v)).(filter)}
+		invariant: o.Table().Where(Eq(o.indexField, v))}
 }
 
 func (o *multiTimeSeriesT) WithOptions(opt Options) MultiTimeSeriesTable {

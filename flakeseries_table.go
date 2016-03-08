@@ -110,7 +110,7 @@ func (o *flakeSeriesT) ListBucketed(start time.Time) Buckets {
 		v:         start,
 		step:      o.bucketSize,
 		field:     bucketFieldName,
-		invariant: o.Table().Where().(filter)}
+		invariant: o.Table().Where()}
 }
 
 func (o *flakeSeriesT) ListSince(id string, window time.Duration, pointerToASlice interface{}) Op {

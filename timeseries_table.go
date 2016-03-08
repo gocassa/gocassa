@@ -80,7 +80,7 @@ func (o *timeSeriesT) ListBucketed(start time.Time) Buckets {
 		v:         start,
 		step:      o.bucketSize,
 		field:     bucketFieldName,
-		invariant: o.Table().Where().(filter)}
+		invariant: o.Table().Where()}
 }
 
 func (o *timeSeriesT) WithOptions(opt Options) TimeSeriesTable {
