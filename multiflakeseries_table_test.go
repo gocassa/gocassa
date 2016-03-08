@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func TestMultiFlakeSeriesT(t *testing.T) {
+func TestMultiFlakeSeriesTable(t *testing.T) {
 	tbl := ns.MultiFlakeSeriesTable("tripFlake6", "Tag", "Id", time.Minute, TripB{})
 	createIf(tbl.(TableChanger), t)
 	id1 := timeToFlake(t, "2006 Jan 2 15:03:59")

@@ -138,7 +138,7 @@ type MultiFlakeSeriesTable interface {
 	Delete(v interface{}, id string) Op
 	Read(v interface{}, id string, pointer interface{}) Op
 	List(v interface{}, start, end time.Time, pointerToASlice interface{}) Op
-	// ListBucketed(v interface{}, start time.Time) Buckets
+	ListBucketed(v interface{}, start time.Time) Buckets
 	// ListSince queries the flakeSeries for the items after the specified ID but within the time window,
 	// if the time window is zero then it lists up until 5 minutes in the future
 	ListSince(v interface{}, id string, window time.Duration, pointerToASlice interface{}) Op
