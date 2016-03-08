@@ -110,6 +110,7 @@ type MultiTimeSeriesTable interface {
 	Delete(v interface{}, timeStamp time.Time, id interface{}) Op
 	Read(v interface{}, timeStamp time.Time, id, pointer interface{}) Op
 	List(v interface{}, start, end time.Time, pointerToASlice interface{}) Op
+	ListBucketed(v interface{}, start time.Time) Buckets
 	WithOptions(Options) MultiTimeSeriesTable
 	Table() Table
 	TableChanger

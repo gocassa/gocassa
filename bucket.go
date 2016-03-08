@@ -4,6 +4,12 @@ import (
 	"time"
 )
 
+func bucket(t time.Time, step time.Duration) time.Time {
+	return bucketIter{
+		v:    t,
+		step: step}.Bucket()
+}
+
 type bucketIter struct {
 	v         time.Time
 	step      time.Duration
