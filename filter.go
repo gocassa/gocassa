@@ -9,6 +9,10 @@ func (f filter) Table() Table {
 	return f.t
 }
 
+func (f filter) Relations() []Relation {
+	return f.rs
+}
+
 func (f filter) Update(m map[string]interface{}) Op {
 	return newWriteOp(f.t.keySpace.qe, f, updateOpType, m)
 }

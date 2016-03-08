@@ -14,7 +14,7 @@ type bucketIter struct {
 	v         time.Time
 	step      time.Duration
 	field     string
-	invariant filter
+	invariant Filter
 }
 
 func (b bucketIter) String() string {
@@ -47,7 +47,7 @@ func (b bucketIter) Prev() Buckets {
 }
 
 func (b bucketIter) Filter() Filter {
-	rels := b.invariant.rs
+	rels := b.invariant.Relations()
 	rels = append(rels, Eq(b.field, b.Bucket()))
-	return b.invariant.t.Where(rels...)
+	return b.invariant.Table().Where(rels...)
 }

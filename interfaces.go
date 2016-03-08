@@ -164,6 +164,8 @@ type Filter interface {
 	ReadOne(pointer interface{}) Op
 	// Table on which this filter operates.
 	Table() Table
+	// Relations which make up this filter. These should not be modified.
+	Relations() []Relation
 }
 
 // Keys is used with the raw CQL Table type. It is implicit when using recipe tables.
