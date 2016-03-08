@@ -307,6 +307,10 @@ type MockFilter struct {
 	relations []Relation
 }
 
+func (f *MockFilter) Table() Table {
+	return f.table
+}
+
 func (f *MockFilter) rowMatch(row map[string]interface{}) bool {
 	for _, relation := range f.relations {
 		value := row[relation.key]

@@ -5,6 +5,10 @@ type filter struct {
 	rs []Relation
 }
 
+func (f filter) Table() Table {
+	return f.t
+}
+
 func (f filter) Update(m map[string]interface{}) Op {
 	return newWriteOp(f.t.keySpace.qe, f, updateOpType, m)
 }
