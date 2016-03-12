@@ -65,7 +65,7 @@ func (o *timeSeriesT) Read(timeStamp time.Time, id, pointer interface{}) Op {
 
 func (o *timeSeriesT) List(startTime time.Time, endTime time.Time, pointerToASlice interface{}) Op {
 	buckets := []interface{}{}
-	for bucket := o.ListBucketed(startTime); bucket.Bucket().Before(endTime); bucket = bucket.Next() {
+	for bucket := o.Buckets(startTime); bucket.Bucket().Before(endTime); bucket = bucket.Next() {
 		buckets = append(buckets, bucket.Bucket())
 	}
 	return o.Table().
@@ -75,7 +75,7 @@ func (o *timeSeriesT) List(startTime time.Time, endTime time.Time, pointerToASli
 		Read(pointerToASlice)
 }
 
-func (o *timeSeriesT) ListBucketed(start time.Time) Buckets {
+func (o *timeSeriesT) Buckets(start time.Time) Buckets {
 	return bucketIter{
 		v:         start,
 		step:      o.bucketSize,

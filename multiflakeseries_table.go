@@ -90,7 +90,7 @@ func (o *multiFlakeSeriesT) Read(v interface{}, id string, pointer interface{}) 
 
 func (o *multiFlakeSeriesT) List(v interface{}, startTime, endTime time.Time, pointerToASlice interface{}) Op {
 	buckets := []interface{}{}
-	for bucket := o.ListBucketed(v, startTime); bucket.Bucket().Before(endTime); bucket = bucket.Next() {
+	for bucket := o.Buckets(v, startTime); bucket.Bucket().Before(endTime); bucket = bucket.Next() {
 		buckets = append(buckets, bucket.Bucket())
 	}
 	return o.Table().
@@ -101,7 +101,7 @@ func (o *multiFlakeSeriesT) List(v interface{}, startTime, endTime time.Time, po
 		Read(pointerToASlice)
 }
 
-func (o *multiFlakeSeriesT) ListBucketed(v interface{}, start time.Time) Buckets {
+func (o *multiFlakeSeriesT) Buckets(v interface{}, start time.Time) Buckets {
 	return bucketIter{
 		v:         start,
 		step:      o.bucketSize,
@@ -124,7 +124,7 @@ func (o *multiFlakeSeriesT) ListSince(v interface{}, id string, window time.Dura
 	}
 
 	buckets := []interface{}{}
-	for bucket := o.ListBucketed(v, startTime); bucket.Bucket().Before(endTime); bucket = bucket.Next() {
+	for bucket := o.Buckets(v, startTime); bucket.Bucket().Before(endTime); bucket = bucket.Next() {
 		buckets = append(buckets, bucket.Bucket())
 	}
 

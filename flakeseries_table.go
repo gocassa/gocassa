@@ -95,7 +95,7 @@ func (o *flakeSeriesT) Read(id string, pointer interface{}) Op {
 
 func (o *flakeSeriesT) List(startTime, endTime time.Time, pointerToASlice interface{}) Op {
 	buckets := []interface{}{}
-	for bucket := o.ListBucketed(startTime); bucket.Bucket().Before(endTime); bucket = bucket.Next() {
+	for bucket := o.Buckets(startTime); bucket.Bucket().Before(endTime); bucket = bucket.Next() {
 		buckets = append(buckets, bucket.Bucket())
 	}
 	return o.Table().
@@ -105,7 +105,7 @@ func (o *flakeSeriesT) List(startTime, endTime time.Time, pointerToASlice interf
 		Read(pointerToASlice)
 }
 
-func (o *flakeSeriesT) ListBucketed(start time.Time) Buckets {
+func (o *flakeSeriesT) Buckets(start time.Time) Buckets {
 	return bucketIter{
 		v:         start,
 		step:      o.bucketSize,
@@ -128,7 +128,7 @@ func (o *flakeSeriesT) ListSince(id string, window time.Duration, pointerToASlic
 	}
 
 	buckets := []interface{}{}
-	for bucket := o.ListBucketed(startTime); bucket.Bucket().Before(endTime); bucket = bucket.Next() {
+	for bucket := o.Buckets(startTime); bucket.Bucket().Before(endTime); bucket = bucket.Next() {
 		buckets = append(buckets, bucket.Bucket())
 	}
 

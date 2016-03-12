@@ -69,7 +69,7 @@ func (o *multiTimeSeriesT) Read(v interface{}, timeStamp time.Time, id, pointer 
 
 func (o *multiTimeSeriesT) List(v interface{}, startTime time.Time, endTime time.Time, pointerToASlice interface{}) Op {
 	buckets := []interface{}{}
-	for bucket := o.ListBucketed(v, startTime); bucket.Bucket().Before(endTime); bucket = bucket.Next() {
+	for bucket := o.Buckets(v, startTime); bucket.Bucket().Before(endTime); bucket = bucket.Next() {
 		buckets = append(buckets, bucket.Bucket())
 	}
 	return o.Table().
@@ -80,7 +80,7 @@ func (o *multiTimeSeriesT) List(v interface{}, startTime time.Time, endTime time
 		Read(pointerToASlice)
 }
 
-func (o *multiTimeSeriesT) ListBucketed(v interface{}, start time.Time) Buckets {
+func (o *multiTimeSeriesT) Buckets(v interface{}, start time.Time) Buckets {
 	return bucketIter{
 		v:         start,
 		step:      o.bucketSize,
