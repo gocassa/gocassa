@@ -22,7 +22,7 @@ func parse(value string) time.Time {
 	return t
 }
 
-func TestTimeSeriesT(t *testing.T) {
+func TestTimeSeriesTable(t *testing.T) {
 	tbl := ns.TimeSeriesTable("tripTime5", "Time", "Id", time.Minute, Trip{})
 	createIf(tbl.(TableChanger), t)
 	err := tbl.Set(Trip{

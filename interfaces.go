@@ -93,6 +93,7 @@ type TimeSeriesTable interface {
 	Delete(timeStamp time.Time, id interface{}) Op
 	Read(timeStamp time.Time, id, pointer interface{}) Op
 	List(start, end time.Time, pointerToASlice interface{}) Op
+	Buckets(start time.Time) Buckets
 	WithOptions(Options) TimeSeriesTable
 	Table() Table
 	TableChanger
@@ -110,6 +111,7 @@ type MultiTimeSeriesTable interface {
 	Delete(v interface{}, timeStamp time.Time, id interface{}) Op
 	Read(v interface{}, timeStamp time.Time, id, pointer interface{}) Op
 	List(v interface{}, start, end time.Time, pointerToASlice interface{}) Op
+	Buckets(v interface{}, start time.Time) Buckets
 	WithOptions(Options) MultiTimeSeriesTable
 	Table() Table
 	TableChanger
@@ -121,6 +123,7 @@ type FlakeSeriesTable interface {
 	Delete(id string) Op
 	Read(id string, pointer interface{}) Op
 	List(start, end time.Time, pointerToASlice interface{}) Op
+	Buckets(start time.Time) Buckets
 	// ListSince queries the flakeSeries for the items after the specified ID but within the time window,
 	// if the time window is zero then it lists up until 5 minutes in the future
 	ListSince(id string, window time.Duration, pointerToASlice interface{}) Op
@@ -135,6 +138,7 @@ type MultiFlakeSeriesTable interface {
 	Delete(v interface{}, id string) Op
 	Read(v interface{}, id string, pointer interface{}) Op
 	List(v interface{}, start, end time.Time, pointerToASlice interface{}) Op
+	Buckets(v interface{}, start time.Time) Buckets
 	// ListSince queries the flakeSeries for the items after the specified ID but within the time window,
 	// if the time window is zero then it lists up until 5 minutes in the future
 	ListSince(v interface{}, id string, window time.Duration, pointerToASlice interface{}) Op
@@ -150,14 +154,18 @@ type MultiFlakeSeriesTable interface {
 // Filter is a subset of a Table, filtered by Relations.
 // You can do writes or reads on a filter.
 type Filter interface {
-	// Updates does a partial update. Use this if you don't want to overwrite your whole row, but you want to modify fields atomically.
+	// Update does a partial update. Use this if you don't want to overwrite your whole row, but you want to modify fields atomically.
 	Update(m map[string]interface{}) Op // Probably this is danger zone (can't be implemented efficiently) on a selectuinb with more than 1 document
 	// Delete all rows matching the filter.
 	Delete() Op
-	// Read the results. Make sure you pass in a pointer to a slice.
+	// Reads all results. Make sure you pass in a pointer to a slice.
 	Read(pointerToASlice interface{}) Op
-	// Read one result. Make sure you pass in a pointer.
+	// ReadOne reads a single result. Make sure you pass in a pointer.
 	ReadOne(pointer interface{}) Op
+	// Table on which this filter operates.
+	Table() Table
+	// Relations which make up this filter. These should not be modified.
+	Relations() []Relation
 }
 
 // Keys is used with the raw CQL Table type. It is implicit when using recipe tables.
@@ -245,3 +253,11 @@ type QueryExecutor interface {
 }
 
 type Counter int
+
+// Buckets is an iterator over a timeseries' buckets
+type Buckets interface {
+	Filter() Filter
+	Bucket() time.Time
+	Next() Buckets
+	Prev() Buckets
+}

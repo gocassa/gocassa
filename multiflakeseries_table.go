@@ -38,7 +38,7 @@ func (o *multiFlakeSeriesT) Set(v interface{}) Op {
 	}
 
 	m[flakeTimestampFieldName] = timestamp
-	m[bucketFieldName] = o.bucket(timestamp.Unix())
+	m[bucketFieldName] = bucket(timestamp, o.bucketSize)
 
 	return o.Table().
 		Set(m)
@@ -49,7 +49,7 @@ func (o *multiFlakeSeriesT) Update(v interface{}, id string, m map[string]interf
 	if err != nil {
 		return errOp{err: err}
 	}
-	bucket := o.bucket(timestamp.Unix())
+	bucket := bucket(timestamp, o.bucketSize)
 
 	return o.Table().
 		Where(Eq(o.indexField, v),
@@ -64,7 +64,7 @@ func (o *multiFlakeSeriesT) Delete(v interface{}, id string) Op {
 	if err != nil {
 		return errOp{err: err}
 	}
-	bucket := o.bucket(timestamp.Unix())
+	bucket := bucket(timestamp, o.bucketSize)
 
 	return o.Table().
 		Where(Eq(o.indexField, v),
@@ -79,7 +79,7 @@ func (o *multiFlakeSeriesT) Read(v interface{}, id string, pointer interface{}) 
 	if err != nil {
 		return errOp{err: err}
 	}
-	bucket := o.bucket(timestamp.Unix())
+	bucket := bucket(timestamp, o.bucketSize)
 	return o.Table().
 		Where(Eq(o.indexField, v),
 			Eq(bucketFieldName, bucket),
@@ -89,13 +89,24 @@ func (o *multiFlakeSeriesT) Read(v interface{}, id string, pointer interface{}) 
 }
 
 func (o *multiFlakeSeriesT) List(v interface{}, startTime, endTime time.Time, pointerToASlice interface{}) Op {
-	buckets := o.buckets(startTime, endTime)
+	buckets := []interface{}{}
+	for bucket := o.Buckets(v, startTime); bucket.Bucket().Before(endTime); bucket = bucket.Next() {
+		buckets = append(buckets, bucket.Bucket())
+	}
 	return o.Table().
 		Where(Eq(o.indexField, v),
 			In(bucketFieldName, buckets...),
 			GTE(flakeTimestampFieldName, startTime),
 			LT(flakeTimestampFieldName, endTime)).
 		Read(pointerToASlice)
+}
+
+func (o *multiFlakeSeriesT) Buckets(v interface{}, start time.Time) Buckets {
+	return bucketIter{
+		v:         start,
+		step:      o.bucketSize,
+		field:     bucketFieldName,
+		invariant: o.Table().Where(Eq(o.indexField, v))}
 }
 
 func (o *multiFlakeSeriesT) ListSince(v interface{}, id string, window time.Duration, pointerToASlice interface{}) Op {
@@ -105,14 +116,18 @@ func (o *multiFlakeSeriesT) ListSince(v interface{}, id string, window time.Dura
 	}
 
 	var endTime time.Time
-
 	if window == 0 {
 		// no window set - so go up until 5 mins in the future
 		endTime = time.Now().Add(5 * time.Minute)
 	} else {
 		endTime = startTime.Add(window)
 	}
-	buckets := o.buckets(startTime, endTime)
+
+	buckets := []interface{}{}
+	for bucket := o.Buckets(v, startTime); bucket.Bucket().Before(endTime); bucket = bucket.Next() {
+		buckets = append(buckets, bucket.Bucket())
+	}
+
 	return o.Table().
 		Where(Eq(o.indexField, v),
 			In(bucketFieldName, buckets),
@@ -129,18 +144,4 @@ func (o *multiFlakeSeriesT) WithOptions(opt Options) MultiFlakeSeriesTable {
 		idField:    o.idField,
 		bucketSize: o.bucketSize,
 	}
-}
-
-func (o *multiFlakeSeriesT) buckets(startTime, endTime time.Time) []interface{} {
-	buckets := []interface{}{}
-	start := o.bucket(startTime.Unix())
-	for i := start; i < endTime.Unix()*1000; i += int64(o.bucketSize/time.Second) * 1000 {
-		buckets = append(buckets, i)
-	}
-
-	return buckets
-}
-
-func (o *multiFlakeSeriesT) bucket(secs int64) int64 {
-	return (secs - secs%int64(o.bucketSize/time.Second)) * 1000
 }
