@@ -103,6 +103,9 @@ func (o *multiTimeSeriesT) WithOptions(opt Options) MultiTimeSeriesTable {
 	}
 }
 
+// indexes takes the supplied index value or values, if passed as map[string]interface{}, and takes those that match the
+// configured indexFields to use as Eq(...) Relation objects havin checked that we have exactly enough to
+// specify all the partition keys.
 func (o *multiTimeSeriesT) indexes(iv interface{}) ([]Relation, error) {
 	var indexes []Relation
 	v, err := o.indexesAsMap(iv)
@@ -122,6 +125,9 @@ func (o *multiTimeSeriesT) indexes(iv interface{}) ([]Relation, error) {
 	return indexes, nil
 }
 
+// indexesAsMap returns the indexes as a map[string]interface{}: if supplied with a map[string]interface{} simply passes this through
+// otherwise takes the single value and wraps in a map[string]interface{} having
+// checked that no more than one partition key is configured.
 func (o *multiTimeSeriesT) indexesAsMap(v interface{}) (map[string]interface{}, error) {
 	switch vt := v.(type) {
 	case map[string]interface{}:
