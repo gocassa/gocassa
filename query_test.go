@@ -22,7 +22,7 @@ func getTestHosts() []string {
 	if h := os.Getenv("GOCASSA_TEST_HOSTS"); h != "" {
 		return strings.Split(h, ",")
 	} else {
-		return []string{"127.0.0.1:49042"}
+		return []string{"127.0.0.1"}
 	}
 }
 
