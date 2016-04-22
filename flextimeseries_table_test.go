@@ -1,9 +1,9 @@
 package gocassa
 
 import (
+	"strings"
 	"testing"
 	"time"
-	//	log "github.com/cihub/seelog"
 )
 
 type TripC struct {
@@ -81,6 +81,13 @@ func TestFlexTimeSeriesTable(t *testing.T) {
 		t.Fatal(ts)
 	}
 	err = tbl.List(map[string]interface{}{"Tag": "B"}, parse("2006 Jan 2 15:03:58"), parse("2006 Jan 2 15:05:00"), ts).Run()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(*ts) != 1 {
+		t.Fatal(ts)
+	}
+	err = tbl.List("B", parse("2006 Jan 2 15:03:58"), parse("2006 Jan 2 15:05:00"), ts).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -191,5 +198,13 @@ func TestFlexTimeSeriesTable2(t *testing.T) {
 	}
 	if len(*ts) != 0 {
 		t.Fatal(ts)
+	}
+	err = tbl.List("B", parse("2006 Jan 2 15:03:58"), parse("2006 Jan 2 15:05:00"), ts).Run()
+	if err == nil || !strings.HasPrefix(err.Error(), "Must pass map of ") || !strings.HasSuffix(err.Error(), "B") {
+		t.Fatal("Should have got an error")
+	}
+	err = tbl.List(map[string]interface{}{"Tag": "B"}, parse("2006 Jan 2 15:03:58"), parse("2006 Jan 2 15:05:00"), ts).Run()
+	if err == nil || !strings.HasPrefix(err.Error(), "Indexes incomplete:") || !strings.HasSuffix(err.Error(), "[Tag Bag]") {
+		t.Fatalf("Should have got an error: %s", err)
 	}
 }

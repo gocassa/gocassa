@@ -1,7 +1,7 @@
 package gocassa
 
 import (
-	"strings"
+	"fmt"
 	"time"
 )
 
@@ -44,30 +44,37 @@ func (o *multiTimeSeriesT) Set(v interface{}) Op {
 	return o.Table.Set(m)
 }
 
-//func (o *multiTimeSeriesT) bucket(secs int64) int64 {
-//	return (secs - secs%int64(o.bucketSize/time.Second)) * 1000
-//}
-//
-
 func (o *multiTimeSeriesT) bucket(secs int64) int64 {
 	return o.bucketer.Bucket(secs)
 }
 
 func (o *multiTimeSeriesT) Update(v interface{}, timeStamp time.Time, id interface{}, m map[string]interface{}) Op {
 	bucket := o.bucket(timeStamp.Unix())
-	relations := fRelations(o.indexes(v), Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id))
+	idxs, err := o.indexes(v)
+	if err != nil {
+		return &badOp{err}
+	}
+	relations := fRelations(idxs, Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id))
 	return o.Where(relations...).Update(m)
 }
 
 func (o *multiTimeSeriesT) Delete(v interface{}, timeStamp time.Time, id interface{}) Op {
 	bucket := o.bucket(timeStamp.Unix())
-	relations := fRelations(o.indexes(v), Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id))
+	idxs, err := o.indexes(v)
+	if err != nil {
+		return &badOp{err}
+	}
+	relations := fRelations(idxs, Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id))
 	return o.Where(relations...).Delete()
 }
 
 func (o *multiTimeSeriesT) Read(v interface{}, timeStamp time.Time, id, pointer interface{}) Op {
 	bucket := o.bucket(timeStamp.Unix())
-	relations := fRelations(o.indexes(v), Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id))
+	idxs, err := o.indexes(v)
+	if err != nil {
+		return &badOp{err}
+	}
+	relations := fRelations(idxs, Eq(bucketFieldName, bucket), Eq(o.timeField, timeStamp), Eq(o.idField, id))
 	return o.Where(relations...).ReadOne(pointer)
 }
 
@@ -78,7 +85,11 @@ func (o *multiTimeSeriesT) List(v interface{}, startTime time.Time, endTime time
 	for i := start; i <= end; i = o.bucketer.Next(i) { // nearly but not quite an iterator
 		buckets = append(buckets, i)
 	}
-	relations := fRelations(o.indexes(v), In(bucketFieldName, buckets...), GTE(o.timeField, startTime), LTE(o.timeField, endTime))
+	idxs, err := o.indexes(v)
+	if err != nil {
+		return &badOp{err}
+	}
+	relations := fRelations(idxs, In(bucketFieldName, buckets...), GTE(o.timeField, startTime), LTE(o.timeField, endTime))
 	return o.Where(relations...).Read(pointerToASlice)
 }
 
@@ -92,9 +103,12 @@ func (o *multiTimeSeriesT) WithOptions(opt Options) MultiTimeSeriesTable {
 	}
 }
 
-func (o *multiTimeSeriesT) indexes(iv interface{}) []Relation {
+func (o *multiTimeSeriesT) indexes(iv interface{}) ([]Relation, error) {
 	var indexes []Relation
-	v := o.indexesAsMap(iv)
+	v, err := o.indexesAsMap(iv)
+	if err != nil {
+		return nil, err
+	}
 	ni := 0
 	for _, i := range o.indexFields {
 		if vv, ok := v[i]; ok {
@@ -103,20 +117,20 @@ func (o *multiTimeSeriesT) indexes(iv interface{}) []Relation {
 		}
 	}
 	if ni != len(o.indexFields) {
-		panic("Indexes incomplete: " + strings.Join(o.indexFields, ","))
+		return nil, fmt.Errorf("Indexes incomplete: %+v", o.indexFields)
 	}
-	return indexes
+	return indexes, nil
 }
 
-func (o *multiTimeSeriesT) indexesAsMap(v interface{}) map[string]interface{} {
+func (o *multiTimeSeriesT) indexesAsMap(v interface{}) (map[string]interface{}, error) {
 	switch vt := v.(type) {
 	case map[string]interface{}:
-		return vt
+		return vt, nil
 	default:
 		if len(o.indexFields) != 1 {
-			panic("Must pass map of values if more than one indexField")
+			return nil, fmt.Errorf("Must pass map of values if more than one indexField (have: %d): got: %+v", len(o.indexFields), v)
 		}
-		return map[string]interface{}{o.indexFields[0]: v}
+		return map[string]interface{}{o.indexFields[0]: v}, nil
 	}
 }
 

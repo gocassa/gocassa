@@ -131,7 +131,7 @@ func (k *k) FlexMultiTimeSeriesTable(name, timeField, idField string, indexField
 	pk := append([]string{}, indexFields...)
 	pk = append(pk, bucketFieldName)
 	return &multiTimeSeriesT{
-		Table: k.NewTable(fmt.Sprintf("%s_multiTimeSeries_%s_%s_%s_%s", name, strings.Join(indexFields, "_"), timeField, idField, toString(bucketer)), row, m, Keys{
+		Table: k.NewTable(fmt.Sprintf("%s_multiTimeSeries_%s_%s_%s", name, strings.Join(indexFields, "_"), timeField, idField), row, m, Keys{
 			PartitionKeys:     pk,
 			ClusteringColumns: []string{timeField, idField},
 		}),
