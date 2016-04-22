@@ -3,7 +3,6 @@ package gocassa
 import (
 	"testing"
 	"time"
-
 	//	log "github.com/cihub/seelog"
 )
 
@@ -15,21 +14,21 @@ type TripC struct {
 	F2   string
 }
 
-type tsBucketer struct {
+type myTsBucketer struct {
 	bucketSize time.Duration
 }
 
-func (b *tsBucketer) Bucket(secs int64) int64 {
+func (b *myTsBucketer) Bucket(secs int64) int64 {
 	return (secs - secs%int64(b.bucketSize/time.Second)) * 1000
 }
 
-func (b *tsBucketer) Next(secs int64) int64 {
+func (b *myTsBucketer) Next(secs int64) int64 {
 	return secs + int64(b.bucketSize/time.Second)*1000
 }
 
 func TestFlexTimeSeriesTable(t *testing.T) {
-	tbl := ns.FlexTimeSeriesTable("tripTime8", "Time", "Id", []string{"Tag"}, &tsBucketer{time.Minute}, TripB{})
-	t.Logf("Table-name: %s bucketer name: %s", tbl.Name(), toString(&tsBucketer{}))
+	tbl := ns.FlexMultiTimeSeriesTable("tripTime8", "Time", "Id", []string{"Tag"}, &tsBucketer{time.Minute}, TripB{})
+	t.Logf("Table-name: %s bucketer name: %s", tbl.Name(), toString(&myTsBucketer{}))
 	createIf(tbl.(TableChanger), t)
 	err := tbl.WithOptions(Options{TTL: 30 * time.Second}).Set(TripB{
 		Id:   "1",
@@ -91,9 +90,9 @@ func TestFlexTimeSeriesTable(t *testing.T) {
 }
 
 func TestFlexTimeSeriesTable2(t *testing.T) {
-	tbl := ns.FlexTimeSeriesTable("tripTime9", "Time", "Id", []string{"Tag", "Bag"}, &tsBucketer{time.Minute}, TripC{}).
+	tbl := ns.FlexMultiTimeSeriesTable("tripTime9", "Time", "Id", []string{"Tag", "Bag"}, &tsBucketer{time.Minute}, TripC{}).
 		WithOptions(Options{TableName: "tt9_tag_bag"})
-	t.Logf("Table-name: %s bucketer name: %s", tbl.Name(), toString(&tsBucketer{}))
+	t.Logf("Table-name: %s bucketer name: %s", tbl.Name(), toString(&myTsBucketer{}))
 	createIf(tbl.(TableChanger), t)
 	err := tbl.WithOptions(Options{TTL: 30 * time.Second}).Set(TripC{
 		Id:   "1",
@@ -140,7 +139,7 @@ func TestFlexTimeSeriesTable2(t *testing.T) {
 		t.Fatal(err)
 	}
 	ts := &[]TripC{}
-	err = tbl.List(map[string]interface{}{"Tag": "A","Bag": "III"}, parse("2006 Jan 2 15:03:58"), parse("2006 Jan 2 15:04:02"), ts).Run()
+	err = tbl.List(map[string]interface{}{"Tag": "A", "Bag": "III"}, parse("2006 Jan 2 15:03:58"), parse("2006 Jan 2 15:04:02"), ts).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -151,7 +150,7 @@ func TestFlexTimeSeriesTable2(t *testing.T) {
 	if ts1[0].Id != "1" || ts1[1].Id != "3" {
 		t.Fatal(ts1[0], ts1[1])
 	}
-	err = tbl.List(map[string]interface{}{"Tag": "A","Bag": "IV"}, parse("2006 Jan 2 15:03:58"), parse("2006 Jan 2 15:04:02"), ts).Run()
+	err = tbl.List(map[string]interface{}{"Tag": "A", "Bag": "IV"}, parse("2006 Jan 2 15:03:58"), parse("2006 Jan 2 15:04:02"), ts).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
