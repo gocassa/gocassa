@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 	"time"
+//	"runtime"
+//	"reflect"
 )
 
 type tableFactory interface {
@@ -136,6 +138,26 @@ func (k *k) MultiTimeSeriesTable(name, indexField, timeField, idField string, bu
 	}
 }
 
+func (k *k) FlexTimeSeriesTable(name, timeField, idField string, indexFields []string, bucketer Bucketer, row interface{}) FlexTimeSeriesTable {
+	m, ok := toMap(row)
+	if !ok {
+		panic("Unrecognized row type")
+	}
+	m[bucketFieldName] = time.Now()
+	pk := append([]string{}, indexFields...)
+	pk = append(pk, bucketFieldName)
+	return &flexTimeSeriesT{
+		Table: k.NewTable(fmt.Sprintf("%s_flexTimeSeries_%s_%s_%s_%s", name, strings.Join(indexFields, "_"), timeField, idField, toString(bucketer)), row, m, Keys{
+			PartitionKeys:     pk,
+			ClusteringColumns: []string{timeField, idField},
+		}),
+		indexFields: indexFields,
+		timeField:  timeField,
+		idField:   idField,
+		bucketer:   bucketer,
+	}
+}
+
 // Returns table names in a keyspace
 func (k *k) Tables() ([]string, error) {
 	const stmt = "SELECT columnfamily_name FROM system.schema_columnfamilies WHERE keyspace_name = ?"
@@ -170,4 +192,10 @@ func (k *k) DropTable(cf string) error {
 
 func (k *k) Name() string {
 	return k.name
+}
+
+func toString(b Bucketer) string {
+	n := fmt.Sprintf("%T", b)
+	split := strings.Split(n, ".")
+	return split[len(split)-1]
 }

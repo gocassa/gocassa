@@ -19,6 +19,7 @@ type KeySpace interface {
 	MultimapMultiKeyTable(tableName string, fieldToIndexBy, uniqueKey []string, row interface{}) MultimapMkTable
 	TimeSeriesTable(tableName, timeField, uniqueKey string, bucketSize time.Duration, row interface{}) TimeSeriesTable
 	MultiTimeSeriesTable(tableName, fieldToIndexByField, timeField, uniqueKey string, bucketSize time.Duration, row interface{}) MultiTimeSeriesTable
+	FlexTimeSeriesTable(name, timeField, idField string, indexFields []string, bucketer Bucketer, row interface{}) FlexTimeSeriesTable
 	Table(tableName string, row interface{}, keys Keys) Table
 	// DebugMode enables/disables debug mode depending on the value of the input boolean.
 	// When DebugMode is enabled, all built CQL statements are printe to stdout.
@@ -108,6 +109,16 @@ type MultiTimeSeriesTable interface {
 	TableChanger
 }
 
+type FlexTimeSeriesTable interface {
+	// timeField and idField must be present
+	Set(v interface{}) Op
+	Update(v map[string]interface{}, timeStamp time.Time, id interface{}, m map[string]interface{}) Op
+	Delete(v map[string]interface{}, timeStamp time.Time, id interface{}) Op
+	Read(v map[string]interface{}, timeStamp time.Time, id interface{}, pointer interface{}) Op
+	List(v map[string]interface{}, start, end time.Time, pointerToASlice interface{}) Op
+	WithOptions(Options) FlexTimeSeriesTable
+	TableChanger
+}
 //
 // Raw CQL
 //
