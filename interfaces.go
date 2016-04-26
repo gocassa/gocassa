@@ -109,17 +109,6 @@ type MultiTimeSeriesTable interface {
 	TableChanger
 }
 
-type FlexTimeSeriesTable interface {
-	// timeField and idField must be present
-	Set(v interface{}) Op
-	Update(v map[string]interface{}, timeStamp time.Time, id interface{}, m map[string]interface{}) Op
-	Delete(v map[string]interface{}, timeStamp time.Time, id interface{}) Op
-	Read(v map[string]interface{}, timeStamp time.Time, id interface{}, pointer interface{}) Op
-	List(v map[string]interface{}, start, end time.Time, pointerToASlice interface{}) Op
-	WithOptions(Options) FlexTimeSeriesTable
-	TableChanger
-}
-
 //
 // Raw CQL
 //

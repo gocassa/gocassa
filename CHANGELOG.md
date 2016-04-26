@@ -2,6 +2,18 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## v1.3.0 - 2016-04-26
+
+### Added
+ - New factory method, FlexMultiTimeSeriesTable, to create a MultiTimeSeriesTable with multiple index-fields and a supplied Bucketer.
+   The existing factory method on KeySpace, MultiTimeSeriesTable, operates as before using a default implementation of Bucketer that
+   provides the original behaviour.
+ - Checks on table names  in tests
+
+### Changed
+ - MultiTimeSeriesTable so that it can be configured with multiple index-fields and with an instance of an implementation of a new
+   Bucketer interface to allow for alternative bucketing strategies, and for more flexible indexes
+
 ## v1.2.0 - 2015-12-22
 
 ### Added
