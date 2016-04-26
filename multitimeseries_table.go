@@ -2,12 +2,14 @@ package gocassa
 
 import (
 	"fmt"
+	"strings"
 	"time"
 )
 
 type Bucketer interface {
 	Bucket(int64) int64
 	Next(int64) int64
+	String() string
 }
 
 type multiTimeSeriesT struct {
@@ -29,6 +31,10 @@ func (b *tsBucketer) Bucket(secs int64) int64 {
 
 func (b *tsBucketer) Next(secs int64) int64 {
 	return secs + int64(b.bucketSize/time.Second)*1000
+}
+
+func (b *tsBucketer) String() string {
+	return b.bucketSize.String()
 }
 
 func (o *multiTimeSeriesT) Set(v interface{}) Op {
@@ -101,6 +107,12 @@ func (o *multiTimeSeriesT) WithOptions(opt Options) MultiTimeSeriesTable {
 		idField:     o.idField,
 		bucketer:    o.bucketer,
 	}
+}
+
+func BucketerString(b Bucketer) string {
+	n := fmt.Sprintf("%T", b)
+	split := strings.Split(n, ".")
+	return split[len(split)-1]
 }
 
 // indexes takes the supplied index value or values, if passed as map[string]interface{}, and takes those that match the

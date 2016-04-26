@@ -26,9 +26,13 @@ func (b *myTsBucketer) Next(secs int64) int64 {
 	return secs + int64(b.bucketSize/time.Second)*1000
 }
 
+func (b *myTsBucketer) String() string {
+	return BucketerString(b)
+}
+
 func TestFlexTimeSeriesTable(t *testing.T) {
 	tbl := ns.FlexMultiTimeSeriesTable("tripTime8", "Time", "Id", []string{"Tag"}, &tsBucketer{time.Minute}, TripB{})
-	t.Logf("Table-name: %s bucketer name: %s", tbl.Name(), toString(&myTsBucketer{}))
+	t.Logf("Table-name: %s bucketer name: %s", tbl.Name(), BucketerString(&myTsBucketer{}))
 	createIf(tbl.(TableChanger), t)
 	err := tbl.WithOptions(Options{TTL: 30 * time.Second}).Set(TripB{
 		Id:   "1",
@@ -99,7 +103,7 @@ func TestFlexTimeSeriesTable(t *testing.T) {
 func TestFlexTimeSeriesTable2(t *testing.T) {
 	tbl := ns.FlexMultiTimeSeriesTable("tripTime9", "Time", "Id", []string{"Tag", "Bag"}, &tsBucketer{time.Minute}, TripC{}).
 		WithOptions(Options{TableName: "tt9_tag_bag"})
-	t.Logf("Table-name: %s bucketer name: %s", tbl.Name(), toString(&myTsBucketer{}))
+	t.Logf("Table-name: %s bucketer name: %s", tbl.Name(), BucketerString(&myTsBucketer{}))
 	createIf(tbl.(TableChanger), t)
 	err := tbl.WithOptions(Options{TTL: 30 * time.Second}).Set(TripC{
 		Id:   "1",

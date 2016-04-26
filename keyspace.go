@@ -131,7 +131,7 @@ func (k *k) FlexMultiTimeSeriesTable(name, timeField, idField string, indexField
 	pk := append([]string{}, indexFields...)
 	pk = append(pk, bucketFieldName)
 	return &multiTimeSeriesT{
-		Table: k.NewTable(fmt.Sprintf("%s_multiTimeSeries_%s_%s_%s", name, strings.Join(indexFields, "_"), timeField, idField), row, m, Keys{
+		Table: k.NewTable(fmt.Sprintf("%s_multiTimeSeries_%s_%s_%s_%s", name, strings.Join(indexFields, "_"), timeField, idField, bucketer.String()), row, m, Keys{
 			PartitionKeys:     pk,
 			ClusteringColumns: []string{timeField, idField},
 		}),
@@ -176,10 +176,4 @@ func (k *k) DropTable(cf string) error {
 
 func (k *k) Name() string {
 	return k.name
-}
-
-func toString(b Bucketer) string {
-	n := fmt.Sprintf("%T", b)
-	split := strings.Split(n, ".")
-	return split[len(split)-1]
 }
