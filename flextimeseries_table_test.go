@@ -14,26 +14,27 @@ type TripC struct {
 	F2   string
 }
 
-type myTsBucketer struct {
+type myBucketer struct {
 	bucketSize time.Duration
 }
 
-func (b *myTsBucketer) Bucket(secs int64) int64 {
+func (b *myBucketer) Bucket(secs int64) int64 {
 	return (secs - secs%int64(b.bucketSize/time.Second)) * 1000
 }
 
-func (b *myTsBucketer) Next(secs int64) int64 {
+func (b *myBucketer) Next(secs int64) int64 {
 	return secs + int64(b.bucketSize/time.Second)*1000
 }
 
-func (b *myTsBucketer) String() string {
+func (b *myBucketer) String() string {
 	return BucketerString(b)
 }
 
 func TestFlexTimeSeriesTable(t *testing.T) {
-	tbl := ns.FlexMultiTimeSeriesTable("tripTime8", "Time", "Id", []string{"Tag"}, &tsBucketer{time.Minute}, TripB{})
-	t.Logf("Table-name: %s bucketer name: %s", tbl.Name(), BucketerString(&myTsBucketer{}))
+	tbl := ns.FlexMultiTimeSeriesTable("tripTime8", "Time", "Id", []string{"Tag"}, &myBucketer{time.Minute}, TripB{})
+	t.Logf("Table-name: %s bucketer name: %s", tbl.Name(), BucketerString(&myBucketer{}))
 	createIf(tbl.(TableChanger), t)
+	validateTableName(t, tbl.(TableChanger), "tripTime8_multiTimeSeries_Tag_Time_Id_myBucketer")
 	err := tbl.WithOptions(Options{TTL: 30 * time.Second}).Set(TripB{
 		Id:   "1",
 		Time: parse("2006 Jan 2 15:03:59"),
@@ -101,10 +102,11 @@ func TestFlexTimeSeriesTable(t *testing.T) {
 }
 
 func TestFlexTimeSeriesTable2(t *testing.T) {
-	tbl := ns.FlexMultiTimeSeriesTable("tripTime9", "Time", "Id", []string{"Tag", "Bag"}, &tsBucketer{time.Minute}, TripC{}).
+	tbl := ns.FlexMultiTimeSeriesTable("tripTime9", "Time", "Id", []string{"Tag", "Bag"}, &myBucketer{time.Minute}, TripC{}).
 		WithOptions(Options{TableName: "tt9_tag_bag"})
-	t.Logf("Table-name: %s bucketer name: %s", tbl.Name(), BucketerString(&myTsBucketer{}))
+	t.Logf("Table-name: %s bucketer name: %s", tbl.Name(), BucketerString(&myBucketer{}))
 	createIf(tbl.(TableChanger), t)
+	validateTableName(t, tbl.(TableChanger), "tt9_tag_bag")
 	err := tbl.WithOptions(Options{TTL: 30 * time.Second}).Set(TripC{
 		Id:   "1",
 		Time: parse("2006 Jan 2 15:03:59"),
