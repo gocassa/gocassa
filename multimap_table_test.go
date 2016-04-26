@@ -14,6 +14,7 @@ type Customer2 struct {
 func TestMultimapTableInsertRead(t *testing.T) {
 	tbl := ns.MultimapTable("customer91", "Tag", "Id", Customer2{})
 	createIf(tbl.(TableChanger), t)
+	validateTableName(t, tbl.(TableChanger), "customer91_multimap_Tag_Id")
 	joe := Customer2{
 		Id:   "33",
 		Name: "Joe",

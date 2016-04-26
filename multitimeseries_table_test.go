@@ -14,6 +14,7 @@ type TripB struct {
 func TestMultiTimeSeriesTable(t *testing.T) {
 	tbl := ns.MultiTimeSeriesTable("tripTime6", "Tag", "Time", "Id", time.Minute, TripB{})
 	createIf(tbl.(TableChanger), t)
+	validateTableName(t, tbl.(TableChanger), "tripTime6_multiTimeSeries_Tag_Time_Id_1m0s")
 	err := tbl.WithOptions(Options{TTL: 30 * time.Second}).Set(TripB{
 		Id:   "1",
 		Time: parse("2006 Jan 2 15:03:59"),

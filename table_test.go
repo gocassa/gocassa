@@ -30,11 +30,13 @@ func TestTables(t *testing.T) {
 
 func TestCreateTable(t *testing.T) {
 	rand.Seed(time.Now().Unix())
-	name := fmt.Sprintf("customer_%v", rand.Int()%100)
+	randy := rand.Int()%100
+	name := fmt.Sprintf("customer_%v", randy)
 	cs := ns.Table(name, Customer{}, Keys{
 		PartitionKeys: []string{"Id", "Name"},
 	})
 	createIf(cs, t)
+	validateTableName(t, cs.(TableChanger), fmt.Sprintf("customer_%d__Id_Name__", randy))
 	err := cs.Set(Customer{
 		Id:   "1001",
 		Name: "Joe",
@@ -64,6 +66,7 @@ func TestClusteringOrder(t *testing.T) {
 		ClusteringColumns: []string{"Id"},
 	}).WithOptions(options)
 	createIf(cs, t)
+	validateTableName(t, cs.(TableChanger), "customer_by_name__Name__Id")
 
 	customers := []Customer{
 		Customer{
@@ -175,6 +178,7 @@ func TestCreateStatement(t *testing.T) {
 		PartitionKeys: []string{"Id", "Name"},
 	})
 	str, err := cs.CreateStatement()
+	validateTableName(t, cs.(TableChanger), "something__Id_Name__")	
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -345,4 +349,12 @@ func TestExecuteWithConsistency(t *testing.T) {
 	if resultOpts.Consistency != nil && *resultOpts.Consistency != cons {
 		t.Fatal(fmt.Sprint("Expected consistency:", cons, "got:", resultOpts.Consistency))
 	}
+}
+
+func validateTableName(t *testing.T, tbl TableChanger, expected string) bool {
+	ok := tbl.Name() == expected
+	if !ok {
+		t.Fatalf("Table name should be: %s and NOT: %s", expected, tbl.Name())
+	}
+	return ok
 }
