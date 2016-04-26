@@ -111,3 +111,53 @@ func TestOptions(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestPagingTimeSeries(t *testing.T) {
+	tbl := ns.TimeSeriesTable("tripTime7", "Time", "Id", time.Hour, Trip{})
+	createIf(tbl.(TableChanger), t)
+	start := time.Now().AddDate(0, 0, -1)
+	tripTime := start
+	for i := 0; i < 100; i++ {
+		tripTime = tripTime.Add(7 * time.Minute)
+		i := Trip{
+			Id:   fmt.Sprintf("%v", i),
+			Time: tripTime,
+		}
+		if err := tbl.Set(i).Run(); err != nil {
+			t.Fatal(err)
+		}
+	}
+	res := []Trip{}
+	err := tbl.List(start.Add(2*time.Hour), time.Now().Add(-9*time.Hour), &res).WithOptions(Options{Limit: 13}).Run()
+	if err != nil {
+		t.Errorf("Failed to read 13 thingies: %s", err)
+	}
+	if len(res) != 13 {
+		t.Errorf("Wrong number back: %d", len(res))
+	}
+	res1 := []Trip{}
+	total := []Trip{}
+	tbl1 := tbl.WithOptions(Options{Limit: 17})
+	s, e := start.Add(2*time.Hour), start.Add(5*time.Hour)
+	t.Logf("Start / End: %#v / %#v", s, e)
+	n := 0
+	for tbl1.List(s, e, &res1).Run() == nil && len(res1) > 1 {
+		if n > 20 {
+			break
+		}
+		n++
+		t.Logf("Query a page of 17: %s", s.String())
+		if len(res1) > 0 {
+			total = append(total, res1[1:]...)
+		} else {
+			total = append(total, res1...)
+		}
+		s = res1[len(res1)-1].Time
+	}
+	if len(total) != 24 {
+		t.Errorf("Pulled the wrong number of thingies: %d", len(total))
+	}
+	for i, to := range total {
+		t.Logf("[%d] %#v", i, to)
+	}
+}

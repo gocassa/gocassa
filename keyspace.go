@@ -119,20 +119,26 @@ func (k *k) TimeSeriesTable(name, timeField, idField string, bucketSize time.Dur
 }
 
 func (k *k) MultiTimeSeriesTable(name, indexField, timeField, idField string, bucketSize time.Duration, row interface{}) MultiTimeSeriesTable {
+	return k.FlexMultiTimeSeriesTable(name, timeField, idField, []string{indexField}, &tsBucketer{bucketSize: bucketSize}, row)
+}
+
+func (k *k) FlexMultiTimeSeriesTable(name, timeField, idField string, indexFields []string, bucketer Bucketer, row interface{}) MultiTimeSeriesTable {
 	m, ok := toMap(row)
 	if !ok {
 		panic("Unrecognized row type")
 	}
 	m[bucketFieldName] = time.Now()
+	pk := append([]string{}, indexFields...)
+	pk = append(pk, bucketFieldName)
 	return &multiTimeSeriesT{
-		Table: k.NewTable(fmt.Sprintf("%s_multiTimeSeries_%s_%s_%s_%s", name, indexField, timeField, idField, bucketSize.String()), row, m, Keys{
-			PartitionKeys:     []string{indexField, bucketFieldName},
+		Table: k.NewTable(fmt.Sprintf("%s_multiTimeSeries_%s_%s_%s_%s", name, strings.Join(indexFields, "_"), timeField, idField, bucketer.String()), row, m, Keys{
+			PartitionKeys:     pk,
 			ClusteringColumns: []string{timeField, idField},
 		}),
-		indexField: indexField,
-		timeField:  timeField,
-		idField:    idField,
-		bucketSize: bucketSize,
+		indexFields: indexFields,
+		timeField:   timeField,
+		idField:     idField,
+		bucketer:    bucketer,
 	}
 }
 

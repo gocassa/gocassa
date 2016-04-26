@@ -29,6 +29,11 @@ type singleOp struct {
 	qe      QueryExecutor
 }
 
+// Used to pass errors back through the fluent API
+type badOp struct {
+	err error
+}
+
 func (o *singleOp) WithOptions(opts Options) Op {
 	return &singleOp{
 		options: o.options.Merge(opts),
@@ -115,6 +120,38 @@ func (o *singleOp) GenerateStatement() (string, []interface{}) {
 func (o *singleOp) QueryExecutor() QueryExecutor {
 	return o.qe
 }
+
+//////
+
+func (o *badOp) WithOptions(opts Options) Op {
+	return o
+}
+
+func (o *badOp) Add(additions ...Op) Op {
+	return o
+}
+
+func (o *badOp) Preflight() error {
+	return o.err
+}
+
+func (o *badOp) Run() error {
+	return o.err
+}
+
+func (o *badOp) RunAtomically() error {
+	return o.Run()
+}
+
+func (o *badOp) GenerateStatement() (string, []interface{}) {
+	return "", []interface{}{}
+}
+
+func (o *badOp) QueryExecutor() QueryExecutor {
+	return nil
+}
+
+//////
 
 func (o *singleOp) generateWrite(opt Options) (string, []interface{}) {
 	var str string
