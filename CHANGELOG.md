@@ -9,6 +9,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
    The existing factory method on KeySpace, MultiTimeSeriesTable, operates as before using a default implementation of Bucketer that
    provides the original behaviour.
  - Checks on table names  in tests
+ - Added ability to close connections
 
 ### Changed
  - MultiTimeSeriesTable so that it can be configured with multiple index-fields and with an instance of an implementation of a new
