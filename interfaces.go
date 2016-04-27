@@ -10,6 +10,7 @@ type Connection interface {
 	CreateKeySpace(name string) error
 	DropKeySpace(name string) error
 	KeySpace(name string) KeySpace
+	Close()
 }
 
 // KeySpace is used to obtain tables from.
@@ -210,6 +211,8 @@ type QueryExecutor interface {
 	Execute(stmt string, params ...interface{}) error
 	// ExecuteAtomically executs multiple DML queries with a logged batch
 	ExecuteAtomically(stmt []string, params [][]interface{}) error
+	// Close closes the open session
+	Close()
 }
 
 type Counter int
