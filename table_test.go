@@ -30,7 +30,7 @@ func TestTables(t *testing.T) {
 
 func TestCreateTable(t *testing.T) {
 	rand.Seed(time.Now().Unix())
-	randy := rand.Int()%100
+	randy := rand.Int() % 100
 	name := fmt.Sprintf("customer_%v", randy)
 	cs := ns.Table(name, Customer{}, Keys{
 		PartitionKeys: []string{"Id", "Name"},
@@ -178,7 +178,7 @@ func TestCreateStatement(t *testing.T) {
 		PartitionKeys: []string{"Id", "Name"},
 	})
 	str, err := cs.CreateStatement()
-	validateTableName(t, cs.(TableChanger), "something__Id_Name__")	
+	validateTableName(t, cs.(TableChanger), "something__Id_Name__")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -298,6 +298,9 @@ func (qe OptionCheckingQE) Execute(stmt string, params ...interface{}) error {
 
 func (qe OptionCheckingQE) ExecuteAtomically(stmt []string, params [][]interface{}) error {
 	return nil
+}
+
+func (qe OptionCheckingQE) Close() {
 }
 
 func TestQueryWithConsistency(t *testing.T) {

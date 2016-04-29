@@ -50,3 +50,9 @@ func (c *connection) KeySpace(name string) KeySpace {
 	k.tableFactory = k
 	return k
 }
+
+// Close closes the current session
+// The connection should not be used again after calling Close()
+func (c *connection) Close() {
+	c.q.Close()
+}

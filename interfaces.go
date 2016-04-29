@@ -10,6 +10,7 @@ type Connection interface {
 	CreateKeySpace(name string) error
 	DropKeySpace(name string) error
 	KeySpace(name string) KeySpace
+	Close()
 }
 
 // KeySpace is used to obtain tables from.
@@ -19,6 +20,7 @@ type KeySpace interface {
 	MultimapMultiKeyTable(tableName string, fieldToIndexBy, uniqueKey []string, row interface{}) MultimapMkTable
 	TimeSeriesTable(tableName, timeField, uniqueKey string, bucketSize time.Duration, row interface{}) TimeSeriesTable
 	MultiTimeSeriesTable(tableName, fieldToIndexByField, timeField, uniqueKey string, bucketSize time.Duration, row interface{}) MultiTimeSeriesTable
+	FlexMultiTimeSeriesTable(name, timeField, idField string, indexFields []string, bucketer Bucketer, row interface{}) MultiTimeSeriesTable
 	Table(tableName string, row interface{}, keys Keys) Table
 	// DebugMode enables/disables debug mode depending on the value of the input boolean.
 	// When DebugMode is enabled, all built CQL statements are printe to stdout.
@@ -209,6 +211,8 @@ type QueryExecutor interface {
 	Execute(stmt string, params ...interface{}) error
 	// ExecuteAtomically executs multiple DML queries with a logged batch
 	ExecuteAtomically(stmt []string, params [][]interface{}) error
+	// Close closes the open session
+	Close()
 }
 
 type Counter int
