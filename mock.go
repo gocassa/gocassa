@@ -301,6 +301,30 @@ func (t *MockTable) WithOptions(o Options) Table {
 	}
 }
 
+type MockDumper func(k interface{}, row interface{})
+
+func Dump(tc TableChanger, md MockDumper) {
+	switch t := tc.(type) {
+	case *multimapMkT:
+	doDump(md, t.Table.(*MockTable))
+	case *mapT:
+	doDump(md, t.Table.(*MockTable))
+	case *multiTimeSeriesT:
+	doDump(md, t.Table.(*MockTable))
+	case *timeSeriesT:
+	doDump(md, t.Table.(*MockTable))
+	case *multimapT:
+	doDump(md, t.Table.(*MockTable))
+	default:
+	}
+}
+
+func doDump(md MockDumper, mt *MockTable) {
+	for k, row := range mt.rows {
+		md(k, row)
+	}
+}
+
 // MockFilter implements the Filter interface and works with MockTable.
 type MockFilter struct {
 	table     *MockTable
@@ -416,15 +440,20 @@ func (f *MockFilter) Delete() Op {
 			if row == nil {
 				return nil
 			}
+			
+			targets := []btree.Item{}
 
 			row.Ascend(func(item btree.Item) bool {
 				columns := item.(*superColumn).Columns
 				if f.rowMatch(columns) {
-					row.Delete(item)
+					targets = append(targets, row.Get(item))
 				}
 
 				return true
 			})
+			for _, item := range targets {
+				row.Delete(item)
+			}
 		}
 
 		return nil
