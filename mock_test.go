@@ -149,6 +149,17 @@ func (s *MockSuite) TestTableDeleteOne() {
 	s.Empty(users)
 }
 
+func (s *MockSuite) TestTableDeleteSome() {
+	s.insertUsers()
+
+	relations := []Relation{Eq("Pk1", 1), Eq("Pk2", 1)}
+	s.NoError(s.tbl.Where(relations...).Delete().Run())
+
+	var users []user
+	s.NoError(s.tbl.Where(relations...).Read(&users).Run())
+	s.Empty(users)
+}
+
 func (s *MockSuite) TestTableDeleteWithIn() {
 	s.insertUsers()
 
