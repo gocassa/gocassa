@@ -174,6 +174,11 @@ func (k *k) MultiFlakeSeriesTable(name, indexField, idField string, bucketSize t
 // Returns table names in a keyspace
 func (k *k) Tables() ([]string, error) {
 	const stmt = "SELECT columnfamily_name FROM system.schema_columnfamilies WHERE keyspace_name = ?"
+
+	if k.qe == nil {
+		return nil, fmt.Errorf("no query executor configured")
+	}
+
 	maps, err := k.qe.Query(stmt, k.name)
 	if err != nil {
 		return nil, err
