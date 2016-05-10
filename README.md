@@ -1,8 +1,8 @@
 gocassa
 =======
 
-[![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg "GoDoc")](http://godoc.org/github.com/mondough/gocassa) 
-[![Build Status](https://img.shields.io/travis/mondough/gocassa/master.svg "Build Status")](https://travis-ci.org/mondough/gocassa) 
+[![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg "GoDoc")](http://godoc.org/github.com/mondough/gocassa)
+[![Build Status](https://img.shields.io/travis/mondough/gocassa/master.svg "Build Status")](https://travis-ci.org/mondough/gocassa)
 
 Gocassa is a high-level library on top of [gocql](https://github.com/gocql/gocql).
 
@@ -22,7 +22,7 @@ package main
 import(
     "fmt"
     "time"
-    
+
     "github.com/mondough/gocassa"
 )
 
@@ -61,9 +61,8 @@ func main() {
     fmt.Println(result)
 }
 ```
-<<<<<<< HEAD
+
 [link to this example](https://github.com/mondough/gocassa/blob/master/examples/table1/table1.go)
-=======
 
 You can pass additional options to a gocassa `Op` to further configure your queries, for example the following query orders the results by the field "Name" in descending order and limits the results to a total of 100.
 
@@ -92,7 +91,6 @@ Gocassa provides multiple table types with their own unique interfaces:
     err := salesTable.Where(gocassa.Eq("Id", "sale-1")).ReadOne(&result).Run()
 ```
 [link to this example](https://github.com/hailocab/gocassa/blob/master/examples/table1/table1.go)
->>>>>>> hailo/master
 
 #### MapTable
 
@@ -121,7 +119,7 @@ Read, Set, Update, and Delete all happen by "Id".
 ```
 [link to this example](https://github.com/mondough/gocassa/blob/master/examples/multimap_table1/multimap_table1.go)
 
-For examples on how to do pagination or Update with this table, refer to the example (linked under code snippet). 
+For examples on how to do pagination or Update with this table, refer to the example (linked under code snippet).
 
 #### TimeSeriesTable
 
@@ -202,7 +200,7 @@ When encoding maps with non-string keys the key values are automatically convert
 
 ### Too long table names
 
-In case you get the following error: 
+In case you get the following error:
 
 ```
 Column family names shouldn't be more than 48 characters long (got "somelongishtablename_multitimeseries_start_id_24h0m0s")
