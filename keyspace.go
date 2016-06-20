@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"time"
+	"github.com/gocql/gocql"
 )
 
 type tableFactory interface {
@@ -172,6 +173,12 @@ func (k *k) Exists(cf string) (bool, error) {
 func (k *k) DropTable(cf string) error {
 	stmt := fmt.Sprintf("DROP TABLE IF EXISTS %s.%s", k.name, cf)
 	return k.qe.Execute(stmt)
+}
+
+func (k *k) TruncateTable(cf string) error {
+	stmt := fmt.Sprintf("TRUNCATE TABLE %s.%s", k.name, cf)
+	cl := gocql.All
+	return k.qe.ExecuteWithOptions(Options{Consistency: &cl,}, stmt)
 }
 
 func (k *k) Name() string {

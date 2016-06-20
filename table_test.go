@@ -52,6 +52,16 @@ func TestCreateTable(t *testing.T) {
 	if len(*res) != 1 {
 		t.Fatal("Not found ", len(*res))
 	}
+	if err := ns.(*k).TruncateTable(cs.Name()); err != nil {
+		t.Errorf("Failed to truncate table: %s error: %s", cs.Name(), err)
+	}
+	res2 := &[]Customer{}
+	if err := cs.Where(Eq("Id", "1001"), Eq("Name", "Joe")).Read(res2).Run(); err != nil {
+		t.Errorf("Failed to read table: %s error: %s", cs.Name(), err)
+	}
+	if len(*res2) != 0 {
+		t.Errorf("Expected table to be empty, but found: %+v", res2)
+	}
 	err = ns.(*k).DropTable(name)
 	if err != nil {
 		t.Fatal(err)
