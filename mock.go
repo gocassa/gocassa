@@ -306,15 +306,15 @@ type MockDumper func(k interface{}, row interface{})
 func Dump(tc TableChanger, md MockDumper) {
 	switch t := tc.(type) {
 	case *multimapMkT:
-	doDump(md, t.Table.(*MockTable))
+		doDump(md, t.Table.(*MockTable))
 	case *mapT:
-	doDump(md, t.Table.(*MockTable))
+		doDump(md, t.Table.(*MockTable))
 	case *multiTimeSeriesT:
-	doDump(md, t.Table.(*MockTable))
+		doDump(md, t.Table.(*MockTable))
 	case *timeSeriesT:
-	doDump(md, t.Table.(*MockTable))
+		doDump(md, t.Table.(*MockTable))
 	case *multimapT:
-	doDump(md, t.Table.(*MockTable))
+		doDump(md, t.Table.(*MockTable))
 	default:
 	}
 }
@@ -440,7 +440,7 @@ func (f *MockFilter) Delete() Op {
 			if row == nil {
 				return nil
 			}
-			
+
 			targets := []btree.Item{}
 
 			row.Ascend(func(item btree.Item) bool {

@@ -24,7 +24,7 @@ var (
 func TestMultimapMultiKeyTableInsertRead(t *testing.T) {
 	tbl := ns.MultimapMultiKeyTable(tablename+"90", StorePK, StoreIndex, Store{})
 	createIf(tbl.(TableChanger), t)
-	validateTableName(t, tbl.(TableChanger), "store90_multimapMk")	
+	validateTableName(t, tbl.(TableChanger), "store90_multimapMk")
 	london := Store{
 		City:    "London",
 		Manager: "Joe",

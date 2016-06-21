@@ -2,9 +2,9 @@ package gocassa
 
 import (
 	"fmt"
+	"github.com/gocql/gocql"
 	"strings"
 	"time"
-	"github.com/gocql/gocql"
 )
 
 type tableFactory interface {
@@ -176,9 +176,9 @@ func (k *k) DropTable(cf string) error {
 }
 
 func (k *k) TruncateTable(cf string) error {
-	stmt := fmt.Sprintf("TRUNCATE TABLE %s.%s", k.name, cf)
+	stmt := fmt.Sprintf("TRUNCATE %s.%s", k.name, cf)
 	cl := gocql.All
-	return k.qe.ExecuteWithOptions(Options{Consistency: &cl,}, stmt)
+	return k.qe.ExecuteWithOptions(Options{Consistency: &cl}, stmt)
 }
 
 func (k *k) Name() string {
