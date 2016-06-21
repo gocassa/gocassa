@@ -252,37 +252,3 @@ func TestMultimapMultiKeyTableListOrder(t *testing.T) {
 		t.Fatalf("Expected to find charing cross, got %v", list[2].Address)
 	}
 }
-
-func TestCruft(t *testing.T) {
-	m := map[string]interface{}{
-		"single":   "unitary",
-		"multiple": []string{"one", "two"},
-	}
-	for k, v := range m {
-		switch tt := v.(type) {
-		case []string:
-			if k != "multiple" {
-				t.Errorf("Misidentified type (%T) for %s => %+v", tt, k, v)
-			}
-		case string:
-			if k != "single" {
-				t.Errorf("Misidentified type (%T) for %s => %+v", tt, k, v)
-			}
-		default:
-			t.Errorf("How did we get here for type (%T) for %s => %+v", tt, k, v)
-		}
-		vv := reflect.ValueOf(v)
-		if vv.Kind() == reflect.Array || vv.Kind() == reflect.Slice {
-			if k != "multiple" {
-				t.Errorf("R Misidentified type (%T) for %s => %+v", v, k, v)
-			}
-			if vv.Len() != 2 {
-				t.Errorf("R Wrong length: %d", vv.Len())
-			}
-		} else {
-			if k != "single" {
-				t.Errorf("R Misidentified type (%T) for %s => %+v", v, k, v)
-			}
-		}
-	}
-}
