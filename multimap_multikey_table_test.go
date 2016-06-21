@@ -24,7 +24,7 @@ var (
 func TestMultimapMultiKeyTableInsertRead(t *testing.T) {
 	tbl := ns.MultimapMultiKeyTable(tablename+"90", StorePK, StoreIndex, Store{})
 	createIf(tbl.(TableChanger), t)
-	validateTableName(t, tbl.(TableChanger), "store90_multimapMk")	
+	validateTableName(t, tbl.(TableChanger), "store90_multimapMk")
 	london := Store{
 		City:    "London",
 		Manager: "Joe",
@@ -164,38 +164,32 @@ func TestMultimapMultiKeyTableMultiRead(t *testing.T) {
 	if !reflect.DeepEqual((*stores)[1], london_soho) {
 		t.Fatalf("Expected to find london_soho, got %v", (*stores)[1])
 	}
-	
+
 	for i, s := range []Store{
-			{City:    "Wick", Manager: "Jean",  Id:      "12412-afa-16961", Address: "Wick",},
-			{City:    "Anstruther", Manager: "Morag", Id:      "12412-afa-16963", Address: "Anstruther",},
-		} {
+		{City: "London", Manager: "Joe", Id: "12412-afa-16961", Address: "Westminster"},
+		{City: "Anstruther", Manager: "Morag", Id: "12412-afa-16963", Address: "Anstruther"},
+	} {
 		err = tbl.Set(s).Run()
 		if err != nil {
 			t.Fatalf("Add store [%d]: error: %s", i, err)
 		}
 	}
-	field[CityKey] = []string{"London", "Anstruther",}
-	id[ManagerKey] = []string{"Joe", "Morag",}
-	
+	field[CityKey] = "London"
+	id[ManagerKey] = "Joe"
+	id[IdKey] = []string{"12412-afa-16956", "12412-afa-16961"}
+
 	err = tbl.MultiRead(field, id, stores).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(*stores) != 3 {
-		t.Fatalf("Expected to multiread 3 records, got %d", len(*stores))
+	if len(*stores) != 2 {
+		t.Fatalf("Expected to multiread 2 records, got %d", len(*stores))
 	}
-	sm := map[string]Store{}
-	for _, s := range (*stores) {
-		sm[s.Id] = s
-	}
-	if !reflect.DeepEqual(sm["12412-afa-16956"], london_somer) {
+	if !reflect.DeepEqual((*stores)[0], london_somer) {
 		t.Fatalf("Expected to find london_somer, got %v", (*stores)[0])
 	}
-	if !reflect.DeepEqual(sm["12412-afa-16957"], london_soho) {
-		t.Fatalf("Expected to find london_soho, got %v", (*stores)[1])
-	}
-	if sm["12412-afa-16963"].City != "Anstruther" {
-		t.Fatalf("Expected to find mad Morag, got %v", (*stores)[2])
+	if (*stores)[1].Address != "Westminster" {
+		t.Fatalf("Expected to find joe in Westminster, got %v", (*stores)[1])
 	}
 }
 
@@ -261,20 +255,20 @@ func TestMultimapMultiKeyTableListOrder(t *testing.T) {
 
 func TestCruft(t *testing.T) {
 	m := map[string]interface{}{
-		"single": "unitary",
-		"multiple": []string{"one", "two",},
+		"single":   "unitary",
+		"multiple": []string{"one", "two"},
 	}
 	for k, v := range m {
 		switch tt := v.(type) {
-			case []string:
+		case []string:
 			if k != "multiple" {
 				t.Errorf("Misidentified type (%T) for %s => %+v", tt, k, v)
 			}
-			case string:
+		case string:
 			if k != "single" {
 				t.Errorf("Misidentified type (%T) for %s => %+v", tt, k, v)
 			}
-			default:
+		default:
 			t.Errorf("How did we get here for type (%T) for %s => %+v", tt, k, v)
 		}
 		vv := reflect.ValueOf(v)

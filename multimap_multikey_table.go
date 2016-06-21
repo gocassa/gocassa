@@ -2,8 +2,6 @@ package gocassa
 
 import (
 	rrr "github.com/hailocab/gocassa/reflect"
-	
-//	log "github.com/cihub/seelog"
 )
 
 type multimapMkT struct {
@@ -58,13 +56,20 @@ func (mm *multimapMkT) ListOfRelations(fieldsToIndex, ids map[string]interface{}
 
 	for _, field := range mm.fieldsToIndexBy {
 		if value := fieldsToIndex[field]; value != nil && value != "" {
-			relations = addRelation(relations, field, value)
+			relation := Eq(field, value)
+			relations = append(relations, relation)
 		}
 	}
 
 	for _, field := range mm.idField {
 		if value := ids[field]; value != nil && value != "" {
-			relations = addRelation(relations, field, value)
+			// A restriction at C* 2.1 - only use IN on last clustering column
+			if field == mm.idField[len(mm.idField)-1] {
+				relations = addRelation(relations, field, value)
+			} else {
+				relation := Eq(field, value)
+				relations = append(relations, relation)
+			}
 		}
 	}
 
