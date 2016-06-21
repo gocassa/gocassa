@@ -31,6 +31,8 @@ type KeySpace interface {
 	Tables() ([]string, error)
 	// Exists returns whether the specified column family exists within the keyspace
 	Exists(string) (bool, error)
+	// Truncates a table for added excitement
+	TruncateTable(cf string) error
 }
 
 //
