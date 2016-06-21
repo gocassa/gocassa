@@ -164,6 +164,39 @@ func TestMultimapMultiKeyTableMultiRead(t *testing.T) {
 	if !reflect.DeepEqual((*stores)[1], london_soho) {
 		t.Fatalf("Expected to find london_soho, got %v", (*stores)[1])
 	}
+	
+	for i, s := range []Store{
+			{City:    "Wick", Manager: "Jean",  Id:      "12412-afa-16961", Address: "Wick",},
+			{City:    "Anstruther", Manager: "Morag", Id:      "12412-afa-16963", Address: "Anstruther",},
+		} {
+		err = tbl.Set(s).Run()
+		if err != nil {
+			t.Fatalf("Add store [%d]: error: %s", i, err)
+		}
+	}
+	field[CityKey] = []string{"London", "Anstruther",}
+	id[ManagerKey] = []string{"Joe", "Morag",}
+	
+	err = tbl.MultiRead(field, id, stores).Run()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(*stores) != 3 {
+		t.Fatalf("Expected to multiread 3 records, got %d", len(*stores))
+	}
+	sm := map[string]Store{}
+	for _, s := range (*stores) {
+		sm[s.Id] = s
+	}
+	if !reflect.DeepEqual(sm["12412-afa-16956"], london_somer) {
+		t.Fatalf("Expected to find london_somer, got %v", (*stores)[0])
+	}
+	if !reflect.DeepEqual(sm["12412-afa-16957"], london_soho) {
+		t.Fatalf("Expected to find london_soho, got %v", (*stores)[1])
+	}
+	if sm["12412-afa-16963"].City != "Anstruther" {
+		t.Fatalf("Expected to find mad Morag, got %v", (*stores)[2])
+	}
 }
 
 func TestMultimapMultiKeyTableListOrder(t *testing.T) {
@@ -223,5 +256,39 @@ func TestMultimapMultiKeyTableListOrder(t *testing.T) {
 	}
 	if !reflect.DeepEqual(list[2], store3) {
 		t.Fatalf("Expected to find charing cross, got %v", list[2].Address)
+	}
+}
+
+func TestCruft(t *testing.T) {
+	m := map[string]interface{}{
+		"single": "unitary",
+		"multiple": []string{"one", "two",},
+	}
+	for k, v := range m {
+		switch tt := v.(type) {
+			case []string:
+			if k != "multiple" {
+				t.Errorf("Misidentified type (%T) for %s => %+v", tt, k, v)
+			}
+			case string:
+			if k != "single" {
+				t.Errorf("Misidentified type (%T) for %s => %+v", tt, k, v)
+			}
+			default:
+			t.Errorf("How did we get here for type (%T) for %s => %+v", tt, k, v)
+		}
+		vv := reflect.ValueOf(v)
+		if vv.Kind() == reflect.Array || vv.Kind() == reflect.Slice {
+			if k != "multiple" {
+				t.Errorf("R Misidentified type (%T) for %s => %+v", v, k, v)
+			}
+			if vv.Len() != 2 {
+				t.Errorf("R Wrong length: %d", vv.Len())
+			}
+		} else {
+			if k != "single" {
+				t.Errorf("R Misidentified type (%T) for %s => %+v", v, k, v)
+			}
+		}
 	}
 }

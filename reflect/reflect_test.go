@@ -163,6 +163,25 @@ func TestFieldsAndValues(t *testing.T) {
 	}
 }
 
+type testees struct {
+	n int
+	in interface{} 
+}
+
+func TestInterfaceToArray(t *testing.T) {
+	cases := []testees{
+		{0, "boogy on brother",},
+		{3, []string{"boogy", "on", "brother",},},
+		{3, []interface{}{"boogy", "on", "brother",},},
+		{0, map[string]string{"dance": "boogy", "on": "brother"},},
+	}
+	for i, tc := range cases {
+		if o := AsInterfaceArray(tc.in); tc.n != len(o) {
+			t.Errorf("[%d] for: %+v expected: %d but got: %d", i, tc.in, tc.n, len(o))
+		}
+	}
+}
+
 func assertFieldsEqual(t *testing.T, a, b []string) {
 	if len(a) != len(b) {
 		t.Errorf("expected fields %v but got %v", a, b)

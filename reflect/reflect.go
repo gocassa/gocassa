@@ -95,3 +95,19 @@ func fieldByIndex(v r.Value, index []int) r.Value {
 
 	return v
 }
+
+// AsInterfaceArray is a convenience method that accepts an interface{} value and returns an []interface{}
+// where if the incoming value is determined to be an array or slice the outgoing arrya is filled
+// with the values from the incoming value, and otherwise is empty. In fact, an empty returned slice
+// implies that the input was not an array or slice.
+func AsInterfaceArray(value interface{}) []interface{} {
+	vv := r.ValueOf(value)
+	if vv.Kind() == r.Array || vv.Kind() == r.Slice {
+		vi := make([]interface{}, 0, vv.Len())
+		for i := 0; i < vv.Len(); i++ {
+			vi = append(vi, vv.Index(i).Interface())
+		}
+		return vi
+	}
+	return []interface{}{}
+}
