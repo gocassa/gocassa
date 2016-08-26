@@ -9,7 +9,7 @@ import (
 	"strconv"
 
 	"github.com/mitchellh/mapstructure"
-	rreflect "github.com/mondough/gocassa/reflect"
+	rreflect "github.com/monzo/gocassa/reflect"
 )
 
 const (
