@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/hailocab/gocassa"
+	"github.com/gocassa/gocassa"
 	"time"
 )
 
