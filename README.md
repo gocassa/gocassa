@@ -1,8 +1,8 @@
 gocassa
 =======
 
-[![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg "GoDoc")](http://godoc.org/github.com/hailocab/gocassa) 
-[![Build Status](https://img.shields.io/travis/hailocab/gocassa/master.svg "Build Status")](https://travis-ci.org/hailocab/gocassa) 
+[![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg "GoDoc")](http://godoc.org/github.com/gocassa/gocassa) 
+[![Build Status](https://img.shields.io/travis/hailocab/gocassa/master.svg "Build Status")](https://travis-ci.org/hailocab/gocassa)
 
 Gocassa is a high-level library on top of [gocql](https://github.com/gocql/gocql).
 
@@ -10,7 +10,7 @@ Current version: v1.3.0
 
 Compared to gocql it provides query building, adds data binding, and provides easy-to-use "recipe" tables for common query use-cases. Unlike [cqlc](https://github.com/relops/cqlc), it does not use code generation.
 
-For docs, see: [https://godoc.org/github.com/hailocab/gocassa](https://godoc.org/github.com/hailocab/gocassa)
+For docs, see: [https://godoc.org/github.com/gocassa/gocassa](https://godoc.org/github.com/gocassa/gocassa)
 
 ## Usage
 
@@ -23,7 +23,7 @@ import(
     "fmt"
     "time"
     
-    "github.com/hailocab/gocassa"
+    "github.com/gocassa/gocassa"
 )
 
 type Sale struct {
@@ -88,7 +88,7 @@ Gocassa provides multiple table types with their own unique interfaces:
     result := Sale{}
     err := salesTable.Where(gocassa.Eq("Id", "sale-1")).ReadOne(&result).Run()
 ```
-[link to this example](https://github.com/hailocab/gocassa/blob/master/examples/table1/table1.go)
+[link to this example](https://github.com/gocassa/gocassa/blob/master/examples/table1/table1.go)
 
 #### MapTable
 
@@ -101,7 +101,7 @@ Gocassa provides multiple table types with their own unique interfaces:
     salesTable.Read("sale-1", &result).Run()
 }
 ```
-[link to this example](https://github.com/hailocab/gocassa/blob/master/examples/map_table1/map_table1.go)
+[link to this example](https://github.com/gocassa/gocassa/blob/master/examples/map_table1/map_table1.go)
 
 Read, Set, Update, and Delete all happen by "Id".
 
@@ -115,7 +115,7 @@ Read, Set, Update, and Delete all happen by "Id".
     results := []Sale{}
     err := salesTable.List("seller-1", nil, 0, &results).Run()
 ```
-[link to this example](https://github.com/hailocab/gocassa/blob/master/examples/multimap_table1/multimap_table1.go)
+[link to this example](https://github.com/gocassa/gocassa/blob/master/examples/multimap_table1/multimap_table1.go)
 
 For examples on how to do pagination or Update with this table, refer to the example (linked under code snippet). 
 

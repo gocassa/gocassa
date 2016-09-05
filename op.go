@@ -8,7 +8,7 @@ import (
 	"runtime"
 	"strconv"
 
-	rreflect "github.com/hailocab/gocassa/reflect"
+	rreflect "github.com/gocassa/gocassa/reflect"
 	"github.com/mitchellh/mapstructure"
 )
 
