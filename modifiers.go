@@ -3,7 +3,6 @@ package gocassa
 import (
 	"bytes"
 	"fmt"
-	"strings"
 )
 
 // Modifiers are used with update statements.
@@ -106,8 +105,8 @@ func (m Modifier) cql(name string) (string, []interface{}) {
 		str = fmt.Sprintf("%s[?] = ?", name)
 		vals = append(vals, m.args[0], m.args[1])
 	case modifierListRemove:
-		str = fmt.Sprintf("%s = %s - ?", name)
-		vals = append(vals, m.args[0])
+		str = fmt.Sprintf("%s = %s - ?", name, name)
+		vals = append(vals, []interface{}{m.args[0]})
 	case modifierMapSetFields:
 		fields, ok := m.args[0].(map[string]interface{})
 		if !ok {
@@ -142,16 +141,4 @@ func (m Modifier) cql(name string) (string, []interface{}) {
 		}
 	}
 	return str, vals
-}
-
-func printElem(i interface{}) string {
-	switch v := i.(type) {
-	case string:
-		return "'" + escape(v) + "'"
-	}
-	return fmt.Sprintf("%v", i)
-}
-
-func escape(s string) string {
-	return strings.Replace(s, "'", "''", -1)
 }

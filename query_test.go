@@ -278,7 +278,7 @@ func TestUpdateList(t *testing.T) {
 		"Ints":     ListRemove(2),
 		"Int32s":   ListRemove(2),
 		"Int64s":   ListRemove(2),
-		"Float32s": ListRemove(2.22),
+		"Float32s": ListRemove(float32(2.22)),
 		"Float64s": ListRemove(2.22),
 		"Bools":    ListRemove(true),
 	}).Run()
