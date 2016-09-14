@@ -3,7 +3,6 @@ package gocassa
 import (
 	"bytes"
 	"fmt"
-	"strings"
 )
 
 // Modifiers are used with update statements.
@@ -13,11 +12,8 @@ const (
 	modifierListAppend
 	modifierListSetAtIndex
 	modifierListRemove
-	modifierListRemoveAtIndex
 	modifierMapSetFields
 	modifierMapSetField
-	modifierMapReplace
-	modifierMapDeleteField
 	modifierCounterIncrement
 )
 
@@ -99,54 +95,50 @@ func (m Modifier) cql(name string) (string, []interface{}) {
 	str := ""
 	vals := []interface{}{}
 	switch m.op {
-	// Can not use bind variables here due to "bind variables are not supported inside collection literals" :(
 	case modifierListPrepend:
-		str = fmt.Sprintf("%v = [%v] + %v", name, printElem(m.args[0]), name)
+		str = fmt.Sprintf("%s = ? + %s", name, name)
+		vals = append(vals, []interface{}{m.args[0]})
 	case modifierListAppend:
-		str = fmt.Sprintf("%v = %v + [%v]", name, name, printElem(m.args[0]))
+		str = fmt.Sprintf("%s = %s + ?", name, name)
+		vals = append(vals, []interface{}{m.args[0]})
 	case modifierListSetAtIndex:
-		str = fmt.Sprintf("%v[%v] = %v", name, m.args[0], printElem(m.args[1]))
+		str = fmt.Sprintf("%s[?] = ?", name)
+		vals = append(vals, m.args[0], m.args[1])
 	case modifierListRemove:
-		str = fmt.Sprintf("%v = %v - [%v]", name, name, printElem(m.args[0]))
+		str = fmt.Sprintf("%s = %s - ?", name, name)
+		vals = append(vals, []interface{}{m.args[0]})
 	case modifierMapSetFields:
-		buf := new(bytes.Buffer)
-		buf.WriteString(fmt.Sprintf("%v = %v + ", name, name))
-		ma, ok := m.args[0].(map[string]interface{})
+		fields, ok := m.args[0].(map[string]interface{})
 		if !ok {
 			panic(fmt.Sprintf("Argument for MapSetFields is not a map: %v", m.args[0]))
 		}
-		buf.WriteString("{")
+
+		buf := new(bytes.Buffer)
 		i := 0
-		for k, v := range ma {
+		for k, v := range fields {
 			if i > 0 {
 				buf.WriteString(", ")
 			}
-			buf.WriteString(fmt.Sprintf("%v : %v", printElem(k), printElem(v)))
+
+			fieldStmt, fieldVals := MapSetField(k, v).cql(name)
+			buf.WriteString(fieldStmt)
+			vals = append(vals, fieldVals...)
+
 			i++
 		}
-		buf.WriteString("}")
 		str = buf.String()
 	case modifierMapSetField:
-		str = fmt.Sprintf("%v[%v] = %v", name, printElem(m.args[0]), printElem(m.args[1]))
+		str = fmt.Sprintf("%s[?] = ?", name)
+		vals = append(vals, m.args[0], m.args[1])
 	case modifierCounterIncrement:
 		val := m.args[0].(int)
 		if val > 0 {
-			str = fmt.Sprintf("%v = %v + %v", name, name, printElem(val))
+			str = fmt.Sprintf("%s = %s + ?", name, name)
+			vals = append(vals, val)
 		} else {
-			str = fmt.Sprintf("%v = %v - %v", name, name, printElem(val*-1))
+			str = fmt.Sprintf("%s = %s - ?", name, name)
+			vals = append(vals, -val)
 		}
 	}
 	return str, vals
-}
-
-func printElem(i interface{}) string {
-	switch v := i.(type) {
-	case string:
-		return "'" + escape(v) + "'"
-	}
-	return fmt.Sprintf("%v", i)
-}
-
-func escape(s string) string {
-	return strings.Replace(s, "'", "''", -1)
 }
