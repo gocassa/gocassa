@@ -110,6 +110,7 @@ func (s *MockSuite) TestTableRead() {
 	s.Equal(u4, u)
 
 	s.NoError(op1.Add(op2).Run())
+	s.NoError(op1.Add(op2).RunAtomically())
 }
 
 func (s *MockSuite) TestTableUpdate() {
