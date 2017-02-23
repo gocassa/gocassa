@@ -312,8 +312,8 @@ func (t *MockTable) SetWithOptions(i interface{}, options Options) Op {
 
 		superColumn := t.getOrCreateColumnGroup(rowKey, superColumnKey)
 
-		for k, v := range columns {
-			superColumn[k] = v
+		if err := assignRecords(columns, superColumn); err != nil {
+			return err
 		}
 		return nil
 	})
@@ -452,32 +452,8 @@ func (f *MockFilter) UpdateWithOptions(m map[string]interface{}, options Options
 					}
 				}
 
-				for key, value := range m {
-					if mod, ok := value.(Modifier); ok {
-						switch mod.op {
-						case modifierMapSetFields:
-							targetMap := make(map[string]interface{})
-							if superColumn[key] != nil {
-								// if it isn't nil then try and type cast it to a map
-								if targetMap, ok = superColumn[key].(map[string]interface{}); !ok {
-									panic(fmt.Sprintf("Can't use MapSetFields modifier on field that isn't a map: %T", superColumn[key]))
-								}
-							}
-
-							ma, ok := mod.args[0].(map[string]interface{})
-							if !ok {
-								panic("Argument for MapSetFields is not a map")
-							}
-							for k, v := range ma {
-								targetMap[k] = v
-							}
-							value = targetMap
-						default:
-							return errors.New(fmt.Sprintf("Modifer %v not supported by mock keyspace", mod.op))
-						}
-					}
-
-					superColumn[key] = value
+				if err := assignRecords(m, superColumn); err != nil {
+					return err
 				}
 			}
 		}
@@ -579,4 +555,43 @@ func (q *MockFilter) ReadOne(out interface{}) Op {
 		q.assignResult(sliceVal.Index(0).Interface(), out)
 		return nil
 	})
+}
+
+func assignRecords(m map[string]interface{}, record map[string]interface{}) error {
+	for k, v := range m {
+		switch v := v.(type) {
+		case Modifier:
+			switch v.op {
+			case modifierMapSetFields:
+				targetMap := make(map[string]interface{})
+				if record[k] != nil {
+					// if it isn't nil then try and type cast it to a map
+					ok := false
+					if targetMap, ok = record[k].(map[string]interface{}); !ok {
+						return fmt.Errorf("Can't use MapSetFields modifier on field that isn't a map: %T", record[k])
+					}
+				}
+
+				ma, ok := v.args[0].(map[string]interface{})
+				if !ok {
+					return fmt.Errorf("Argument for MapSetFields is not a map")
+				}
+				for k, v := range ma {
+					targetMap[k] = v
+				}
+				record[k] = targetMap
+			case modifierCounterIncrement:
+				oldV, _ := record[k].(int64)
+				delta := int64(v.args[0].(int))
+
+				record[k] = oldV + delta
+			default:
+				return fmt.Errorf("Modifer %v not supported by mock keyspace", v.op)
+			}
+		default:
+			record[k] = v
+		}
+	}
+
+	return nil
 }
