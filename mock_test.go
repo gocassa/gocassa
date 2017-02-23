@@ -1,6 +1,7 @@
 package gocassa
 
 import (
+	"reflect"
 	"testing"
 	"time"
 
@@ -14,6 +15,11 @@ type user struct {
 	Ck1  int
 	Ck2  int
 	Name string
+}
+
+type UserWithMap struct {
+	Id  string
+	Map map[string]interface{}
 }
 
 type point struct {
@@ -194,6 +200,46 @@ func (s *MockSuite) TestMapTableDelete() {
 	s.NoError(s.mapTbl.Delete(1).Run())
 	var user user
 	s.Equal(RowNotFoundError{}, s.mapTbl.Read(1, &user).Run())
+}
+
+func (s *MockSuite) TestMapModifiers() {
+	tbl := s.ks.MapTable("user342135", "Id", UserWithMap{})
+	createIf(tbl.(TableChanger), s.T())
+	c := UserWithMap{
+		Id: "1",
+		Map: map[string]interface{}{
+			"3": "Is Odd",
+			"6": "Is Even",
+		},
+	}
+	if err := tbl.Set(c).Run(); err != nil {
+		s.T().Fatal(err)
+	}
+	if err := tbl.Update("1", map[string]interface{}{
+		"Map": MapSetFields(map[string]interface{}{
+			"2": "Two",
+			"4": "Four",
+		}),
+	}).Run(); err != nil {
+		s.T().Fatal(err)
+	}
+
+	// Read back into a new struct (see #83)
+	var c2 UserWithMap
+	if err := tbl.Read("1", &c2).Run(); err != nil {
+		s.T().Fatal(err)
+	}
+	if !reflect.DeepEqual(c2, UserWithMap{
+		Id: "1",
+		Map: map[string]interface{}{
+			"2": "Two",
+			"3": "Is Odd",
+			"4": "Four",
+			"6": "Is Even",
+		},
+	}) {
+		s.T().Fatal(c2)
+	}
 }
 
 // MultiMapTable tests
