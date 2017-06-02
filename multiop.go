@@ -19,6 +19,10 @@ func (mo multiOp) Run() error {
 }
 
 func (mo multiOp) RunAtomically() error {
+	if len(mo) == 0 {
+		return nil
+	}
+
 	if err := mo.Preflight(); err != nil {
 		return err
 	}
@@ -47,17 +51,22 @@ func (mo multiOp) QueryExecutor() QueryExecutor {
 }
 
 func (mo multiOp) Add(ops_ ...Op) Op {
-	ops := make([]Op, 0, len(ops_))
+	if len(ops_) == 0 {
+		return mo
+	} else if len(mo) == 0 {
+		return ops_[0].Add(ops_[1:]...)
+	}
+
 	for _, op := range ops_ {
 		// If any multiOps were passed, flatten them out
 		switch op := op.(type) {
 		case multiOp:
-			ops = append(ops, op...)
+			mo = append(mo, op...)
 		default:
-			ops = append(ops, op)
+			mo = append(mo, op)
 		}
 	}
-	return append(mo, ops...)
+	return mo
 }
 
 func (mo multiOp) WithOptions(opts Options) Op {
