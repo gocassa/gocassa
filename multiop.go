@@ -54,7 +54,12 @@ func (mo multiOp) Add(ops_ ...Op) Op {
 	if len(ops_) == 0 {
 		return mo
 	} else if len(mo) == 0 {
-		return ops_[0].Add(ops_[1:]...)
+		switch len(ops_) {
+		case 1:
+			return ops_[0]
+		default:
+			return ops_[0].Add(ops_[1:]...)
+		}
 	}
 
 	for _, op := range ops_ {
