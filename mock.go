@@ -563,13 +563,33 @@ func assignRecords(m map[string]interface{}, record map[string]interface{}) erro
 		case Modifier:
 			switch v.op {
 			case modifierMapSetFields:
-				targetMap := make(map[string]interface{})
+				// Go interfaces are internally represented as a type and a value. The record[k] interface{} value could look like one of these:
+				// [type, value]
+				// [type, nil  ]
+				// [nil,  nil  ]
+				var targetMap reflect.Value
 				if record[k] != nil {
-					// if it isn't nil then try and type cast it to a map
-					ok := false
-					if targetMap, ok = record[k].(map[string]interface{}); !ok {
+					// narrowed it down to:
+					// [type, value]
+					// [type, nil  ]
+					rv := reflect.ValueOf(record[k])
+
+					if rv.Type().Kind() != reflect.Map {
 						return fmt.Errorf("Can't use MapSetFields modifier on field that isn't a map: %T", record[k])
 					}
+
+					if rv.IsNil() {
+						// [type, nil  ]
+						targetMap = reflect.MakeMap(rv.Type())
+					} else {
+						// [type, value]
+						targetMap = rv
+					}
+				} else {
+					// [nil,  nil  ]
+					// We don't know the type, so we guess. Note that this guess is
+					// likely wrong but to fix that we need a much larger refactor.
+					targetMap = reflect.ValueOf(map[string]interface{}{})
 				}
 
 				ma, ok := v.args[0].(map[string]interface{})
@@ -577,9 +597,9 @@ func assignRecords(m map[string]interface{}, record map[string]interface{}) erro
 					return fmt.Errorf("Argument for MapSetFields is not a map")
 				}
 				for k, v := range ma {
-					targetMap[k] = v
+					targetMap.SetMapIndex(reflect.ValueOf(k), reflect.ValueOf(v))
 				}
-				record[k] = targetMap
+				record[k] = targetMap.Interface()
 			case modifierCounterIncrement:
 				oldV, _ := record[k].(int64)
 				delta := int64(v.args[0].(int))
