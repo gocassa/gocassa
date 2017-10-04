@@ -136,6 +136,30 @@ func (k *k) MultiTimeSeriesTable(name, indexField, timeField, idField string, bu
 	}
 }
 
+func (k *k) MultiKeyTimeSeriesTable(name string, indexFields []string, timeField string, idFields []string, bucketSize time.Duration, row interface{}) MultiKeyTimeSeriesTable {
+	m, ok := toMap(row)
+	if !ok {
+		panic("Unrecognized row type")
+	}
+
+	partitionKeys := []string{bucketFieldName}
+	partitionKeys = append(partitionKeys, indexFields...)
+	clusteringColumns := []string{timeField}
+	clusteringColumns = append(clusteringColumns, idFields...)
+
+	m[bucketFieldName] = time.Now()
+	return &multiKeyTimeSeriesT{
+		t: k.NewTable(fmt.Sprintf("%s_multiKeyTimeSeries_%s_%s", name, timeField, bucketSize.String()), row, m, Keys{
+			PartitionKeys:     partitionKeys,
+			ClusteringColumns: clusteringColumns,
+		}),
+		indexFields: indexFields,
+		timeField:   timeField,
+		idFields:    idFields,
+		bucketSize:  bucketSize,
+	}
+}
+
 func (k *k) FlakeSeriesTable(name, idField string, bucketSize time.Duration, row interface{}) FlakeSeriesTable {
 	m, ok := toMap(row)
 	if !ok {
@@ -173,7 +197,7 @@ func (k *k) MultiFlakeSeriesTable(name, indexField, idField string, bucketSize t
 
 // Returns table names in a keyspace
 func (k *k) Tables() ([]string, error) {
-	const stmt = "SELECT columnfamily_name FROM system.schema_columnfamilies WHERE keyspace_name = ?"
+	const stmt = "SELECT table_name FROM system_schema.tables WHERE keyspace_name = ?"
 
 	if k.qe == nil {
 		return nil, fmt.Errorf("no query executor configured")

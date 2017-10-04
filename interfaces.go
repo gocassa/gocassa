@@ -19,6 +19,7 @@ type KeySpace interface {
 	MultimapMultiKeyTable(tableName string, fieldToIndexBy, uniqueKey []string, row interface{}) MultimapMkTable
 	TimeSeriesTable(tableName, timeField, uniqueKey string, bucketSize time.Duration, row interface{}) TimeSeriesTable
 	MultiTimeSeriesTable(tableName, fieldToIndexByField, timeField, uniqueKey string, bucketSize time.Duration, row interface{}) MultiTimeSeriesTable
+	MultiKeyTimeSeriesTable(tableName string, fieldToIndexByField []string, timeField string, uniqueKey []string, bucketSize time.Duration, row interface{}) MultiKeyTimeSeriesTable
 	FlakeSeriesTable(tableName, idField string, bucketSize time.Duration, row interface{}) FlakeSeriesTable
 	MultiFlakeSeriesTable(tableName, indexField, idField string, bucketSize time.Duration, row interface{}) MultiFlakeSeriesTable
 	Table(tableName string, row interface{}, keys Keys) Table
@@ -113,6 +114,20 @@ type MultiTimeSeriesTable interface {
 	List(v interface{}, start, end time.Time, pointerToASlice interface{}) Op
 	Buckets(v interface{}, start time.Time) Buckets
 	WithOptions(Options) MultiTimeSeriesTable
+	Table() Table
+	TableChanger
+}
+
+// MultiKeyTimeSeriesTable is a cross between TimeSeries and MultimapMkTable tables.
+type MultiKeyTimeSeriesTable interface {
+	// timeField and idField must be present
+	Set(v interface{}) Op
+	Update(v map[string]interface{}, timeStamp time.Time, id map[string]interface{}, m map[string]interface{}) Op
+	Delete(v map[string]interface{}, timeStamp time.Time, id map[string]interface{}) Op
+	Read(v map[string]interface{}, timeStamp time.Time, id map[string]interface{}, pointer interface{}) Op
+	List(v map[string]interface{}, start, end time.Time, pointerToASlice interface{}) Op
+	Buckets(v map[string]interface{}, start time.Time) Buckets
+	WithOptions(Options) MultiKeyTimeSeriesTable
 	Table() Table
 	TableChanger
 }
