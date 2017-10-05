@@ -36,6 +36,12 @@ func init() {
 	cluster.MaxWaitSchemaAgreement = 2 * time.Minute // travis might be slow
 	cluster.RetryPolicy = &gocql.SimpleRetryPolicy{
 		NumRetries: 3}
+	cluster.ProtoVersion = 3
+	cluster.DisableInitialHostLookup = true
+	cluster.IgnorePeerAddr = true
+	cluster.Events.DisableNodeStatusEvents = true
+	cluster.Events.DisableSchemaEvents = true
+	cluster.Events.DisableTopologyEvents = true
 	sess, err := cluster.CreateSession()
 	if err != nil {
 		panic(err)
