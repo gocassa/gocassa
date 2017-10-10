@@ -130,6 +130,7 @@ func (ks *mockKeySpace) NewTable(name string, entity interface{}, fields map[str
 		entity: entity,
 		keys:   keys,
 		rows:   map[rowKey]*btree.BTree{},
+		mtx:    &sync.RWMutex{},
 	}
 }
 
@@ -144,7 +145,7 @@ type MockTable struct {
 	sync.RWMutex
 
 	// rows is mapping from row key to column group key to column map
-	mtx     sync.RWMutex
+	mtx     *sync.RWMutex
 	name    string
 	rows    map[rowKey]*btree.BTree
 	entity  interface{}
@@ -357,6 +358,7 @@ func (t *MockTable) WithOptions(o Options) Table {
 		entity:  t.entity,
 		keys:    t.keys,
 		options: t.options.Merge(o),
+		mtx:     t.mtx,
 	}
 }
 
