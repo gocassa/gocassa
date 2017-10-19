@@ -209,7 +209,7 @@ func (k *k) Tables() ([]string, error) {
 	}
 	ret := []string{}
 	for _, m := range maps {
-		ret = append(ret, m["columnfamily_name"].(string))
+		ret = append(ret, m["table_name"].(string))
 	}
 	return ret, nil
 }
