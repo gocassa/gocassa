@@ -142,8 +142,8 @@ func (k *k) MultiKeyTimeSeriesTable(name string, indexFields []string, timeField
 		panic("Unrecognized row type")
 	}
 
-	partitionKeys := []string{bucketFieldName}
-	partitionKeys = append(partitionKeys, indexFields...)
+	partitionKeys := indexFields
+	partitionKeys = append(partitionKeys, bucketFieldName)
 	clusteringColumns := []string{timeField}
 	clusteringColumns = append(clusteringColumns, idFields...)
 

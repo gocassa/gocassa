@@ -53,6 +53,7 @@ type MockSuite struct {
 	mmapTbl   MultimapTable
 	tsTbl     TimeSeriesTable
 	mtsTbl    MultiTimeSeriesTable
+	mkTsTbl   MultiKeyTimeSeriesTable
 	embMapTbl MapTable
 	embTsTbl  TimeSeriesTable
 }
@@ -69,6 +70,7 @@ func (s *MockSuite) SetupTest() {
 	s.mmapTbl = s.ks.MultimapTable("users", "Pk1", "Pk2", user{})
 	s.tsTbl = s.ks.TimeSeriesTable("points", "Time", "Id", 1*time.Minute, point{})
 	s.mtsTbl = s.ks.MultiTimeSeriesTable("points", "User", "Time", "Id", 1*time.Minute, point{})
+	s.mkTsTbl = s.ks.MultiKeyTimeSeriesTable("points", []string{"X", "Y"}, "Time", []string{"Id"}, 1*time.Minute, user{})
 
 	s.embMapTbl = s.ks.MapTable("addresses", "Id", address{})
 	s.embTsTbl = s.ks.TimeSeriesTable("addresses", "Time", "Id", 1*time.Minute, address{})
@@ -399,6 +401,27 @@ func (s *MockSuite) TestMultiTimeSeriesTableDelete() {
 	s.Equal(RowNotFoundError{}, s.mtsTbl.Read("John", points[0].Time, points[0].Id, &p).Run())
 }
 
+func (s *MockSuite) TestMultiKeyTimeSeriesTableRead() {
+	points := s.insertPoints()
+
+	var p point
+	s.NoError(s.mkTsTbl.Read(map[string]interface{}{"X": points[0].X, "Y": points[0].Y}, points[0].Time, map[string]interface{}{"User": points[0].User}, &p).Run())
+	s.Equal(points[0], p)
+}
+
+func (s *MockSuite) TestMultiKeyTimeSeriesTableList() {
+	points := s.insertPoints()
+
+	var ps []point
+	s.NoError(s.mkTsTbl.List(map[string]interface{}{"X": 1.1, "Y": 1.2}, points[0].Time, points[2].Time, &ps).Run())
+	s.Len(ps, 1)
+	s.Equal(points[0], ps[0])
+
+	s.NoError(s.mkTsTbl.List(map[string]interface{}{"X": 5.1, "Y": 5.2}, points[0].Time, points[2].Time, &ps).Run())
+	s.Len(ps, 1)
+	s.Equal(points[1], ps[0])
+}
+
 func (s *MockSuite) TestNoop() {
 	s.insertUsers()
 	var users []user
@@ -450,6 +473,7 @@ func (s *MockSuite) insertPoints() []point {
 	for _, p := range points {
 		s.NoError(s.tsTbl.Set(p).Run())
 		s.NoError(s.mtsTbl.Set(p).Run())
+		s.NoError(s.mkTsTbl.Set(p).Run())
 	}
 
 	return points
