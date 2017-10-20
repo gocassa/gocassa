@@ -4,5 +4,16 @@ go:
   - 1.9
   - tip
 
-services:
-  - cassandra
+addons:
+  apt:
+   packages:
+    - oracle-java8-installer
+
+before_install:
+  - sudo update-java-alternatives -s java-8-oracle
+  - export JAVA_HOME=/usr/lib/jvm/java-8-oracle
+  - java -version
+  - sudo rm -rf /var/lib/cassandra/*
+  - wget http://www.us.apache.org/dist/cassandra/3.0.14/apache-cassandra-3.0.14-bin.tar.gz && tar -xvzf apache-cassandra-3.0.14-bin.tar.gz
+  - sudo sh ./apache-cassandra-3.0.14/bin/cassandra -R
+  - sleep 20
