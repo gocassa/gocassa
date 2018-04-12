@@ -1,6 +1,7 @@
 package gocassa
 
 import (
+	"context"
 	"time"
 
 	"github.com/gocql/gocql"
@@ -54,9 +55,11 @@ type Options struct {
 	CompactStorage bool
 	// Compressor specifies the compressor (if any) to use on a newly created table
 	Compressor string
+	// Context allows a request context to passed, which is propagated to the QueryExecutor
+	Context context.Context
 }
 
-// Returns a new Options which is a right biased merge of the two initial Options.
+// Merge returns a new Options which is a right biased merge of the two initial Options.
 func (o Options) Merge(neu Options) Options {
 	ret := Options{
 		TTL:             o.TTL,
@@ -66,6 +69,7 @@ func (o Options) Merge(neu Options) Options {
 		Select:          o.Select,
 		CompactStorage:  o.CompactStorage,
 		Compressor:      o.Compressor,
+		Context:         o.Context,
 	}
 	if neu.TTL != time.Duration(0) {
 		ret.TTL = neu.TTL
@@ -94,6 +98,11 @@ func (o Options) Merge(neu Options) Options {
 	if len(neu.Compressor) > 0 {
 		ret.Compressor = neu.Compressor
 	}
+	// Take the latest context added, so it can be overridden
+	if neu.Context != nil {
+		ret.Context = neu.Context
+	}
+
 	return ret
 }
 
