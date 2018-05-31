@@ -505,29 +505,21 @@ func (q *MockFilter) Read(out interface{}) Op {
 		q.table.Lock()
 		defer q.table.Unlock()
 
-		rowKeys, err := q.keysFromRelations(q.table.keys.PartitionKeys)
+		var (
+			result []map[string]interface{}
+			err    error
+		)
+
+		switch {
+		case len(q.Relations()) == 0:
+			result = q.readAllRows()
+		default:
+			result, err = q.readSomeRows()
+		}
 		if err != nil {
 			return err
 		}
 
-		q.table.mtx.RLock()
-		defer q.table.mtx.RUnlock()
-		var result []map[string]interface{}
-		for _, rowKey := range rowKeys {
-			row := q.table.rows[rowKey.RowKey()]
-			if row == nil {
-				continue
-			}
-
-			row.Ascend(func(item btree.Item) bool {
-				columns := item.(*superColumn).Columns
-				if q.rowMatch(columns) {
-					result = append(result, columns)
-				}
-
-				return true
-			})
-		}
 		opt := q.table.options.Merge(m.options)
 		if opt.Limit > 0 && opt.Limit < len(result) {
 			result = result[:opt.Limit]
@@ -535,6 +527,52 @@ func (q *MockFilter) Read(out interface{}) Op {
 
 		return q.assignResult(result, out)
 	})
+}
+
+func (q *MockFilter) readSomeRows() ([]map[string]interface{}, error) {
+	q.table.mtx.RLock()
+	defer q.table.mtx.RUnlock()
+
+	rowKeys, err := q.keysFromRelations(q.table.keys.PartitionKeys)
+	if err != nil {
+		return nil, err
+	}
+
+	var result []map[string]interface{}
+	for _, rowKey := range rowKeys {
+		row := q.table.rows[rowKey.RowKey()]
+		if row == nil {
+			continue
+		}
+
+		row.Ascend(func(item btree.Item) bool {
+			columns := item.(*superColumn).Columns
+			if q.rowMatch(columns) {
+				result = append(result, columns)
+			}
+
+			return true
+		})
+	}
+
+	return result, nil
+}
+
+func (q *MockFilter) readAllRows() []map[string]interface{} {
+	q.table.mtx.RLock()
+	defer q.table.mtx.RUnlock()
+	var result []map[string]interface{}
+	for _, row := range q.table.rows {
+		row.Ascend(func(item btree.Item) bool {
+			columns := item.(*superColumn).Columns
+			if q.rowMatch(columns) {
+				result = append(result, columns)
+			}
+
+			return true
+		})
+	}
+	return result
 }
 
 func (q *MockFilter) assignResult(records interface{}, out interface{}) error {
