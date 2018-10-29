@@ -59,9 +59,9 @@ func (t *t) zero() interface{} {
 func keyValues(m map[string]interface{}) ([]string, []interface{}) {
 	keys := []string{}
 	values := []interface{}{}
-	for k, v := range m {
+	for _, k := range sortedKeys(m) {
 		keys = append(keys, k)
-		values = append(values, v)
+		values = append(values, m[k])
 	}
 	return keys, values
 }
