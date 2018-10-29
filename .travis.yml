@@ -1,7 +1,8 @@
 language: go
 
 go:
-  - 1.9
+  - 1.10.x
+  - 1.11.x
   - tip
 
 addons:
@@ -14,6 +15,6 @@ before_install:
   - export JAVA_HOME=/usr/lib/jvm/java-8-oracle
   - java -version
   - sudo rm -rf /var/lib/cassandra/*
-  - wget http://www.us.apache.org/dist/cassandra/3.0.16/apache-cassandra-3.0.16-bin.tar.gz && tar -xvzf apache-cassandra-3.0.16-bin.tar.gz
+  - wget https://archive.apache.org/dist/cassandra/3.0.16/apache-cassandra-3.0.16-bin.tar.gz && tar -xvzf apache-cassandra-3.0.16-bin.tar.gz
   - sudo sh ./apache-cassandra-3.0.16/bin/cassandra -R
   - sleep 20
