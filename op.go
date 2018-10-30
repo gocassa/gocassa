@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"reflect"
 	"runtime"
+	"sort"
 	"strconv"
 
 	"github.com/mitchellh/mapstructure"
@@ -238,17 +239,17 @@ func updateStatement(kn, cfName string, fields map[string]interface{}, opts Opti
 	buf.WriteString("SET ")
 	i := 0
 	ret := []interface{}{}
-	for k, v := range fields {
+	for _, k := range sortedKeys(fields) {
 		if i > 0 {
 			buf.WriteString(", ")
 		}
-		if mod, ok := v.(Modifier); ok {
+		if mod, ok := fields[k].(Modifier); ok {
 			stmt, vals := mod.cql(k)
 			buf.WriteString(stmt)
 			ret = append(ret, vals...)
 		} else {
 			buf.WriteString(k + " = ?")
-			ret = append(ret, v)
+			ret = append(ret, fields[k])
 		}
 		i++
 	}
@@ -298,4 +299,13 @@ func decodeBigIntHook(f reflect.Kind, t reflect.Kind, data interface{}) (interfa
 	}
 
 	return data, nil
+}
+
+func sortedKeys(m map[string]interface{}) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
 }
