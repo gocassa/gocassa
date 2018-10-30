@@ -302,7 +302,7 @@ func decodeBigIntHook(f reflect.Kind, t reflect.Kind, data interface{}) (interfa
 }
 
 func sortedKeys(m map[string]interface{}) []string {
-	var keys []string
+	keys := make([]string, 0, len(m))
 	for k := range m {
 		keys = append(keys, k)
 	}
