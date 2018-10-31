@@ -35,11 +35,11 @@ func newTableInfo(keyspace, name string, keys Keys, entity interface{}, fieldSou
 		keys:          keys,
 		fieldSource:   fieldSource,
 	}
-	fields := []string{}
-	values := []interface{}{}
-	for k, v := range fieldSource {
+	fields := make([]string, 0, len(fieldSource))
+	values := make([]interface{}, 0, len(fieldSource))
+	for _, k := range sortedKeys(fieldSource) {
 		fields = append(fields, k)
-		values = append(values, v)
+		values = append(values, fieldSource[k])
 	}
 	cinf.fieldNames = map[string]struct{}{}
 	for _, v := range fields {
