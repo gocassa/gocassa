@@ -130,9 +130,7 @@ func (o *singleOp) generateWrite(opt Options) (string, []interface{}) {
 		str, vals = generateWhere(o.f.rs)
 		str = fmt.Sprintf("DELETE FROM %s.%s%s", o.f.t.keySpace.name, o.f.t.Name(), str)
 	case insertOpType:
-		fields, insertVals := keyValues(o.m)
-		str = insertStatement(o.f.t.keySpace.name, o.f.t.Name(), fields, o.f.t.options.Merge(opt))
-		vals = insertVals
+		str, vals = insertStatement(o.f.t.keySpace.name, o.f.t.Name(), o.m, o.f.t.options.Merge(opt))
 	}
 	if o.f.t.keySpace.debugMode {
 		fmt.Println(str, vals)
@@ -229,16 +227,16 @@ func updateStatement(kn, cfName string, fields map[string]interface{}, opts Opti
 	buf := new(bytes.Buffer)
 	buf.WriteString(fmt.Sprintf("UPDATE %s.%s ", kn, cfName))
 
+	ret := []interface{}{}
+
 	// Apply options
 	if opts.TTL != 0 {
-		buf.WriteString("USING TTL ")
-		buf.WriteString(strconv.FormatFloat(opts.TTL.Seconds(), 'f', 0, 64))
-		buf.WriteRune(' ')
+		buf.WriteString("USING TTL ? ")
+		ret = append(ret, strconv.FormatFloat(opts.TTL.Seconds(), 'f', 0, 64))
 	}
 
 	buf.WriteString("SET ")
 	i := 0
-	ret := []interface{}{}
 	for _, k := range sortedKeys(fields) {
 		if i > 0 {
 			buf.WriteString(", ")

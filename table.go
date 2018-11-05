@@ -133,13 +133,13 @@ func transformFields(m map[string]interface{}) {
 //   VALUES ('cfd66ccc-d857-4e90-b1e5-df98a3d40cd6', 'johndoe')
 //
 // Gotcha: primkey must be first
-func insertStatement(keySpaceName, cfName string, fieldNames []string, opts Options) string {
+func insertStatement(keySpaceName, cfName string, fields map[string]interface{}, opts Options) (string, []interface{}) {
+	fieldNames, vals := keyValues(fields)
+
 	placeHolders := make([]string, len(fieldNames))
-	for i := 0; i < len(fieldNames); i++ {
-		placeHolders[i] = "?"
-	}
 	lowerFieldNames := make([]string, len(fieldNames))
 	for i, v := range fieldNames {
+		placeHolders[i] = "?"
 		lowerFieldNames[i] = strings.ToLower(v)
 	}
 
@@ -152,11 +152,11 @@ func insertStatement(keySpaceName, cfName string, fieldNames []string, opts Opti
 
 	// Apply options
 	if opts.TTL != 0 {
-		buf.WriteString(" USING TTL ")
-		buf.WriteString(strconv.FormatFloat(opts.TTL.Seconds(), 'f', 0, 64))
+		buf.WriteString(" USING TTL ? ")
+		vals = append(vals, strconv.FormatFloat(opts.TTL.Seconds(), 'f', 0, 64))
 	}
 
-	return buf.String()
+	return buf.String(), vals
 }
 
 func (t t) Set(i interface{}) Op {
