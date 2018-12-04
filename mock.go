@@ -602,6 +602,45 @@ func assignRecords(m map[string]interface{}, record map[string]interface{}) erro
 		switch v := v.(type) {
 		case Modifier:
 			switch v.op {
+			case modifierMapSetField:
+				// Go interfaces are internally represented as a type and a value. The record[k] interface{} value could look like one of these:
+				// [type, value]
+				// [type, nil  ]
+				// [nil,  nil  ]
+				var targetMap reflect.Value
+				if record[k] != nil {
+					// narrowed it down to:
+					// [type, value]
+					// [type, nil  ]
+					rv := reflect.ValueOf(record[k])
+
+					if rv.Type().Kind() != reflect.Map {
+						return fmt.Errorf("Can't use MapSetField modifier on field that isn't a map: %T", record[k])
+					}
+
+					if !rv.IsNil() {
+						// [type, value]
+						targetMap = rv
+					}
+				}
+
+				// This modifier's args is a []interface{} with a key at index 0 and a value at index 1
+				if len(v.args) != 2 {
+					return fmt.Errorf("Argument for MapSetField is not a slice of 2 elements")
+				}
+
+				key := reflect.ValueOf(v.args[0])
+				value := reflect.ValueOf(v.args[1])
+
+				// If we couldn't initialize the map from the content of record[k], we create it from the values of v.args
+				if targetMap.Kind() != reflect.Map {
+					targetMapType := reflect.MapOf(key.Type(), value.Type())
+					targetMap = reflect.MakeMap(targetMapType)
+				}
+
+				targetMap.SetMapIndex(key, value)
+
+				record[k] = targetMap.Interface()
 			case modifierMapSetFields:
 				// Go interfaces are internally represented as a type and a value. The record[k] interface{} value could look like one of these:
 				// [type, value]
