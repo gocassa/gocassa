@@ -20,6 +20,7 @@ type user struct {
 type UserWithMap struct {
 	Id  string
 	Map map[string]interface{}
+	OtherMap map[int]interface{}
 }
 
 type point struct {
@@ -213,10 +214,26 @@ func (s *MockSuite) TestMapModifiers() {
 			"3": "Is Odd",
 			"6": "Is Even",
 		},
+		OtherMap: nil,
 	}
 	if err := tbl.Set(c).Run(); err != nil {
 		s.T().Fatal(err)
 	}
+
+	// MapSetField
+	if err := tbl.Update("1", map[string]interface{}{
+		"OtherMap": MapSetField(1,  "One"),
+	}).Run(); err != nil {
+		s.T().Fatal(err)
+	}
+
+	if err := tbl.Update("1", map[string]interface{}{
+		"OtherMap": MapSetField(2,  "Two"),
+	}).Run(); err != nil {
+		s.T().Fatal(err)
+	}
+
+	// MapSetFields
 	if err := tbl.Update("1", map[string]interface{}{
 		"Map": MapSetFields(map[string]interface{}{
 			"2": "Two",
@@ -238,6 +255,10 @@ func (s *MockSuite) TestMapModifiers() {
 			"3": "Is Odd",
 			"4": "Four",
 			"6": "Is Even",
+		},
+		OtherMap: map[int]interface{}{
+			1: "One",
+			2: "Two",
 		},
 	}) {
 		s.T().Fatal(c2)
