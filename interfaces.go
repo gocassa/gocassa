@@ -1,6 +1,7 @@
 package gocassa
 
 import (
+	"context"
 	"time"
 )
 
@@ -195,6 +196,8 @@ type Keys struct {
 type Op interface {
 	// Run the operation.
 	Run() error
+	// Run the operation, first running WithOptions with the provided context.
+	RunWithContext(context.Context) error
 	// You do not need this in 95% of the use cases, use Run!
 	// Using atomic batched writes (logged batches in Cassandra terminology) comes at a high performance cost!
 	RunAtomically() error

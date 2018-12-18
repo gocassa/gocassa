@@ -1,5 +1,7 @@
 package gocassa
 
+import "context"
+
 type multiOp []Op
 
 func Noop() Op {
@@ -16,6 +18,10 @@ func (mo multiOp) Run() error {
 		}
 	}
 	return nil
+}
+
+func (mo multiOp) RunWithContext(ctx context.Context) error {
+	return mo.WithOptions(Options{Context: ctx}).Run()
 }
 
 func (mo multiOp) RunAtomically() error {

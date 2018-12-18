@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strconv"
 
+	"context"
 	"github.com/mitchellh/mapstructure"
 	rreflect "github.com/monzo/gocassa/reflect"
 )
@@ -85,6 +86,10 @@ func (w *singleOp) readOne() error {
 func (w *singleOp) write() error {
 	stmt, params := w.generateWrite(w.options)
 	return w.qe.ExecuteWithOptions(w.options, stmt, params...)
+}
+
+func (o *singleOp) RunWithContext(ctx context.Context) error {
+	return o.WithOptions(Options{Context: ctx}).Run()
 }
 
 func (o *singleOp) Run() error {

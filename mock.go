@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"sync"
 
+	"context"
 	"github.com/gocql/gocql"
 	"github.com/google/btree"
 )
@@ -40,6 +41,10 @@ func (m mockOp) Run() error {
 		}
 	}
 	return nil
+}
+
+func (m mockOp) RunWithContext(ctx context.Context) error {
+	return m.WithOptions(Options{Context: ctx}).Run()
 }
 
 func (m mockOp) WithOptions(opt Options) Op {
@@ -77,6 +82,10 @@ func (mo mockMultiOp) Run() error {
 		}
 	}
 	return nil
+}
+
+func (mo mockMultiOp) RunWithContext(ctx context.Context) error {
+	return mo.WithOptions(Options{Context: ctx}).Run()
 }
 
 func (mo mockMultiOp) RunAtomically() error {
