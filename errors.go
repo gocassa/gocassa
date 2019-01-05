@@ -25,11 +25,12 @@ func (r RowNotFoundError) Error() string {
 // in a multiOp scenario)
 type errOp struct{ err error }
 
-func (o errOp) Run() error                                 { return o.err }
-func (o errOp) RunWithContext(_ context.Context) error     { return o.err }
-func (o errOp) RunAtomically() error                       { return o.err }
-func (o errOp) Add(ops ...Op) Op                           { return multiOp{o}.Add(ops...) }
-func (o errOp) WithOptions(_ Options) Op                   { return o }
-func (o errOp) Preflight() error                           { return o.err }
-func (o errOp) GenerateStatement() (string, []interface{}) { return "", []interface{}{} }
-func (o errOp) QueryExecutor() QueryExecutor               { return nil }
+func (o errOp) Run() error                                       { return o.err }
+func (o errOp) RunWithContext(_ context.Context) error           { return o.err }
+func (o errOp) RunAtomicallyWithContext(_ context.Context) error { return o.err }
+func (o errOp) RunAtomically() error                             { return o.err }
+func (o errOp) Add(ops ...Op) Op                                 { return multiOp{o}.Add(ops...) }
+func (o errOp) WithOptions(_ Options) Op                         { return o }
+func (o errOp) Preflight() error                                 { return o.err }
+func (o errOp) GenerateStatement() (string, []interface{})       { return "", []interface{}{} }
+func (o errOp) QueryExecutor() QueryExecutor                     { return nil }

@@ -1,8 +1,8 @@
 package gocassa
 
 import (
+	"context"
 	"errors"
-
 	"github.com/gocql/gocql"
 )
 
@@ -54,6 +54,10 @@ func (cb goCQLBackend) ExecuteAtomically(stmts []string, vals [][]interface{}) e
 		batch.Query(stmts[i], vals[i]...)
 	}
 	return cb.session.ExecuteBatch(batch)
+}
+
+func (cb goCQLBackend) ExecuteAtomicallyWithContext(_ context.Context, stmts []string, vals [][]interface{}) error {
+	return cb.ExecuteAtomically(stmts, vals)
 }
 
 // GoCQLSessionToQueryExecutor enables you to supply your own gocql session with your custom options

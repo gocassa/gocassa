@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"context"
 	"github.com/gocql/gocql"
 )
 
@@ -293,6 +294,10 @@ func (qe OptionCheckingQE) Execute(stmt string, params ...interface{}) error {
 }
 
 func (qe OptionCheckingQE) ExecuteAtomically(stmt []string, params [][]interface{}) error {
+	return nil
+}
+
+func (qe OptionCheckingQE) ExecuteAtomicallyWithContext(ctx context.Context, stmt []string, params [][]interface{}) error {
 	return nil
 }
 

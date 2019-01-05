@@ -25,6 +25,10 @@ func (mo multiOp) RunWithContext(ctx context.Context) error {
 }
 
 func (mo multiOp) RunAtomically() error {
+	return mo.RunAtomicallyWithContext(nil)
+}
+
+func (mo multiOp) RunAtomicallyWithContext(ctx context.Context) error {
 	if len(mo) == 0 {
 		return nil
 	}
@@ -42,7 +46,11 @@ func (mo multiOp) RunAtomically() error {
 		vals[i] = v
 	}
 
-	return qe.ExecuteAtomically(stmts, vals)
+	if ctx == nil {
+		return qe.ExecuteAtomically(stmts, vals)
+	}
+
+	return qe.ExecuteAtomicallyWithContext(ctx, stmts, vals)
 }
 
 func (mo multiOp) GenerateStatement() (string, []interface{}) {

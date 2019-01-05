@@ -104,6 +104,10 @@ func (o *singleOp) Run() error {
 	return nil
 }
 
+func (o *singleOp) RunAtomicallyWithContext(_ context.Context) error {
+	return o.Run()
+}
+
 func (o *singleOp) RunAtomically() error {
 	return o.Run()
 }

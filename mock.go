@@ -54,6 +54,10 @@ func (m mockOp) WithOptions(opt Options) Op {
 	}
 }
 
+func (m mockOp) RunAtomicallyWithContext(_ context.Context) error {
+	return m.Run()
+}
+
 func (m mockOp) RunAtomically() error {
 	return m.Run()
 }
@@ -89,6 +93,10 @@ func (mo mockMultiOp) RunWithContext(ctx context.Context) error {
 }
 
 func (mo mockMultiOp) RunAtomically() error {
+	return mo.Run()
+}
+
+func (mo mockMultiOp) RunAtomicallyWithContext(_ context.Context) error {
 	return mo.Run()
 }
 
