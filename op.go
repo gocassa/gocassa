@@ -92,10 +92,6 @@ func (w *singleOp) write() error {
 	return w.qe.ExecuteWithOptions(w.options, stmt, params...)
 }
 
-func (o *singleOp) RunWithContext(ctx context.Context) error {
-	return o.WithOptions(Options{Context: ctx}).Run()
-}
-
 func (o *singleOp) Run() error {
 	switch o.opType {
 	case updateOpType, insertOpType, deleteOpType:
@@ -106,6 +102,10 @@ func (o *singleOp) Run() error {
 		return o.readOne()
 	}
 	return nil
+}
+
+func (o *singleOp) RunWithContext(ctx context.Context) error {
+	return o.WithOptions(Options{Context: ctx}).Run()
 }
 
 func (o *singleOp) RunAtomically() error {
