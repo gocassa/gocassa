@@ -58,7 +58,7 @@ func (cb goCQLBackend) ExecuteAtomicallyWithOptions(opts Options, stmts []string
 	}
 
 	if opts.Consistency != nil {
-		batch.SetConsistency(*opts.Consistency)
+		batch.Cons = *opts.Consistency
 	}
 
 	return cb.session.ExecuteBatch(batch)
