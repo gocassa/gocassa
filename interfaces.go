@@ -1,6 +1,7 @@
 package gocassa
 
 import (
+	"context"
 	"time"
 )
 
@@ -195,9 +196,13 @@ type Keys struct {
 type Op interface {
 	// Run the operation.
 	Run() error
+	// Run the operation, providing context to the executor.
+	RunWithContext(context.Context) error
 	// You do not need this in 95% of the use cases, use Run!
 	// Using atomic batched writes (logged batches in Cassandra terminology) comes at a high performance cost!
 	RunAtomically() error
+	// Run the operation as an atomic (logged) batch, providing context to the executor.
+	RunAtomicallyWithContext(context.Context) error
 	// Add an other Op to this one.
 	Add(...Op) Op
 	// WithOptions lets you specify `Op` level `Options`.
@@ -210,6 +215,8 @@ type Op interface {
 	//    op1.WithOptions(Options{Limit:3}).Add(op2).WithOptions(Options{Limit:2}) // op1 and op2 both have a limit of 2
 	//
 	WithOptions(Options) Op
+	// Options lets you read the `Options` for this `Op`
+	Options() Options
 	// Preflight performs any pre-execution validation that confirms the op considers itself "valid".
 	// NOTE: Run() and RunAtomically() should call this method before execution, and abort if any errors are returned.
 	Preflight() error
@@ -263,8 +270,10 @@ type QueryExecutor interface {
 	ExecuteWithOptions(opts Options, stmt string, params ...interface{}) error
 	// Execute executes a DML query
 	Execute(stmt string, params ...interface{}) error
-	// ExecuteAtomically executs multiple DML queries with a logged batch
+	// ExecuteAtomically executes multiple DML queries with a logged batch
 	ExecuteAtomically(stmt []string, params [][]interface{}) error
+	// ExecuteAtomically executes multiple DML queries with a logged batch, and takes options
+	ExecuteAtomicallyWithOptions(opts Options, stmt []string, params [][]interface{}) error
 }
 
 type Counter int

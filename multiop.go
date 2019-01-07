@@ -1,5 +1,7 @@
 package gocassa
 
+import "context"
+
 type multiOp []Op
 
 func Noop() Op {
@@ -16,6 +18,10 @@ func (mo multiOp) Run() error {
 		}
 	}
 	return nil
+}
+
+func (mo multiOp) RunWithContext(ctx context.Context) error {
+	return mo.WithOptions(Options{Context: ctx}).Run()
 }
 
 func (mo multiOp) RunAtomically() error {
@@ -36,7 +42,11 @@ func (mo multiOp) RunAtomically() error {
 		vals[i] = v
 	}
 
-	return qe.ExecuteAtomically(stmts, vals)
+	return qe.ExecuteAtomicallyWithOptions(mo.Options(), stmts, vals)
+}
+
+func (mo multiOp) RunAtomicallyWithContext(ctx context.Context) error {
+	return mo.WithOptions(Options{Context: ctx}).RunAtomically()
 }
 
 func (mo multiOp) GenerateStatement() (string, []interface{}) {
@@ -72,6 +82,14 @@ func (mo multiOp) Add(ops_ ...Op) Op {
 		}
 	}
 	return mo
+}
+
+func (mo multiOp) Options() Options {
+	var opts Options
+	for _, op := range mo {
+		opts.Merge(op.Options())
+	}
+	return opts
 }
 
 func (mo multiOp) WithOptions(opts Options) Op {

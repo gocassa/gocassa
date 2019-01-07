@@ -296,6 +296,11 @@ func (qe OptionCheckingQE) ExecuteAtomically(stmt []string, params [][]interface
 	return nil
 }
 
+func (qe OptionCheckingQE) ExecuteAtomicallyWithOptions(opts Options, stmt []string, params [][]interface{}) error {
+	qe.opts.Consistency = opts.Consistency
+	return nil
+}
+
 func TestQueryWithConsistency(t *testing.T) {
 	// It's tricky to verify this against a live DB, so mock out the
 	// query executor and make sure the right options get passed

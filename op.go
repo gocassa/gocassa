@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strconv"
 
+	"context"
 	"github.com/mitchellh/mapstructure"
 	rreflect "github.com/monzo/gocassa/reflect"
 )
@@ -28,6 +29,10 @@ type singleOp struct {
 	result  interface{}
 	m       map[string]interface{} // map for updates, sets etc
 	qe      QueryExecutor
+}
+
+func (o *singleOp) Options() Options {
+	return o.options
 }
 
 func (o *singleOp) WithOptions(opts Options) Op {
@@ -99,8 +104,16 @@ func (o *singleOp) Run() error {
 	return nil
 }
 
+func (o *singleOp) RunWithContext(ctx context.Context) error {
+	return o.WithOptions(Options{Context: ctx}).Run()
+}
+
 func (o *singleOp) RunAtomically() error {
 	return o.Run()
+}
+
+func (o *singleOp) RunAtomicallyWithContext(ctx context.Context) error {
+	return o.WithOptions(Options{Context: ctx}).Run()
 }
 
 func (o *singleOp) GenerateStatement() (string, []interface{}) {

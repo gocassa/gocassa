@@ -18,8 +18,8 @@ type user struct {
 }
 
 type UserWithMap struct {
-	Id  string
-	Map map[string]interface{}
+	Id       string
+	Map      map[string]interface{}
 	OtherMap map[int]interface{}
 }
 
@@ -222,13 +222,13 @@ func (s *MockSuite) TestMapModifiers() {
 
 	// MapSetField
 	if err := tbl.Update("1", map[string]interface{}{
-		"OtherMap": MapSetField(1,  "One"),
+		"OtherMap": MapSetField(1, "One"),
 	}).Run(); err != nil {
 		s.T().Fatal(err)
 	}
 
 	if err := tbl.Update("1", map[string]interface{}{
-		"OtherMap": MapSetField(2,  "Two"),
+		"OtherMap": MapSetField(2, "Two"),
 	}).Run(); err != nil {
 		s.T().Fatal(err)
 	}

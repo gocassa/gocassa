@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"sync"
 
+	"context"
 	"github.com/gocql/gocql"
 	"github.com/google/btree"
 )
@@ -42,6 +43,14 @@ func (m mockOp) Run() error {
 	return nil
 }
 
+func (m mockOp) RunWithContext(ctx context.Context) error {
+	return m.WithOptions(Options{Context: ctx}).Run()
+}
+
+func (m mockOp) Options() Options {
+	return m.options
+}
+
 func (m mockOp) WithOptions(opt Options) Op {
 	return mockOp{
 		options: opt,
@@ -51,6 +60,10 @@ func (m mockOp) WithOptions(opt Options) Op {
 
 func (m mockOp) RunAtomically() error {
 	return m.Run()
+}
+
+func (m mockOp) RunAtomicallyWithContext(ctx context.Context) error {
+	return m.WithOptions(Options{Context: ctx}).Run()
 }
 
 func (m mockOp) GenerateStatement() (string, []interface{}) {
@@ -79,8 +92,16 @@ func (mo mockMultiOp) Run() error {
 	return nil
 }
 
+func (mo mockMultiOp) RunWithContext(ctx context.Context) error {
+	return mo.WithOptions(Options{Context: ctx}).Run()
+}
+
 func (mo mockMultiOp) RunAtomically() error {
 	return mo.Run()
+}
+
+func (mo mockMultiOp) RunAtomicallyWithContext(ctx context.Context) error {
+	return mo.WithOptions(Options{Context: ctx}).Run()
 }
 
 func (mo mockMultiOp) GenerateStatement() (string, []interface{}) {
@@ -105,6 +126,14 @@ func (mo mockMultiOp) Add(inOps ...Op) Op {
 		}
 	}
 	return append(mo, ops...)
+}
+
+func (mo mockMultiOp) Options() Options {
+	var opts Options
+	for _, op := range mo {
+		opts.Merge(op.Options())
+	}
+	return opts
 }
 
 func (mo mockMultiOp) WithOptions(opts Options) Op {
