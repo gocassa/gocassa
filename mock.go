@@ -47,6 +47,10 @@ func (m mockOp) RunWithContext(ctx context.Context) error {
 	return m.WithOptions(Options{Context: ctx}).Run()
 }
 
+func (m mockOp) Options() Options {
+	return m.options
+}
+
 func (m mockOp) WithOptions(opt Options) Op {
 	return mockOp{
 		options: opt,
@@ -122,6 +126,14 @@ func (mo mockMultiOp) Add(inOps ...Op) Op {
 		}
 	}
 	return append(mo, ops...)
+}
+
+func (mo mockMultiOp) Options() Options {
+	var opts Options
+	for _, op := range mo {
+		opts.Merge(op.Options())
+	}
+	return opts
 }
 
 func (mo mockMultiOp) WithOptions(opts Options) Op {

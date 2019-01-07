@@ -1,7 +1,6 @@
 package gocassa
 
 import (
-	"context"
 	"errors"
 	"github.com/gocql/gocql"
 )
@@ -41,7 +40,7 @@ func (cb goCQLBackend) Execute(stmt string, vals ...interface{}) error {
 	return cb.ExecuteWithOptions(Options{}, stmt, vals...)
 }
 
-func (cb goCQLBackend) ExecuteAtomically(stmts []string, vals [][]interface{}) error {
+func (cb goCQLBackend) ExecuteAtomicallyWithOptions(opts Options, stmts []string, vals [][]interface{}) error {
 	if len(stmts) != len(vals) {
 		return errors.New("executeBatched: stmts length != param length")
 	}
@@ -50,14 +49,19 @@ func (cb goCQLBackend) ExecuteAtomically(stmts []string, vals [][]interface{}) e
 		return nil
 	}
 	batch := cb.session.NewBatch(gocql.LoggedBatch)
-	for i, _ := range stmts {
+	for i := range stmts {
 		batch.Query(stmts[i], vals[i]...)
 	}
+
+	if opts.Consistency != nil {
+		batch.SetConsistency(*opts.Consistency)
+	}
+
 	return cb.session.ExecuteBatch(batch)
 }
 
-func (cb goCQLBackend) ExecuteAtomicallyWithContext(_ context.Context, stmts []string, vals [][]interface{}) error {
-	return cb.ExecuteAtomically(stmts, vals)
+func (cb goCQLBackend) ExecuteAtomically(stmts []string, vals [][]interface{}) error {
+	return cb.ExecuteAtomicallyWithOptions(Options{}, stmts, vals)
 }
 
 // GoCQLSessionToQueryExecutor enables you to supply your own gocql session with your custom options

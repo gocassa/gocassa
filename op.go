@@ -31,6 +31,10 @@ type singleOp struct {
 	qe      QueryExecutor
 }
 
+func (o *singleOp) Options() Options {
+	return o.options
+}
+
 func (o *singleOp) WithOptions(opts Options) Op {
 	return &singleOp{
 		options: o.options.Merge(opts),
