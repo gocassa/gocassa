@@ -108,12 +108,12 @@ func (o *singleOp) Run() error {
 	return nil
 }
 
-func (o *singleOp) RunAtomicallyWithContext(_ context.Context) error {
+func (o *singleOp) RunAtomically() error {
 	return o.Run()
 }
 
-func (o *singleOp) RunAtomically() error {
-	return o.Run()
+func (o *singleOp) RunAtomicallyWithContext(ctx context.Context) error {
+	return o.WithOptions(Options{Context: ctx}).Run()
 }
 
 func (o *singleOp) GenerateStatement() (string, []interface{}) {

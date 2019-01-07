@@ -58,12 +58,12 @@ func (m mockOp) WithOptions(opt Options) Op {
 	}
 }
 
-func (m mockOp) RunAtomicallyWithContext(_ context.Context) error {
+func (m mockOp) RunAtomically() error {
 	return m.Run()
 }
 
-func (m mockOp) RunAtomically() error {
-	return m.Run()
+func (m mockOp) RunAtomicallyWithContext(ctx context.Context) error {
+	return m.WithOptions(Options{Context: ctx}).Run()
 }
 
 func (m mockOp) GenerateStatement() (string, []interface{}) {
@@ -100,8 +100,8 @@ func (mo mockMultiOp) RunAtomically() error {
 	return mo.Run()
 }
 
-func (mo mockMultiOp) RunAtomicallyWithContext(_ context.Context) error {
-	return mo.Run()
+func (mo mockMultiOp) RunAtomicallyWithContext(ctx context.Context) error {
+	return mo.WithOptions(Options{Context: ctx}).Run()
 }
 
 func (mo mockMultiOp) GenerateStatement() (string, []interface{}) {

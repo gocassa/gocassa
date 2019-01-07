@@ -201,7 +201,7 @@ type Op interface {
 	// You do not need this in 95% of the use cases, use Run!
 	// Using atomic batched writes (logged batches in Cassandra terminology) comes at a high performance cost!
 	RunAtomically() error
-	// Run the operation atomically, providing context to the executor.
+	// Run the operation as an atomic (logged) batch, providing context to the executor.
 	RunAtomicallyWithContext(context.Context) error
 	// Add an other Op to this one.
 	Add(...Op) Op
@@ -270,10 +270,10 @@ type QueryExecutor interface {
 	ExecuteWithOptions(opts Options, stmt string, params ...interface{}) error
 	// Execute executes a DML query
 	Execute(stmt string, params ...interface{}) error
-	// ExecuteAtomically executes multiple DML queries with a logged batch, and takes context
-	ExecuteAtomicallyWithOptions(opts Options, stmt []string, params [][]interface{}) error
 	// ExecuteAtomically executes multiple DML queries with a logged batch
 	ExecuteAtomically(stmt []string, params [][]interface{}) error
+	// ExecuteAtomically executes multiple DML queries with a logged batch, and takes options
+	ExecuteAtomicallyWithOptions(opts Options, stmt []string, params [][]interface{}) error
 }
 
 type Counter int

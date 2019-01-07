@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"context"
 	"github.com/gocql/gocql"
 )
 
@@ -297,7 +296,8 @@ func (qe OptionCheckingQE) ExecuteAtomically(stmt []string, params [][]interface
 	return nil
 }
 
-func (qe OptionCheckingQE) ExecuteAtomicallyWithContext(ctx context.Context, stmt []string, params [][]interface{}) error {
+func (qe OptionCheckingQE) ExecuteAtomicallyWithOptions(opts Options, stmt []string, params [][]interface{}) error {
+	qe.opts.Consistency = opts.Consistency
 	return nil
 }
 
