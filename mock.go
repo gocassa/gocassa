@@ -131,7 +131,7 @@ func (mo mockMultiOp) Add(inOps ...Op) Op {
 func (mo mockMultiOp) Options() Options {
 	var opts Options
 	for _, op := range mo {
-		opts.Merge(op.Options())
+		opts = opts.Merge(op.Options())
 	}
 	return opts
 }
