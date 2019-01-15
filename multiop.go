@@ -87,7 +87,7 @@ func (mo multiOp) Add(ops_ ...Op) Op {
 func (mo multiOp) Options() Options {
 	var opts Options
 	for _, op := range mo {
-		opts.Merge(op.Options())
+		opts = opts.Merge(op.Options())
 	}
 	return opts
 }
