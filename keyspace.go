@@ -142,7 +142,7 @@ func (k *k) FlexMultiTimeSeriesTable(name, timeField, idField string, indexField
 	}
 }
 
-// Returns table names in a keyspace
+// Tables returns table names in a keyspace
 func (k *k) Tables() ([]string, error) {
 	const stmt = "SELECT columnfamily_name FROM system.schema_columnfamilies WHERE keyspace_name = ?"
 	maps, err := k.qe.Query(stmt, k.name)
