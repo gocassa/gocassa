@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"context"
+
 	"github.com/gocql/gocql"
 	"github.com/google/btree"
 )
@@ -279,8 +280,10 @@ func (t *MockTable) keyFromColumnValues(values map[string]interface{}, keyNames 
 
 	for _, keyName := range keyNames {
 		value, ok := values[keyName]
-
-		if !ok {
+		// need to explcitly check for string type here, as we cannot
+		// write an empty string in the primary key
+		stringVal, isString := value.(string)
+		if !ok || (isString && stringVal == "") {
 			return nil, fmt.Errorf("Missing mandatory PRIMARY KEY part %s", keyName)
 		}
 		key = key.Append(keyName, value)

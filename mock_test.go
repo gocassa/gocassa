@@ -84,6 +84,21 @@ func (s *MockSuite) TestTableEmpty() {
 	s.Equal(0, len(result))
 }
 
+// TestEmptyPrimaryKey asserts that gocassa mock will return an error for a row
+// with an empty primary
+func (s *MockSuite) TestEmptyPrimaryKey() {
+	address := address{
+		Id:              "",
+		Time:            s.parseTime("2015-01-01 00:00:00"),
+		LocationPrice:   map[string]int{"A": 1},
+		LocationHistory: map[time.Time]string{time.Now().UTC(): "A"},
+		PostCode:        "ABC",
+	}
+
+	s.Error(s.embMapTbl.Set(address).Run())
+	s.Error(s.embTsTbl.Set(address).Run())
+}
+
 func (s *MockSuite) TestTableRead() {
 	u1, u2, u3, u4 := s.insertUsers()
 
