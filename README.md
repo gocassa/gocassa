@@ -75,6 +75,18 @@ err := salesTable.List("seller-1", nil, 0, &results).WithOptions(gocassa.Options
 }).Run()
 ```
 
+### Running the tests
+
+As a prerequisite for the tests, you need to have cassandra running locally. To
+download and install open-source Cassandra, see [Apache
+Cassandra](https://cassandra.apache.org/) documentation. On a macOS, you simply
+install using `brew install cassandra`.
+
+Then you can run all the unit tests with the following command-
+```go
+go test ./...
+```
+
 ### Table Types
 
 Gocassa provides multiple table types with their own unique interfaces:
