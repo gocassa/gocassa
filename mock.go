@@ -275,7 +275,7 @@ func (t *MockTable) zero() interface{} {
 	return reflect.New(reflect.TypeOf(t.entity)).Interface()
 }
 
-func (t *MockTable) keyFromColumnValues(values map[string]interface{}, keyNames []string) (key, error) {
+func (t *MockTable) partitionKeyFromColumnValues(values map[string]interface{}, keyNames []string) (key, error) {
 	var key key
 
 	for _, keyName := range keyNames {
@@ -284,6 +284,20 @@ func (t *MockTable) keyFromColumnValues(values map[string]interface{}, keyNames 
 		// write an empty string in the primary key
 		stringVal, isString := value.(string)
 		if !ok || (isString && stringVal == "") {
+			return nil, fmt.Errorf("Missing mandatory PRIMARY KEY part %s", keyName)
+		}
+		key = key.Append(keyName, value)
+	}
+
+	return key, nil
+}
+
+func (t *MockTable) clusteringKeyFromColumnValues(values map[string]interface{}, keyNames []string) (key, error) {
+	var key key
+
+	for _, keyName := range keyNames {
+		value, ok := values[keyName]
+		if !ok {
 			return nil, fmt.Errorf("Missing mandatory PRIMARY KEY part %s", keyName)
 		}
 		key = key.Append(keyName, value)
@@ -333,12 +347,12 @@ func (t *MockTable) SetWithOptions(i interface{}, options Options) Op {
 			return errors.New("Can't create: value not understood")
 		}
 
-		rowKey, err := t.keyFromColumnValues(columns, t.keys.PartitionKeys)
+		rowKey, err := t.partitionKeyFromColumnValues(columns, t.keys.PartitionKeys)
 		if err != nil {
 			return err
 		}
 
-		superColumnKey, err := t.keyFromColumnValues(columns, t.keys.ClusteringColumns)
+		superColumnKey, err := t.clusteringKeyFromColumnValues(columns, t.keys.ClusteringColumns)
 		if err != nil {
 			return err
 		}
