@@ -36,6 +36,7 @@ type PostalCode string
 type address struct {
 	Time            time.Time
 	Id              string
+	County          string
 	LocationPrice   map[string]int       // json compatible map
 	LocationHistory map[time.Time]string // not json compatible map
 	PostCode        PostalCode           // embedded type
@@ -48,15 +49,16 @@ func TestRunMockSuite(t *testing.T) {
 type MockSuite struct {
 	suite.Suite
 	*require.Assertions
-	tbl       Table
-	ks        KeySpace
-	mapTbl    MapTable
-	mmapTbl   MultimapTable
-	tsTbl     TimeSeriesTable
-	mtsTbl    MultiTimeSeriesTable
-	mkTsTbl   MultiKeyTimeSeriesTable
-	embMapTbl MapTable
-	embTsTbl  TimeSeriesTable
+	tbl                  Table
+	ks                   KeySpace
+	mapTbl               MapTable
+	mmapTbl              MultimapTable
+	tsTbl                TimeSeriesTable
+	mtsTbl               MultiTimeSeriesTable
+	mkTsTbl              MultiKeyTimeSeriesTable
+	embMapTbl            MapTable
+	embTsTbl             TimeSeriesTable
+	addressByCountyMmTbl MultimapTable
 }
 
 func (s *MockSuite) SetupTest() {
@@ -75,6 +77,7 @@ func (s *MockSuite) SetupTest() {
 
 	s.embMapTbl = s.ks.MapTable("addresses", "Id", address{})
 	s.embTsTbl = s.ks.TimeSeriesTable("addresses", "Time", "Id", 1*time.Minute, address{})
+	s.addressByCountyMmTbl = s.ks.MultimapTable("address_by_county", "County", "Id", address{})
 }
 
 // Table tests
@@ -82,6 +85,36 @@ func (s *MockSuite) TestTableEmpty() {
 	var result []user
 	s.NoError(s.tbl.Where(Eq("Pk1", 1), Eq("Pk2", 1), Eq("Ck1", 1), Eq("Ck2", 1)).Read(&result).Run())
 	s.Equal(0, len(result))
+}
+
+// TestEmptyPrimaryKey asserts that gocassa mock will return an error for a row
+// with an empty primary
+func (s *MockSuite) TestEmptyPrimaryKey() {
+	address := address{
+		Id:              "",
+		County:          "",
+		Time:            s.parseTime("2015-01-01 00:00:00"),
+		LocationPrice:   map[string]int{"A": 1},
+		LocationHistory: map[time.Time]string{time.Now().UTC(): "A"},
+		PostCode:        "ABC",
+	}
+
+	// embMapTbl has Id in the partition key
+	s.Error(s.embMapTbl.Set(address).Run())
+	// addressByCountyMmTbl has County in the partition key
+	s.Error(s.addressByCountyMmTbl.Set(address).Run())
+
+	address.County = "London"
+	s.Error(s.embMapTbl.Set(address).Run())
+	// address can be written successfully, now that the partiton key -
+	// County is not empty anymore; Id is still empty
+	s.NoError(s.addressByCountyMmTbl.Set(address).Run())
+
+	address.Id = "someID"
+	// both Id and County are not empty, writing to the tables should be
+	// suucessful
+	s.NoError(s.embMapTbl.Set(address).Run())
+	s.NoError(s.addressByCountyMmTbl.Set(address).Run())
 }
 
 func (s *MockSuite) TestTableRead() {
