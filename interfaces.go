@@ -17,13 +17,14 @@ type Connection interface {
 type KeySpace interface {
 	// MapTable is a simple key-value store.
 	MapTable(prefixForTableName, partitionKey string, row interface{}) MapTable
-	// MultimapTable uses the partitionKey for partitioning the data. The ordering within a partition is determined using the clusteringKey.
+	// MultimapTable lets you list rows based on a field equality, eg. 'list all sales where seller id = v'.
+	// It uses the partitionKey for partitioning the data. The ordering within a partition is determined using the clusteringKey.
 	MultimapTable(prefixForTableName, partitionKey, clusteringKey string, row interface{}) MultimapTable
-	// MultimapMultiKeyTable uses the partitionKey for partitioning the data. The ordering within a partition is determined by a set of
-	// clusteringKeys.
+	// // MultimapMkTable lets you list rows based on several fields equality, eg. 'list all sales where seller id = v and name = 'john'.
+	// It uses the partitionKey for partitioning the data. The ordering within a partition is determined by a set of clusteringKeys.
 	MultimapMultiKeyTable(prefixForTableName string, partitionKey, clusteringKey []string, row interface{}) MultimapMkTable
 	/*
-		TimeSeriesTable stores data as a timeseries.
+		TimeSeriesTable lets you list rows which have a field value between two date ranges.
 		timeField is used as the partition key
 		bucketSize is used to determine for what duration the data will be stored on the same partition.
 	*/
@@ -64,7 +65,6 @@ type MapTable interface {
 // Multimap recipe
 //
 
-// MultimapTable lets you list rows based on a field equality, eg. 'list all sales where seller id = v'.
 type MultimapTable interface {
 	Set(v interface{}) Op
 	Update(v, id interface{}, m map[string]interface{}) Op
@@ -78,7 +78,6 @@ type MultimapTable interface {
 	TableChanger
 }
 
-// MultimapMkTable lets you list rows based on several fields equality, eg. 'list all sales where seller id = v and name = 'john'.
 type MultimapMkTable interface {
 	Set(v interface{}) Op
 	Update(v, id map[string]interface{}, m map[string]interface{}) Op
@@ -96,7 +95,6 @@ type MultimapMkTable interface {
 // TimeSeries recipe
 //
 
-// TimeSeriesTable lets you list rows which have a field value between two date ranges.
 type TimeSeriesTable interface {
 	// timeField and idField must be present
 	Set(v interface{}) Op
