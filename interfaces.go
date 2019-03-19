@@ -15,15 +15,15 @@ type Connection interface {
 
 // KeySpace is used to obtain tables from.
 type KeySpace interface {
-	MapTable(tableName, id string, row interface{}) MapTable
-	MultimapTable(tableName, fieldToIndexBy, uniqueKey string, row interface{}) MultimapTable
-	MultimapMultiKeyTable(tableName string, fieldToIndexBy, uniqueKey []string, row interface{}) MultimapMkTable
-	TimeSeriesTable(tableName, timeField, uniqueKey string, bucketSize time.Duration, row interface{}) TimeSeriesTable
-	MultiTimeSeriesTable(tableName, fieldToIndexByField, timeField, uniqueKey string, bucketSize time.Duration, row interface{}) MultiTimeSeriesTable
-	MultiKeyTimeSeriesTable(tableName string, fieldToIndexByField []string, timeField string, uniqueKey []string, bucketSize time.Duration, row interface{}) MultiKeyTimeSeriesTable
-	FlakeSeriesTable(tableName, idField string, bucketSize time.Duration, row interface{}) FlakeSeriesTable
-	MultiFlakeSeriesTable(tableName, indexField, idField string, bucketSize time.Duration, row interface{}) MultiFlakeSeriesTable
-	Table(tableName string, row interface{}, keys Keys) Table
+	MapTable(prefixForTableName, id string, row interface{}) MapTable
+	MultimapTable(prefixForTableName, fieldToIndexBy, uniqueKey string, row interface{}) MultimapTable
+	MultimapMultiKeyTable(prefixForTableName string, fieldToIndexBy, uniqueKey []string, row interface{}) MultimapMkTable
+	TimeSeriesTable(prefixForTableName, timeField, uniqueKey string, bucketSize time.Duration, row interface{}) TimeSeriesTable
+	MultiTimeSeriesTable(prefixForTableName, fieldToIndexByField, timeField, uniqueKey string, bucketSize time.Duration, row interface{}) MultiTimeSeriesTable
+	MultiKeyTimeSeriesTable(prefixForTableName string, fieldToIndexByField []string, timeField string, uniqueKey []string, bucketSize time.Duration, row interface{}) MultiKeyTimeSeriesTable
+	FlakeSeriesTable(prefixForTableName, idField string, bucketSize time.Duration, row interface{}) FlakeSeriesTable
+	MultiFlakeSeriesTable(prefixForTableName, indexField, idField string, bucketSize time.Duration, row interface{}) MultiFlakeSeriesTable
+	Table(prefixForTableName string, row interface{}, keys Keys) Table
 	// DebugMode enables/disables debug mode depending on the value of the input boolean.
 	// When DebugMode is enabled, all built CQL statements are printe to stdout.
 	DebugMode(bool)
