@@ -16,11 +16,11 @@ type Connection interface {
 // KeySpace is used to obtain tables from.
 type KeySpace interface {
 	MapTable(prefixForTableName, id string, row interface{}) MapTable
-	MultimapTable(prefixForTableName, fieldToIndexBy, uniqueKey string, row interface{}) MultimapTable
-	MultimapMultiKeyTable(prefixForTableName string, fieldToIndexBy, uniqueKey []string, row interface{}) MultimapMkTable
-	TimeSeriesTable(prefixForTableName, timeField, uniqueKey string, bucketSize time.Duration, row interface{}) TimeSeriesTable
-	MultiTimeSeriesTable(prefixForTableName, fieldToIndexByField, timeField, uniqueKey string, bucketSize time.Duration, row interface{}) MultiTimeSeriesTable
-	MultiKeyTimeSeriesTable(prefixForTableName string, fieldToIndexByField []string, timeField string, uniqueKey []string, bucketSize time.Duration, row interface{}) MultiKeyTimeSeriesTable
+	MultimapTable(prefixForTableName, partitionKey, clusteringKey string, row interface{}) MultimapTable
+	MultimapMultiKeyTable(prefixForTableName string, partitionKey, clusteringKey []string, row interface{}) MultimapMkTable
+	TimeSeriesTable(prefixForTableName, timeField, clusteringKey string, bucketSize time.Duration, row interface{}) TimeSeriesTable
+	MultiTimeSeriesTable(prefixForTableName, partitionKey, timeField, clusteringKey string, bucketSize time.Duration, row interface{}) MultiTimeSeriesTable
+	MultiKeyTimeSeriesTable(prefixForTableName string, partitionKeys []string, timeField string, clusteringKeys []string, bucketSize time.Duration, row interface{}) MultiKeyTimeSeriesTable
 	FlakeSeriesTable(prefixForTableName, idField string, bucketSize time.Duration, row interface{}) FlakeSeriesTable
 	MultiFlakeSeriesTable(prefixForTableName, indexField, idField string, bucketSize time.Duration, row interface{}) MultiFlakeSeriesTable
 	Table(prefixForTableName string, row interface{}, keys Keys) Table
