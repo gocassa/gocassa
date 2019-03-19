@@ -51,11 +51,11 @@ type KeySpace interface {
 
 // MapTable gives you basic CRUD functionality. If you need fancier ways to query your data set have a look at the other tables.
 type MapTable interface {
-	Set(v interface{}) Op
-	Update(id interface{}, m map[string]interface{}) Op
-	Delete(id interface{}) Op
-	Read(id, pointer interface{}) Op
-	MultiRead(ids []interface{}, pointerToASlice interface{}) Op
+	Set(value interface{}) Op
+	Update(partitionKey interface{}, updatedValues map[string]interface{}) Op
+	Delete(partitionKey interface{}) Op
+	Read(partitionKey, pointer interface{}) Op
+	MultiRead(partitionKeys []interface{}, pointerToASlice interface{}) Op
 	WithOptions(Options) MapTable
 	Table() Table
 	TableChanger
@@ -66,13 +66,13 @@ type MapTable interface {
 //
 
 type MultimapTable interface {
-	Set(v interface{}) Op
-	Update(v, id interface{}, m map[string]interface{}) Op
-	Delete(v, id interface{}) Op
-	DeleteAll(v interface{}) Op
-	List(v, startId interface{}, limit int, pointerToASlice interface{}) Op
-	Read(v, id, pointer interface{}) Op
-	MultiRead(v interface{}, ids []interface{}, pointerToASlice interface{}) Op
+	Set(value interface{}) Op
+	Update(value, id interface{}, updatedValues map[string]interface{}) Op
+	Delete(value, id interface{}) Op
+	DeleteAll(value interface{}) Op
+	List(partitionKey, clusteringKey interface{}, limit int, pointerToASlice interface{}) Op
+	Read(partitionKey, clusteringKey, pointer interface{}) Op
+	MultiRead(partitionKey interface{}, ids []interface{}, pointerToASlice interface{}) Op
 	WithOptions(Options) MultimapTable
 	Table() Table
 	TableChanger
