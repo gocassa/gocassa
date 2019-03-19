@@ -15,9 +15,18 @@ type Connection interface {
 
 // KeySpace is used to obtain tables from.
 type KeySpace interface {
-	MapTable(prefixForTableName, id string, row interface{}) MapTable
+	// MapTable is a simple key-value store.
+	MapTable(prefixForTableName, partitionKey string, row interface{}) MapTable
+	// MultimapTable uses the partitionKey for partitioning the data. The ordering within a partition is determined using the clusteringKey.
 	MultimapTable(prefixForTableName, partitionKey, clusteringKey string, row interface{}) MultimapTable
+	// MultimapMultiKeyTable uses the partitionKey for partitioning the data. The ordering within a partition is determined by a set of
+	// clusteringKeys.
 	MultimapMultiKeyTable(prefixForTableName string, partitionKey, clusteringKey []string, row interface{}) MultimapMkTable
+	/*
+		TimeSeriesTable stores data as a timeseries.
+		timeField is used as the partition key
+		bucketSize is used to determine for what duration the data will be stored on the same partition.
+	*/
 	TimeSeriesTable(prefixForTableName, timeField, clusteringKey string, bucketSize time.Duration, row interface{}) TimeSeriesTable
 	MultiTimeSeriesTable(prefixForTableName, partitionKey, timeField, clusteringKey string, bucketSize time.Duration, row interface{}) MultiTimeSeriesTable
 	MultiKeyTimeSeriesTable(prefixForTableName string, partitionKeys []string, timeField string, clusteringKeys []string, bucketSize time.Duration, row interface{}) MultiKeyTimeSeriesTable
