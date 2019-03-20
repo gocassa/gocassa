@@ -16,24 +16,24 @@ type Connection interface {
 // KeySpace is used to obtain tables from.
 type KeySpace interface {
 	// MapTable is a simple key-value store.
-	MapTable(prefixForTableName, partitionKey string, row interface{}) MapTable
+	MapTable(prefixForTableName, partitionKey string, rowDefinition interface{}) MapTable
 	// MultimapTable lets you list rows based on a field equality, eg. 'list all sales where seller id = v'.
 	// It uses the partitionKey for partitioning the data. The ordering within a partition is determined using the clusteringKey.
-	MultimapTable(prefixForTableName, partitionKey, clusteringKey string, row interface{}) MultimapTable
+	MultimapTable(prefixForTableName, partitionKey, clusteringKey string, rowDefinition interface{}) MultimapTable
 	// // MultimapMkTable lets you list rows based on several fields equality, eg. 'list all sales where seller id = v and name = 'john'.
 	// It uses the partitionKey for partitioning the data. The ordering within a partition is determined by a set of clusteringKeys.
-	MultimapMultiKeyTable(prefixForTableName string, partitionKey, clusteringKey []string, row interface{}) MultimapMkTable
+	MultimapMultiKeyTable(prefixForTableName string, partitionKeys, clusteringKeys []string, rowDefinition interface{}) MultimapMkTable
 	/*
 		TimeSeriesTable lets you list rows which have a field value between two date ranges.
 		timeField is used as the partition key
 		bucketSize is used to determine for what duration the data will be stored on the same partition.
 	*/
-	TimeSeriesTable(prefixForTableName, timeField, clusteringKey string, bucketSize time.Duration, row interface{}) TimeSeriesTable
-	MultiTimeSeriesTable(prefixForTableName, partitionKey, timeField, clusteringKey string, bucketSize time.Duration, row interface{}) MultiTimeSeriesTable
-	MultiKeyTimeSeriesTable(prefixForTableName string, partitionKeys []string, timeField string, clusteringKeys []string, bucketSize time.Duration, row interface{}) MultiKeyTimeSeriesTable
-	FlakeSeriesTable(prefixForTableName, idField string, bucketSize time.Duration, row interface{}) FlakeSeriesTable
-	MultiFlakeSeriesTable(prefixForTableName, indexField, idField string, bucketSize time.Duration, row interface{}) MultiFlakeSeriesTable
-	Table(prefixForTableName string, row interface{}, keys Keys) Table
+	TimeSeriesTable(prefixForTableName, timeField, clusteringKey string, bucketSize time.Duration, rowDefinition interface{}) TimeSeriesTable
+	MultiTimeSeriesTable(prefixForTableName, partitionKey, timeField, clusteringKey string, bucketSize time.Duration, rowDefinition interface{}) MultiTimeSeriesTable
+	MultiKeyTimeSeriesTable(prefixForTableName string, partitionKeys []string, timeField string, clusteringKeys []string, bucketSize time.Duration, rowDefinition interface{}) MultiKeyTimeSeriesTable
+	FlakeSeriesTable(prefixForTableName, idField string, bucketSize time.Duration, rowDefinition interface{}) FlakeSeriesTable
+	MultiFlakeSeriesTable(prefixForTableName, indexField, idField string, bucketSize time.Duration, rowDefinition interface{}) MultiFlakeSeriesTable
+	Table(prefixForTableName string, rowDefinition interface{}, keys Keys) Table
 	// DebugMode enables/disables debug mode depending on the value of the input boolean.
 	// When DebugMode is enabled, all built CQL statements are printe to stdout.
 	DebugMode(bool)
