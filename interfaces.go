@@ -63,7 +63,9 @@ type KeySpace interface {
 
 // MapTable gives you basic CRUD functionality. If you need fancier ways to query your data set have a look at the other tables.
 type MapTable interface {
-	Set(value interface{}) Op
+	// Set Inserts, or Replaces your row with the supplied struct. Be aware that what is not in your struct
+	// will be deleted. To only overwrite some of the fields, Update()
+	Set(rowStruct interface{}) Op
 	Update(partitionKey interface{}, updatedValues map[string]interface{}) Op
 	Delete(partitionKey interface{}) Op
 	Read(partitionKey, pointer interface{}) Op
@@ -78,7 +80,9 @@ type MapTable interface {
 //
 
 type MultimapTable interface {
-	Set(value interface{}) Op
+	// Set Inserts, or Replaces your row with the supplied struct. Be aware that what is not in your struct
+	// will be deleted. To only overwrite some of the fields, Update()
+	Set(rowStruct interface{}) Op
 	Update(value, id interface{}, updatedValues map[string]interface{}) Op
 	Delete(value, id interface{}) Op
 	DeleteAll(value interface{}) Op
@@ -91,7 +95,9 @@ type MultimapTable interface {
 }
 
 type MultimapMkTable interface {
-	Set(v interface{}) Op
+	// Set Inserts, or Replaces your row with the supplied struct. Be aware that what is not in your struct
+	// will be deleted. To only overwrite some of the fields, Update()
+	Set(rowStruct interface{}) Op
 	Update(v, id map[string]interface{}, updatedValues map[string]interface{}) Op
 	Delete(v, id map[string]interface{}) Op
 	DeleteAll(v map[string]interface{}) Op
@@ -109,7 +115,10 @@ type MultimapMkTable interface {
 
 type TimeSeriesTable interface {
 	// timeField and idField must be present
-	Set(v interface{}) Op
+
+	// Set Inserts, or Replaces your row with the supplied struct. Be aware that what is not in your struct
+	// will be deleted. To only overwrite some of the fields, Update()
+	Set(rowStruct interface{}) Op
 	Update(timeStamp time.Time, id interface{}, updatedValues map[string]interface{}) Op
 	Delete(timeStamp time.Time, id interface{}) Op
 	Read(timeStamp time.Time, id, pointer interface{}) Op
@@ -126,7 +135,10 @@ type TimeSeriesTable interface {
 
 type MultiTimeSeriesTable interface {
 	// timeField and idField must be present
-	Set(value interface{}) Op
+
+	// Set Inserts, or Replaces your row with the supplied struct. Be aware that what is not in your struct
+	// will be deleted. To only overwrite some of the fields, Update()
+	Set(rowStruct interface{}) Op
 	Update(v interface{}, timeStamp time.Time, id interface{}, updatedValues map[string]interface{}) Op
 	Delete(v interface{}, timeStamp time.Time, id interface{}) Op
 	Read(v interface{}, timeStamp time.Time, id, pointer interface{}) Op
@@ -140,7 +152,10 @@ type MultiTimeSeriesTable interface {
 // MultiKeyTimeSeriesTable is a cross between TimeSeries and MultimapMkTable tables.
 type MultiKeyTimeSeriesTable interface {
 	// timeField and idField must be present
-	Set(v interface{}) Op
+
+	// Set Inserts, or Replaces your row with the supplied struct. Be aware that what is not in your struct
+	// will be deleted. To only overwrite some of the fields, Update()
+	Set(rowStruct interface{}) Op
 	Update(v map[string]interface{}, timeStamp time.Time, id map[string]interface{}, updatedValues map[string]interface{}) Op
 	Delete(v map[string]interface{}, timeStamp time.Time, id map[string]interface{}) Op
 	Read(v map[string]interface{}, timeStamp time.Time, id map[string]interface{}, pointer interface{}) Op
@@ -152,7 +167,9 @@ type MultiKeyTimeSeriesTable interface {
 }
 
 type FlakeSeriesTable interface {
-	Set(v interface{}) Op
+	// Set Inserts, or Replaces your row with the supplied struct. Be aware that what is not in your struct
+	// will be deleted. To only overwrite some of the fields, Update()
+	Set(rowStruct interface{}) Op
 	Update(id string, updatedValues map[string]interface{}) Op
 	Delete(id string) Op
 	Read(id string, pointer interface{}) Op
@@ -167,7 +184,9 @@ type FlakeSeriesTable interface {
 }
 
 type MultiFlakeSeriesTable interface {
-	Set(v interface{}) Op
+	// Set Inserts, or Replaces your row with the supplied struct. Be aware that what is not in your struct
+	// will be deleted. To only overwrite some of the fields, Update()
+	Set(rowStruct interface{}) Op
 	Update(v interface{}, id string, updatedValues map[string]interface{}) Op
 	Delete(v interface{}, id string) Op
 	Read(v interface{}, id string, pointer interface{}) Op
@@ -269,7 +288,7 @@ type TableChanger interface {
 type Table interface {
 	// Set Inserts, or Replaces your row with the supplied struct. Be aware that what is not in your struct
 	// will be deleted. To only overwrite some of the fields, use Query.Update.
-	Set(v interface{}) Op
+	Set(rowStruct interface{}) Op
 	// Where accepts a bunch of realtions and returns a filter. See the documentation for Relation and Filter to understand what that means.
 	Where(relations ...Relation) Filter // Because we provide selections
 	// Name returns the underlying table name, as stored in C*
