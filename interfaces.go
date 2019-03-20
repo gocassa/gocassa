@@ -29,10 +29,22 @@ type KeySpace interface {
 		bucketSize is used to determine for what duration the data will be stored on the same partition.
 	*/
 	TimeSeriesTable(prefixForTableName, timeField, clusteringKey string, bucketSize time.Duration, rowDefinition interface{}) TimeSeriesTable
+	/*
+		MultiTimeSeriesTable is a cross between TimeSeries and Multimap tables.
+		The partitionKey and timeField make up the composite partitionKey.
+		The ordering within a partition is decided by the clusteringKey.
+		bucketSize is used to determine for what duration the data will be stored on the same partition.
+	*/
 	MultiTimeSeriesTable(prefixForTableName, partitionKey, timeField, clusteringKey string, bucketSize time.Duration, rowDefinition interface{}) MultiTimeSeriesTable
 	MultiKeyTimeSeriesTable(prefixForTableName string, partitionKeys []string, timeField string, clusteringKeys []string, bucketSize time.Duration, rowDefinition interface{}) MultiKeyTimeSeriesTable
-	FlakeSeriesTable(prefixForTableName, idField string, bucketSize time.Duration, rowDefinition interface{}) FlakeSeriesTable
-	MultiFlakeSeriesTable(prefixForTableName, indexField, idField string, bucketSize time.Duration, rowDefinition interface{}) MultiFlakeSeriesTable
+	/*
+		FlakeSeriesTable is similar to TimeSeriesTable.
+		flakeIDField is used as the partition key instead of a timeField.
+		(FlakeIDs encode time of ID generation within them and can be used as a replacement for timestamps)
+		bucketSize is used to determine for what duration the data will be stored on the same partition.
+	*/
+	FlakeSeriesTable(prefixForTableName, flakeIDField string, bucketSize time.Duration, rowDefinition interface{}) FlakeSeriesTable
+	MultiFlakeSeriesTable(prefixForTableName, partitionKey, flakeIDField string, bucketSize time.Duration, rowDefinition interface{}) MultiFlakeSeriesTable
 	Table(prefixForTableName string, rowDefinition interface{}, keys Keys) Table
 	// DebugMode enables/disables debug mode depending on the value of the input boolean.
 	// When DebugMode is enabled, all built CQL statements are printe to stdout.
@@ -112,7 +124,6 @@ type TimeSeriesTable interface {
 // TimeSeries B recipe
 //
 
-// MultiTimeSeriesTable is a cross between TimeSeries and Multimap tables.
 type MultiTimeSeriesTable interface {
 	// timeField and idField must be present
 	Set(v interface{}) Op
