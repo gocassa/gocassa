@@ -15,7 +15,6 @@ type field struct {
 	index     []int
 	typ       reflect.Type
 	omitEmpty bool
-	quoted    bool
 }
 
 func fillField(f field) field {

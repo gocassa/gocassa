@@ -271,10 +271,6 @@ func (k key) Append(column string, value interface{}) key {
 	return newKey
 }
 
-func (t *MockTable) zero() interface{} {
-	return reflect.New(reflect.TypeOf(t.entity)).Interface()
-}
-
 func (t *MockTable) partitionKeyFromColumnValues(values map[string]interface{}, keyNames []string) (key, error) {
 	var key key
 
