@@ -3,7 +3,6 @@ package gocassa
 import (
 	"bytes"
 	"fmt"
-	"reflect"
 	"strconv"
 	"strings"
 
@@ -48,10 +47,6 @@ func newTableInfo(keyspace, name string, keys Keys, entity interface{}, fieldSou
 	cinf.fields = fields
 	cinf.fieldValues = values
 	return cinf
-}
-
-func (t *t) zero() interface{} {
-	return reflect.New(reflect.TypeOf(t.info.marshalSource)).Interface()
 }
 
 // Since we cant have Map -> [(k, v)] we settle for Map -> ([k], [v])

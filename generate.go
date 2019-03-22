@@ -105,10 +105,6 @@ func j(s []string) string {
 	return strings.Join(s1, ", ")
 }
 
-func createKeyspace(keyspaceName string) string {
-	return fmt.Sprintf("CREATE KEYSPACE \"%v\" WITH REPLICATION = {'class' : 'NetworkTopologyStrategy', 'eu-west-1' : 3}", keyspaceName)
-}
-
 func cassaType(i interface{}) gocql.Type {
 	switch i.(type) {
 	case int, int32:
