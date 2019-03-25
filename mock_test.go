@@ -40,6 +40,7 @@ type address struct {
 	LocationPrice   map[string]int       // json compatible map
 	LocationHistory map[time.Time]string // not json compatible map
 	PostCode        PostalCode           // embedded type
+	TownID          string
 }
 
 func TestRunMockSuite(t *testing.T) {
@@ -59,6 +60,7 @@ type MockSuite struct {
 	embMapTbl            MapTable
 	embTsTbl             TimeSeriesTable
 	addressByCountyMmTbl MultimapTable
+	mmMkTable            MultimapMkTable
 }
 
 func (s *MockSuite) SetupTest() {
@@ -78,6 +80,7 @@ func (s *MockSuite) SetupTest() {
 	s.embMapTbl = s.ks.MapTable("addresses", "Id", address{})
 	s.embTsTbl = s.ks.TimeSeriesTable("addresses", "Time", "Id", 1*time.Minute, address{})
 	s.addressByCountyMmTbl = s.ks.MultimapTable("address_by_county", "County", "Id", address{})
+	s.mmMkTable = s.ks.MultimapMultiKeyTable("addresses_by_id_and_town", []string{"Id", "TownID"}, []string{"County"}, address{})
 }
 
 // Table tests
@@ -90,7 +93,7 @@ func (s *MockSuite) TestTableEmpty() {
 // TestEmptyPrimaryKey asserts that gocassa mock will return an error for a row
 // with an empty primary
 func (s *MockSuite) TestEmptyPrimaryKey() {
-	address := address{
+	add := address{
 		Id:              "",
 		County:          "",
 		Time:            s.parseTime("2015-01-01 00:00:00"),
@@ -100,21 +103,34 @@ func (s *MockSuite) TestEmptyPrimaryKey() {
 	}
 
 	// embMapTbl has Id in the partition key
-	s.Error(s.embMapTbl.Set(address).Run())
+	s.Error(s.embMapTbl.Set(add).Run())
 	// addressByCountyMmTbl has County in the partition key
-	s.Error(s.addressByCountyMmTbl.Set(address).Run())
+	s.Error(s.addressByCountyMmTbl.Set(add).Run())
 
-	address.County = "London"
-	s.Error(s.embMapTbl.Set(address).Run())
+	add.County = "London"
+	s.Error(s.embMapTbl.Set(add).Run())
 	// address can be written successfully, now that the partiton key -
 	// County is not empty anymore; Id is still empty
-	s.NoError(s.addressByCountyMmTbl.Set(address).Run())
+	s.NoError(s.addressByCountyMmTbl.Set(add).Run())
 
-	address.Id = "someID"
+	add.Id = "someID"
 	// both Id and County are not empty, writing to the tables should be
 	// suucessful
-	s.NoError(s.embMapTbl.Set(address).Run())
-	s.NoError(s.addressByCountyMmTbl.Set(address).Run())
+	s.NoError(s.embMapTbl.Set(add).Run())
+	s.NoError(s.addressByCountyMmTbl.Set(add).Run())
+
+	add = address{
+		Id:              "",
+		TownID:          "",
+		County:          "",
+		Time:            s.parseTime("2015-01-01 00:00:00"),
+		LocationPrice:   map[string]int{"A": 1},
+		LocationHistory: map[time.Time]string{time.Now().UTC(): "A"},
+		PostCode:        "ABC",
+	}
+	// no error in writing all empty values to a table with a composite
+	// primary key
+	s.NoError(s.mmMkTable.Set(add).Run())
 }
 
 func (s *MockSuite) TestTableRead() {

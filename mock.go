@@ -274,12 +274,25 @@ func (k key) Append(column string, value interface{}) key {
 func (t *MockTable) partitionKeyFromColumnValues(values map[string]interface{}, keyNames []string) (key, error) {
 	var key key
 
-	for _, keyName := range keyNames {
-		value, ok := values[keyName]
-		// need to explcitly check for string type here, as we cannot
-		// write an empty string in the primary key
+	// For a single partition key of type string, check that it is not
+	// empty, this is same as this error from a real C* cluster-
+	// InvalidRequest: Error from server: code=2200 [Invalid query]
+	// message="Key may not be empty"
+	if len(keyNames) == 1 {
+		value, ok := values[keyNames[0]]
 		stringVal, isString := value.(string)
 		if !ok || (isString && stringVal == "") {
+			return nil, fmt.Errorf("Missing mandatory PRIMARY KEY part %s", keyNames[0])
+		}
+		key = key.Append(keyNames[0], value)
+		return key, nil
+	}
+
+	// Cassandra _does_ allow you to have a composite partition key in which
+	// all the components can be empty
+	for _, keyName := range keyNames {
+		value, ok := values[keyName]
+		if !ok {
 			return nil, fmt.Errorf("Missing mandatory PRIMARY KEY part %s", keyName)
 		}
 		key = key.Append(keyName, value)
