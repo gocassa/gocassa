@@ -66,7 +66,7 @@ type MapTable interface {
 	// Set Inserts, or Replaces your row with the supplied struct. Be aware that what is not in your struct
 	// will be deleted. To only overwrite some of the fields, Update()
 	Set(rowStruct interface{}) Op
-	Update(partitionKey interface{}, updatedValues map[string]interface{}) Op
+	Update(partitionKey interface{}, valuesToUpdate map[string]interface{}) Op
 	Delete(partitionKey interface{}) Op
 	Read(partitionKey, pointer interface{}) Op
 	MultiRead(partitionKeys []interface{}, pointerToASlice interface{}) Op
@@ -83,7 +83,7 @@ type MultimapTable interface {
 	// Set Inserts, or Replaces your row with the supplied struct. Be aware that what is not in your struct
 	// will be deleted. To only overwrite some of the fields, Update()
 	Set(rowStruct interface{}) Op
-	Update(value, id interface{}, updatedValues map[string]interface{}) Op
+	Update(value, id interface{}, valuesToUpdate map[string]interface{}) Op
 	Delete(value, id interface{}) Op
 	DeleteAll(value interface{}) Op
 	List(partitionKey, clusteringKey interface{}, limit int, pointerToASlice interface{}) Op
@@ -98,7 +98,7 @@ type MultimapMkTable interface {
 	// Set Inserts, or Replaces your row with the supplied struct. Be aware that what is not in your struct
 	// will be deleted. To only overwrite some of the fields, Update()
 	Set(rowStruct interface{}) Op
-	Update(v, id map[string]interface{}, updatedValues map[string]interface{}) Op
+	Update(v, id map[string]interface{}, valuesToUpdate map[string]interface{}) Op
 	Delete(v, id map[string]interface{}) Op
 	DeleteAll(v map[string]interface{}) Op
 	List(v, startId map[string]interface{}, limit int, pointerToASlice interface{}) Op
@@ -119,7 +119,7 @@ type TimeSeriesTable interface {
 	// Set Inserts, or Replaces your row with the supplied struct. Be aware that what is not in your struct
 	// will be deleted. To only overwrite some of the fields, Update()
 	Set(rowStruct interface{}) Op
-	Update(timeStamp time.Time, id interface{}, updatedValues map[string]interface{}) Op
+	Update(timeStamp time.Time, id interface{}, valuesToUpdate map[string]interface{}) Op
 	Delete(timeStamp time.Time, id interface{}) Op
 	Read(timeStamp time.Time, id, pointer interface{}) Op
 	List(start, end time.Time, pointerToASlice interface{}) Op
@@ -139,7 +139,7 @@ type MultiTimeSeriesTable interface {
 	// Set Inserts, or Replaces your row with the supplied struct. Be aware that what is not in your struct
 	// will be deleted. To only overwrite some of the fields, Update()
 	Set(rowStruct interface{}) Op
-	Update(v interface{}, timeStamp time.Time, id interface{}, updatedValues map[string]interface{}) Op
+	Update(v interface{}, timeStamp time.Time, id interface{}, valuesToUpdate map[string]interface{}) Op
 	Delete(v interface{}, timeStamp time.Time, id interface{}) Op
 	Read(v interface{}, timeStamp time.Time, id, pointer interface{}) Op
 	List(v interface{}, start, end time.Time, pointerToASlice interface{}) Op
@@ -156,7 +156,7 @@ type MultiKeyTimeSeriesTable interface {
 	// Set Inserts, or Replaces your row with the supplied struct. Be aware that what is not in your struct
 	// will be deleted. To only overwrite some of the fields, Update()
 	Set(rowStruct interface{}) Op
-	Update(v map[string]interface{}, timeStamp time.Time, id map[string]interface{}, updatedValues map[string]interface{}) Op
+	Update(v map[string]interface{}, timeStamp time.Time, id map[string]interface{}, valuesToUpdate map[string]interface{}) Op
 	Delete(v map[string]interface{}, timeStamp time.Time, id map[string]interface{}) Op
 	Read(v map[string]interface{}, timeStamp time.Time, id map[string]interface{}, pointer interface{}) Op
 	List(v map[string]interface{}, start, end time.Time, pointerToASlice interface{}) Op
@@ -170,7 +170,7 @@ type FlakeSeriesTable interface {
 	// Set Inserts, or Replaces your row with the supplied struct. Be aware that what is not in your struct
 	// will be deleted. To only overwrite some of the fields, Update()
 	Set(rowStruct interface{}) Op
-	Update(id string, updatedValues map[string]interface{}) Op
+	Update(id string, valuesToUpdate map[string]interface{}) Op
 	Delete(id string) Op
 	Read(id string, pointer interface{}) Op
 	List(start, end time.Time, pointerToASlice interface{}) Op
@@ -187,7 +187,7 @@ type MultiFlakeSeriesTable interface {
 	// Set Inserts, or Replaces your row with the supplied struct. Be aware that what is not in your struct
 	// will be deleted. To only overwrite some of the fields, Update()
 	Set(rowStruct interface{}) Op
-	Update(v interface{}, id string, updatedValues map[string]interface{}) Op
+	Update(v interface{}, id string, valuesToUpdate map[string]interface{}) Op
 	Delete(v interface{}, id string) Op
 	Read(v interface{}, id string, pointer interface{}) Op
 	List(v interface{}, start, end time.Time, pointerToASlice interface{}) Op
@@ -208,7 +208,7 @@ type MultiFlakeSeriesTable interface {
 // You can do writes or reads on a filter.
 type Filter interface {
 	// Update does a partial update. Use this if you don't want to overwrite your whole row, but you want to modify fields atomically.
-	Update(updatedValues map[string]interface{}) Op // Probably this is danger zone (can't be implemented efficiently) on a selectuinb with more than 1 document
+	Update(valuesToUpdate map[string]interface{}) Op // Probably this is danger zone (can't be implemented efficiently) on a selectuinb with more than 1 document
 	// Delete all rows matching the filter.
 	Delete() Op
 	// Reads all results. Make sure you pass in a pointer to a slice.
