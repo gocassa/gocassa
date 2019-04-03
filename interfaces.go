@@ -17,15 +17,21 @@ type Connection interface {
 type KeySpace interface {
 	// MapTable is a simple key-value store.
 	MapTable(prefixForTableName, partitionKey string, rowDefinition interface{}) MapTable
-	// MultimapTable lets you list rows based on a field equality, eg. 'list all sales where seller id = v'.
-	// It uses the partitionKey for partitioning the data. The ordering within a partition is determined using the clusteringKey.
+	/*
+		MultimapTable lets you list rows based on a field equality but allows for a single partitionKey.
+		It uses the partitionKey for partitioning the data.
+		The ordering within a partition is determined using the clusteringKey.
+	*/
 	MultimapTable(prefixForTableName, partitionKey, clusteringKey string, rowDefinition interface{}) MultimapTable
-	// // MultimapMkTable lets you list rows based on several fields equality, eg. 'list all sales where seller id = v and name = 'john'.
-	// It uses the partitionKey for partitioning the data. The ordering within a partition is determined by a set of clusteringKeys.
+	/*
+		MultimapMultiKeyTable lets you list rows based on several fields equality but allows for more than one partitionKey.
+		It uses the partitionKeys for partitioning the data.
+		The ordering within a partition is determined by a set of clusteringKeys.
+	*/
 	MultimapMultiKeyTable(prefixForTableName string, partitionKeys, clusteringKeys []string, rowDefinition interface{}) MultimapMkTable
 	/*
 		TimeSeriesTable lets you list rows which have a field value between two date ranges.
-		timeField is used as the partition key
+		timeField is used as the partition key alongside the bucket.
 		bucketSize is used to determine for what duration the data will be stored on the same partition.
 	*/
 	TimeSeriesTable(prefixForTableName, timeField, clusteringKey string, bucketSize time.Duration, rowDefinition interface{}) TimeSeriesTable
@@ -36,10 +42,16 @@ type KeySpace interface {
 		bucketSize is used to determine for what duration the data will be stored on the same partition.
 	*/
 	MultiTimeSeriesTable(prefixForTableName, partitionKey, timeField, clusteringKey string, bucketSize time.Duration, rowDefinition interface{}) MultiTimeSeriesTable
+	/*
+		MultiKeyTimeSeriesTable is a cross between TimeSeries and MultimapMultikey tables.
+		The partitionKeys and timeField make up the composite partitionKey.
+		The ordering within a partition is decided by the clusteringKey.
+		bucketSize is used to determine for what duration the data will be stored on the same partition.
+	*/
 	MultiKeyTimeSeriesTable(prefixForTableName string, partitionKeys []string, timeField string, clusteringKeys []string, bucketSize time.Duration, rowDefinition interface{}) MultiKeyTimeSeriesTable
 	/*
 		FlakeSeriesTable is similar to TimeSeriesTable.
-		flakeIDField is used as the partition key instead of a timeField.
+		flakeIDField is used as the partition key along with the bucket field.
 		(FlakeIDs encode time of ID generation within them and can be used as a replacement for timestamps)
 		bucketSize is used to determine for what duration the data will be stored on the same partition.
 	*/
