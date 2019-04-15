@@ -10,6 +10,8 @@ import (
 	"strconv"
 
 	"context"
+
+	"github.com/gocql/gocql"
 	"github.com/mitchellh/mapstructure"
 	rreflect "github.com/monzo/gocassa/reflect"
 )
@@ -276,6 +278,7 @@ func decodeResult(m, result interface{}) error {
 		TagName:          rreflect.TagName,
 		DecodeHook: mapstructure.ComposeDecodeHookFunc(
 			decodeBigIntHook,
+			decodeUnmarshalCQLHook,
 		),
 	})
 	if err != nil {
@@ -306,6 +309,50 @@ func decodeBigIntHook(f reflect.Kind, t reflect.Kind, data interface{}) (interfa
 			return int16(i.Int64()), nil
 		case reflect.Int8:
 			return int8(i.Int64()), nil
+		}
+	}
+
+	return data, nil
+}
+
+// decodeUnmarshalCQLHook is hook function to decode custom type which
+// implements gocql.Unmarshaler into the its custom type.
+func decodeUnmarshalCQLHook(f, t reflect.Type, data interface{}) (interface{}, error) {
+	// Only consider string ([]byte) → custom type
+	if f == t || f.Kind() != reflect.String {
+		return data, nil
+	}
+
+	var (
+		rcvrType reflect.Type
+		tIsValue bool
+	)
+	switch t.Kind() {
+	case reflect.Ptr:
+		rcvrType = t
+	default:
+		// Unmarshaling a non-pointer type is possible iff pointer
+		// receiver of this type implements gocql.Unmarshaler
+		rcvrType = reflect.PtrTo(t)
+		tIsValue = true
+	}
+
+	unmarshaler := reflect.TypeOf((*gocql.Unmarshaler)(nil)).Elem()
+	if rcvrType.Implements(unmarshaler) {
+		// make sure obj is not nil by allocating
+		obj := reflect.New(rcvrType.Elem()) // obj := new(*t)
+		if !obj.CanInterface() || !obj.Elem().CanInterface() {
+			// Give up if cannot type switch against Unmarshaler
+			return data, nil
+		}
+		if u, ok := obj.Interface().(gocql.Unmarshaler); ok {
+			var info gocql.TypeInfo // dummy info
+			u.UnmarshalCQL(info, []byte(data.(string)))
+			if tIsValue {
+				// Convert this to non-reflect world
+				return obj.Elem().Interface().(interface{}), nil // return *obj
+			}
+			return u, nil
 		}
 	}
 

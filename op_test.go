@@ -2,7 +2,11 @@ package gocassa
 
 import (
 	"reflect"
+	"strconv"
+	"strings"
 	"testing"
+
+	"github.com/gocql/gocql"
 )
 
 type OpTestStruct struct {
@@ -92,6 +96,70 @@ func TestDecodeSingleRow(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(result, opTestRowExpected) {
+		t.Fatalf("Did not get expected result")
+	}
+}
+
+type OpTestCompositeType struct {
+	Num int
+	Str string
+}
+
+func (t *OpTestCompositeType) UnmarshalCQL(_ gocql.TypeInfo, data []byte) error {
+	parts := strings.Split(string(data), " ")
+	num, err := strconv.Atoi(parts[0])
+	if err != nil {
+		return err
+	}
+	t.Num = num
+	t.Str = parts[1]
+	return nil
+}
+
+type OpTestEnumType int32
+
+const (
+	OpTestEnumOne   OpTestEnumType = 1
+	OpTestEnumTwo   OpTestEnumType = 2
+	OpTestEnumThree OpTestEnumType = 3
+)
+
+func (t *OpTestEnumType) UnmarshalCQL(_ gocql.TypeInfo, data []byte) error {
+	values := map[string]OpTestEnumType{
+		"EnumOne":   1,
+		"EnumTwo":   2,
+		"EnumThree": 3,
+	}
+	*t = values[string(data)]
+	return nil
+}
+
+type OpTestUnmarshalCQLStruct struct {
+	A string
+	B *OpTestCompositeType
+	C OpTestEnumType
+}
+
+var opTestUnmarshalCQLRow = map[string]interface{}{
+	"A": "a",
+	"B": "42 CQL",
+	"C": "EnumTwo",
+}
+
+var opTestUnmarshalCQLRowExpected = OpTestUnmarshalCQLStruct{
+	A: "a",
+	B: &OpTestCompositeType{Num: 42, Str: "CQL"},
+	C: OpTestEnumType(2),
+}
+
+func TestDecodeUnmarshalCQL(t *testing.T) {
+	var result OpTestUnmarshalCQLStruct
+	err := decodeResult(opTestUnmarshalCQLRow, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(result, opTestUnmarshalCQLRowExpected) {
 		t.Fatalf("Did not get expected result")
 	}
 }
