@@ -1,17 +1,28 @@
 package gocassa
 
+import "reflect"
+
 type statement struct {
-	columns []string
-	values  []interface{}
-	query   string
+	fieldNames []string
+	fieldTypes []reflect.Type
+
+	values []interface{}
+	query  string
 }
 
 var noOpStatement = newStatement("", []interface{}{})
 
-// ColumnNames contains the column names which will be selected
+// FieldNames contains the column names which will be selected
 // This will only be populated for SELECT queries
-func (s statement) ColumnNames() []string {
-	return s.columns
+func (s statement) FieldNames() []string {
+	return s.fieldNames
+}
+
+// FieldTypes contains the binding types of columns selected
+// in their referenced struct. This will only be populated for
+// SELECT queries
+func (s statement) FieldTypes() []reflect.Type {
+	return s.fieldTypes
 }
 
 // Values encapsulates binding values to be set within the CQL
@@ -33,10 +44,11 @@ func newStatement(query string, values []interface{}) statement {
 	}
 }
 
-func newSelectStatement(query string, values []interface{}, columnNames []string) statement {
+func newSelectStatement(query string, values []interface{}, fieldNames []string, fieldTypes []reflect.Type) statement {
 	return statement{
-		query:   query,
-		values:  values,
-		columns: columnNames,
+		query:      query,
+		values:     values,
+		fieldNames: fieldNames,
+		fieldTypes: fieldTypes,
 	}
 }

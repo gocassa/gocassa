@@ -2,6 +2,7 @@ package gocassa
 
 import (
 	"context"
+	"reflect"
 	"time"
 )
 
@@ -262,9 +263,13 @@ type Table interface {
 // Statement encapsulates a gocassa generated statement to be passed via
 // the QueryExecutor.
 type Statement interface {
-	// ColumnNames contains the column names which will be selected
+	// FieldNames contains the column names which will be selected
 	// This will only be populated for SELECT queries
-	ColumnNames() []string
+	FieldNames() []string
+	// FieldTypes contains the binding types of columns selected
+	// in their referenced struct. This will only be populated for
+	// SELECT queries
+	FieldTypes() []reflect.Type
 	// Values encapsulates binding values to be set within the CQL
 	// query string as binding parameters. If there are no binding
 	// parameters in the query, this will be the empty slice

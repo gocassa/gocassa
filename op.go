@@ -157,7 +157,8 @@ func (o *singleOp) generateWrite(opt Options) Statement {
 func (o *singleOp) generateRead(opt Options) Statement {
 	w, wv := generateWhere(o.f.rs)
 	mopt := o.f.t.options.Merge(opt)
-	fl := o.f.t.generateColumnFieldList(mopt.Select)
+	fl := o.f.t.generateFieldList(mopt.Select)
+	ft := o.f.t.generateFieldTypes(fl)
 	ord, ov := o.generateOrderBy(mopt)
 	lim, lv := o.generateLimit(mopt)
 	stmt := fmt.Sprintf("SELECT %s FROM %s.%s", strings.Join(fl, ","), o.f.t.keySpace.name, o.f.t.Name())
@@ -186,7 +187,7 @@ func (o *singleOp) generateRead(opt Options) Statement {
 	if o.f.t.keySpace.debugMode {
 		fmt.Println(buf.String(), vals)
 	}
-	return newSelectStatement(buf.String(), vals, fl)
+	return newSelectStatement(buf.String(), vals, fl, ft)
 }
 
 func (o *singleOp) generateOrderBy(opt Options) (string, []interface{}) {
