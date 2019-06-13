@@ -33,5 +33,5 @@ func (o errOp) Add(ops ...Op) Op                                 { return multiO
 func (o errOp) Options() Options                                 { return Options{} }
 func (o errOp) WithOptions(_ Options) Op                         { return o }
 func (o errOp) Preflight() error                                 { return o.err }
-func (o errOp) GenerateStatement() (string, []interface{})       { return "", []interface{}{} }
+func (o errOp) GenerateStatement() Statement                     { return noOpStatement }
 func (o errOp) QueryExecutor() QueryExecutor                     { return nil }

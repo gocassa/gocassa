@@ -220,8 +220,8 @@ type Op interface {
 	// Preflight performs any pre-execution validation that confirms the op considers itself "valid".
 	// NOTE: Run() and RunAtomically() should call this method before execution, and abort if any errors are returned.
 	Preflight() error
-	// GenerateStatement generates the statment and params to perform the operation
-	GenerateStatement() (string, []interface{})
+	// GenerateStatement generates the statement to perform the operation
+	GenerateStatement() Statement
 	// QueryExecutor returns the QueryExecutor
 	QueryExecutor() QueryExecutor
 }
@@ -232,12 +232,12 @@ type TableChanger interface {
 	// If the table already exists, it returns an error.
 	Create() error
 	// CreateStatement returns you the CQL query which can be used to create the table manually in cqlsh
-	CreateStatement() (string, error)
+	CreateStatement() (Statement, error)
 	// Create creates the table in the keySpace, but only if it does not exist already.
 	// If the table already exists, then nothing is created.
 	CreateIfNotExist() error
 	// CreateStatement returns you the CQL query which can be used to create the table manually in cqlsh
-	CreateIfNotExistStatement() (string, error)
+	CreateIfNotExistStatement() (Statement, error)
 	// Recreate drops the table if exists and creates it again.
 	// This is useful for test purposes only.
 	Recreate() error
@@ -259,21 +259,35 @@ type Table interface {
 	TableChanger
 }
 
+// Statement encapsulates a gocassa generated statement to be passed via
+// the QueryExecutor.
+type Statement interface {
+	// ColumnNames contains the column names which will be selected
+	// This will only be populated for SELECT queries
+	ColumnNames() []string
+	// Values encapsulates binding values to be set within the CQL
+	// query string as binding parameters. If there are no binding
+	// parameters in the query, this will be the empty slice
+	Values() []interface{}
+	// Query returns the CQL query for this statement
+	Query() string
+}
+
 // QueryExecutor actually executes the queries - this is mostly useful for testing/mocking purposes,
 // ignore this otherwise. This library is using github.com/gocql/gocql as the query executor by default.
 type QueryExecutor interface {
 	// Query executes a query and returns the results.  It also takes Options to do things like set consistency
-	QueryWithOptions(opts Options, stmt string, params ...interface{}) ([]map[string]interface{}, error)
+	QueryWithOptions(opts Options, stmt Statement) ([]map[string]interface{}, error)
 	// Query executes a query and returns the results
-	Query(stmt string, params ...interface{}) ([]map[string]interface{}, error)
+	Query(stmt Statement) ([]map[string]interface{}, error)
 	// Execute executes a DML query. It also takes Options to do things like set consistency
-	ExecuteWithOptions(opts Options, stmt string, params ...interface{}) error
+	ExecuteWithOptions(opts Options, stmt Statement) error
 	// Execute executes a DML query
-	Execute(stmt string, params ...interface{}) error
+	Execute(stmt Statement) error
 	// ExecuteAtomically executes multiple DML queries with a logged batch
-	ExecuteAtomically(stmt []string, params [][]interface{}) error
+	ExecuteAtomically(stmt []Statement) error
 	// ExecuteAtomically executes multiple DML queries with a logged batch, and takes options
-	ExecuteAtomicallyWithOptions(opts Options, stmt []string, params [][]interface{}) error
+	ExecuteAtomicallyWithOptions(opts Options, stmt []Statement) error
 }
 
 type Counter int

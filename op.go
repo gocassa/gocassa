@@ -8,6 +8,7 @@ import (
 	"runtime"
 	"sort"
 	"strconv"
+	"strings"
 
 	"context"
 
@@ -64,8 +65,8 @@ func newWriteOp(qe QueryExecutor, f filter, opType uint8, m map[string]interface
 }
 
 func (w *singleOp) read() error {
-	stmt, params := w.generateRead(w.options)
-	maps, err := w.qe.QueryWithOptions(w.options, stmt, params...)
+	stmt := w.generateRead(w.options)
+	maps, err := w.qe.QueryWithOptions(w.options, stmt)
 	if err != nil {
 		return err
 	}
@@ -74,8 +75,8 @@ func (w *singleOp) read() error {
 }
 
 func (w *singleOp) readOne() error {
-	stmt, params := w.generateRead(w.options)
-	maps, err := w.qe.QueryWithOptions(w.options, stmt, params...)
+	stmt := w.generateRead(w.options)
+	maps, err := w.qe.QueryWithOptions(w.options, stmt)
 	if err != nil {
 		return err
 	}
@@ -90,8 +91,8 @@ func (w *singleOp) readOne() error {
 }
 
 func (w *singleOp) write() error {
-	stmt, params := w.generateWrite(w.options)
-	return w.qe.ExecuteWithOptions(w.options, stmt, params...)
+	stmt := w.generateWrite(w.options)
+	return w.qe.ExecuteWithOptions(w.options, stmt)
 }
 
 func (o *singleOp) Run() error {
@@ -118,21 +119,21 @@ func (o *singleOp) RunAtomicallyWithContext(ctx context.Context) error {
 	return o.WithOptions(Options{Context: ctx}).Run()
 }
 
-func (o *singleOp) GenerateStatement() (string, []interface{}) {
+func (o *singleOp) GenerateStatement() Statement {
 	switch o.opType {
 	case updateOpType, insertOpType, deleteOpType:
 		return o.generateWrite(o.options)
 	case readOpType, singleReadOpType:
 		return o.generateRead(o.options)
 	}
-	return "", []interface{}{}
+	return noOpStatement
 }
 
 func (o *singleOp) QueryExecutor() QueryExecutor {
 	return o.qe
 }
 
-func (o *singleOp) generateWrite(opt Options) (string, []interface{}) {
+func (o *singleOp) generateWrite(opt Options) Statement {
 	var str string
 	var vals []interface{}
 	switch o.opType {
@@ -150,15 +151,16 @@ func (o *singleOp) generateWrite(opt Options) (string, []interface{}) {
 	if o.f.t.keySpace.debugMode {
 		fmt.Println(str, vals)
 	}
-	return str, vals
+	return newStatement(str, vals)
 }
 
-func (o *singleOp) generateRead(opt Options) (string, []interface{}) {
+func (o *singleOp) generateRead(opt Options) Statement {
 	w, wv := generateWhere(o.f.rs)
 	mopt := o.f.t.options.Merge(opt)
+	fl := o.f.t.generateColumnFieldList(mopt.Select)
 	ord, ov := o.generateOrderBy(mopt)
 	lim, lv := o.generateLimit(mopt)
-	stmt := fmt.Sprintf("SELECT %s FROM %s.%s", o.f.t.generateFieldNames(mopt.Select), o.f.t.keySpace.name, o.f.t.Name())
+	stmt := fmt.Sprintf("SELECT %s FROM %s.%s", strings.Join(fl, ","), o.f.t.keySpace.name, o.f.t.Name())
 	vals := []interface{}{}
 	buf := new(bytes.Buffer)
 	buf.WriteString(stmt)
@@ -184,7 +186,7 @@ func (o *singleOp) generateRead(opt Options) (string, []interface{}) {
 	if o.f.t.keySpace.debugMode {
 		fmt.Println(buf.String(), vals)
 	}
-	return buf.String(), vals
+	return newSelectStatement(buf.String(), vals, fl)
 }
 
 func (o *singleOp) generateOrderBy(opt Options) (string, []interface{}) {

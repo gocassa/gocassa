@@ -174,23 +174,23 @@ func TestCreateStatement(t *testing.T) {
 	cs := ns.Table("something", Customer{}, Keys{
 		PartitionKeys: []string{"Id", "Name"},
 	})
-	str, err := cs.CreateStatement()
+	stmt, err := cs.CreateStatement()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(str, "something") {
-		t.Fatal(str)
+	if !strings.Contains(stmt.Query(), "something") {
+		t.Fatal(stmt.Query())
 	}
-	str, err = cs.WithOptions(Options{TableName: "funky"}).CreateStatement()
+	stmt, err = cs.WithOptions(Options{TableName: "funky"}).CreateStatement()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(str, "funky") {
-		t.Fatal(str)
+	if !strings.Contains(stmt.Query(), "funky") {
+		t.Fatal(stmt.Query())
 	}
 	// if clustering order is not specified, it should omit the clustering order by and use the default
-	if strings.Contains(str, "WITH CLUSTERING ORDER BY") {
-		t.Fatal(str)
+	if strings.Contains(stmt.Query(), "WITH CLUSTERING ORDER BY") {
+		t.Fatal(stmt.Query())
 	}
 }
 
@@ -203,14 +203,14 @@ func TestAllowFiltering(t *testing.T) {
 	createIf(cs, t)
 	c2 := Customer2{}
 	//This shouldn't contain allow filtering
-	st, _ := cs.Where(Eq("Name", "Brian")).Read(&c2).GenerateStatement()
-	if strings.Contains(st, "ALLOW FILTERING") {
+	st := cs.Where(Eq("Name", "Brian")).Read(&c2).GenerateStatement()
+	if strings.Contains(st.Query(), "ALLOW FILTERING") {
 		t.Error("Allow filtering should be disabled by default")
 	}
 
 	op := Options{AllowFiltering: true}
-	stAllow, _ := cs.Where(Eq("", "")).Read(&c2).WithOptions(op).GenerateStatement()
-	if !strings.Contains(stAllow, "ALLOW FILTERING") {
+	stAllow := cs.Where(Eq("", "")).Read(&c2).WithOptions(op).GenerateStatement()
+	if !strings.Contains(stAllow.Query(), "ALLOW FILTERING") {
 		t.Error("Allow filtering show be included in the statement")
 	}
 }
@@ -219,39 +219,39 @@ func TestKeysCreation(t *testing.T) {
 	cs := ns.Table("composite_keys", Customer{}, Keys{
 		PartitionKeys: []string{"Id", "Name"},
 	})
-	str, err := cs.CreateStatement()
+	stmt, err := cs.CreateStatement()
 	if err != nil {
 		t.Fatal(err)
 	}
 	//composite
-	if !strings.Contains(str, "PRIMARY KEY ((id, name ))") {
-		t.Fatal(str)
+	if !strings.Contains(stmt.Query(), "PRIMARY KEY ((id, name ))") {
+		t.Fatal(stmt.Query())
 	}
 
 	cs = ns.Table("compound_keys", Customer{}, Keys{
 		PartitionKeys: []string{"Id", "Name"},
 		Compound:      true,
 	})
-	str, err = cs.CreateStatement()
+	stmt, err = cs.CreateStatement()
 	if err != nil {
 		t.Fatal(err)
 	}
 	//compound
-	if !strings.Contains(str, "PRIMARY KEY (id, name )") {
-		t.Fatal(str)
+	if !strings.Contains(stmt.Query(), "PRIMARY KEY (id, name )") {
+		t.Fatal(stmt.Query())
 	}
 
 	cs = ns.Table("clustering_keys", Customer{}, Keys{
 		PartitionKeys:     []string{"Id"},
 		ClusteringColumns: []string{"Name"},
 	})
-	str, err = cs.CreateStatement()
+	stmt, err = cs.CreateStatement()
 	if err != nil {
 		t.Fatal(err)
 	}
 	//with columns
-	if !strings.Contains(str, "PRIMARY KEY ((id), name)") {
-		t.Fatal(str)
+	if !strings.Contains(stmt.Query(), "PRIMARY KEY ((id), name)") {
+		t.Fatal(stmt.Query())
 	}
 	//compound gets ignored when using clustering columns
 	cs = ns.Table("clustering_keys", Customer{}, Keys{
@@ -259,13 +259,13 @@ func TestKeysCreation(t *testing.T) {
 		ClusteringColumns: []string{"Name"},
 		Compound:          true,
 	})
-	str, err = cs.CreateStatement()
+	stmt, err = cs.CreateStatement()
 	if err != nil {
 		t.Fatal(err)
 	}
 	//with columns
-	if !strings.Contains(str, "PRIMARY KEY ((id), name)") {
-		t.Fatal(str)
+	if !strings.Contains(stmt.Query(), "PRIMARY KEY ((id), name)") {
+		t.Fatal(stmt.Query())
 	}
 }
 
@@ -274,29 +274,29 @@ type OptionCheckingQE struct {
 	opts *Options
 }
 
-func (qe OptionCheckingQE) QueryWithOptions(opts Options, stmt string, params ...interface{}) ([]map[string]interface{}, error) {
+func (qe OptionCheckingQE) QueryWithOptions(opts Options, stmt Statement) ([]map[string]interface{}, error) {
 	qe.opts.Consistency = opts.Consistency
 	return []map[string]interface{}{}, nil
 }
 
-func (qe OptionCheckingQE) Query(stmt string, params ...interface{}) ([]map[string]interface{}, error) {
-	return qe.QueryWithOptions(Options{}, stmt, params...)
+func (qe OptionCheckingQE) Query(stmt Statement) ([]map[string]interface{}, error) {
+	return qe.QueryWithOptions(Options{}, stmt)
 }
 
-func (qe OptionCheckingQE) ExecuteWithOptions(opts Options, stmt string, params ...interface{}) error {
+func (qe OptionCheckingQE) ExecuteWithOptions(opts Options, stmt Statement) error {
 	qe.opts.Consistency = opts.Consistency
 	return nil
 }
 
-func (qe OptionCheckingQE) Execute(stmt string, params ...interface{}) error {
-	return qe.ExecuteWithOptions(Options{}, stmt, params...)
+func (qe OptionCheckingQE) Execute(stmt Statement) error {
+	return qe.ExecuteWithOptions(Options{}, stmt)
 }
 
-func (qe OptionCheckingQE) ExecuteAtomically(stmt []string, params [][]interface{}) error {
+func (qe OptionCheckingQE) ExecuteAtomically(stmt []Statement) error {
 	return nil
 }
 
-func (qe OptionCheckingQE) ExecuteAtomicallyWithOptions(opts Options, stmt []string, params [][]interface{}) error {
+func (qe OptionCheckingQE) ExecuteAtomicallyWithOptions(opts Options, stmt []Statement) error {
 	qe.opts.Consistency = opts.Consistency
 	return nil
 }

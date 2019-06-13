@@ -28,21 +28,21 @@ import (
 // );
 //
 
-func createTableIfNotExist(keySpace, cf string, partitionKeys, colKeys []string, fields []string, values []interface{}, order []ClusteringOrderColumn, compoundKey, compact bool, compressor string) (string, error) {
+func createTableIfNotExist(keySpace, cf string, partitionKeys, colKeys []string, fields []string, values []interface{}, order []ClusteringOrderColumn, compoundKey, compact bool, compressor string) (Statement, error) {
 	return createTableStmt("CREATE TABLE IF NOT EXISTS", keySpace, cf, partitionKeys, colKeys, fields, values, order, compoundKey, compact, compressor)
 }
 
-func createTable(keySpace, cf string, partitionKeys, colKeys []string, fields []string, values []interface{}, order []ClusteringOrderColumn, compoundKey, compact bool, compressor string) (string, error) {
+func createTable(keySpace, cf string, partitionKeys, colKeys []string, fields []string, values []interface{}, order []ClusteringOrderColumn, compoundKey, compact bool, compressor string) (Statement, error) {
 	return createTableStmt("CREATE TABLE", keySpace, cf, partitionKeys, colKeys, fields, values, order, compoundKey, compact, compressor)
 }
 
-func createTableStmt(createStmt, keySpace, cf string, partitionKeys, colKeys []string, fields []string, values []interface{}, order []ClusteringOrderColumn, compoundKey, compact bool, compressor string) (string, error) {
+func createTableStmt(createStmt, keySpace, cf string, partitionKeys, colKeys []string, fields []string, values []interface{}, order []ClusteringOrderColumn, compoundKey, compact bool, compressor string) (Statement, error) {
 	firstLine := fmt.Sprintf("%s %v.%v (", createStmt, keySpace, cf)
 	fieldLines := []string{}
 	for i, _ := range fields {
 		typeStr, err := stringTypeOf(values[i])
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 		l := "    " + strings.ToLower(fields[i]) + " " + typeStr
 		fieldLines = append(fieldLines, l)
@@ -93,8 +93,8 @@ func createTableStmt(createStmt, keySpace, cf string, partitionKeys, colKeys []s
 	}
 
 	lines = append(lines, ";")
-	stmt := strings.Join(lines, "\n")
-	return stmt, nil
+	qry := strings.Join(lines, "\n")
+	return newStatement(qry, []interface{}{}), nil
 }
 
 func j(s []string) string {

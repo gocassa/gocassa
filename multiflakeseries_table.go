@@ -12,13 +12,13 @@ type multiFlakeSeriesT struct {
 	bucketSize time.Duration
 }
 
-func (o *multiFlakeSeriesT) Table() Table                     { return o.t }
-func (o *multiFlakeSeriesT) Create() error                    { return o.Table().Create() }
-func (o *multiFlakeSeriesT) CreateIfNotExist() error          { return o.Table().CreateIfNotExist() }
-func (o *multiFlakeSeriesT) Name() string                     { return o.Table().Name() }
-func (o *multiFlakeSeriesT) Recreate() error                  { return o.Table().Recreate() }
-func (o *multiFlakeSeriesT) CreateStatement() (string, error) { return o.Table().CreateStatement() }
-func (o *multiFlakeSeriesT) CreateIfNotExistStatement() (string, error) {
+func (o *multiFlakeSeriesT) Table() Table                        { return o.t }
+func (o *multiFlakeSeriesT) Create() error                       { return o.Table().Create() }
+func (o *multiFlakeSeriesT) CreateIfNotExist() error             { return o.Table().CreateIfNotExist() }
+func (o *multiFlakeSeriesT) Name() string                        { return o.Table().Name() }
+func (o *multiFlakeSeriesT) Recreate() error                     { return o.Table().Recreate() }
+func (o *multiFlakeSeriesT) CreateStatement() (Statement, error) { return o.Table().CreateStatement() }
+func (o *multiFlakeSeriesT) CreateIfNotExistStatement() (Statement, error) {
 	return o.Table().CreateIfNotExistStatement()
 }
 

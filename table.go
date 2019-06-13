@@ -79,7 +79,7 @@ func (t t) Where(rs ...Relation) Filter {
 	}
 }
 
-func (t t) generateFieldNames(sel []string) string {
+func (t t) generateColumnFieldList(sel []string) []string {
 	xs := make([]string, len(t.info.fields))
 	if len(sel) > 0 {
 		xs = sel
@@ -88,7 +88,7 @@ func (t t) generateFieldNames(sel []string) string {
 			xs[i] = strings.ToLower(v)
 		}
 	}
-	return strings.Join(xs, ", ")
+	return xs
 }
 
 func relations(keys Keys, m map[string]interface{}) []Relation {
@@ -201,7 +201,7 @@ func (t t) Recreate() error {
 	return t.Create()
 }
 
-func (t t) CreateStatement() (string, error) {
+func (t t) CreateStatement() (Statement, error) {
 	return createTable(t.keySpace.name,
 		t.Name(),
 		t.info.keys.PartitionKeys,
@@ -215,7 +215,7 @@ func (t t) CreateStatement() (string, error) {
 	)
 }
 
-func (t t) CreateIfNotExistStatement() (string, error) {
+func (t t) CreateIfNotExistStatement() (Statement, error) {
 	return createTableIfNotExist(t.keySpace.name,
 		t.Name(),
 		t.info.keys.PartitionKeys,

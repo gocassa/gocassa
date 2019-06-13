@@ -13,13 +13,13 @@ type timeSeriesT struct {
 	bucketSize time.Duration
 }
 
-func (o *timeSeriesT) Table() Table                     { return o.t }
-func (o *timeSeriesT) Create() error                    { return o.Table().Create() }
-func (o *timeSeriesT) CreateIfNotExist() error          { return o.Table().CreateIfNotExist() }
-func (o *timeSeriesT) Name() string                     { return o.Table().Name() }
-func (o *timeSeriesT) Recreate() error                  { return o.Table().Recreate() }
-func (o *timeSeriesT) CreateStatement() (string, error) { return o.Table().CreateStatement() }
-func (o *timeSeriesT) CreateIfNotExistStatement() (string, error) {
+func (o *timeSeriesT) Table() Table                        { return o.t }
+func (o *timeSeriesT) Create() error                       { return o.Table().Create() }
+func (o *timeSeriesT) CreateIfNotExist() error             { return o.Table().CreateIfNotExist() }
+func (o *timeSeriesT) Name() string                        { return o.Table().Name() }
+func (o *timeSeriesT) Recreate() error                     { return o.Table().Recreate() }
+func (o *timeSeriesT) CreateStatement() (Statement, error) { return o.Table().CreateStatement() }
+func (o *timeSeriesT) CreateIfNotExistStatement() (Statement, error) {
 	return o.Table().CreateIfNotExistStatement()
 }
 

@@ -32,25 +32,23 @@ func (mo multiOp) RunAtomically() error {
 	if err := mo.Preflight(); err != nil {
 		return err
 	}
-	stmts := make([]string, len(mo))
-	vals := make([][]interface{}, len(mo))
+	stmts := make([]Statement, len(mo))
 	var qe QueryExecutor
 	for i, op := range mo {
-		s, v := op.GenerateStatement()
+		s := op.GenerateStatement()
 		qe = op.QueryExecutor()
 		stmts[i] = s
-		vals[i] = v
 	}
 
-	return qe.ExecuteAtomicallyWithOptions(mo.Options(), stmts, vals)
+	return qe.ExecuteAtomicallyWithOptions(mo.Options(), stmts)
 }
 
 func (mo multiOp) RunAtomicallyWithContext(ctx context.Context) error {
 	return mo.WithOptions(Options{Context: ctx}).RunAtomically()
 }
 
-func (mo multiOp) GenerateStatement() (string, []interface{}) {
-	return "", []interface{}{}
+func (mo multiOp) GenerateStatement() Statement {
+	return noOpStatement
 }
 
 func (mo multiOp) QueryExecutor() QueryExecutor {

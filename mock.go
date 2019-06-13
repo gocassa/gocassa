@@ -67,8 +67,8 @@ func (m mockOp) RunAtomicallyWithContext(ctx context.Context) error {
 	return m.WithOptions(Options{Context: ctx}).Run()
 }
 
-func (m mockOp) GenerateStatement() (string, []interface{}) {
-	return "", []interface{}{}
+func (m mockOp) GenerateStatement() Statement {
+	return noOpStatement
 }
 
 func (m mockOp) QueryExecutor() QueryExecutor {
@@ -105,8 +105,8 @@ func (mo mockMultiOp) RunAtomicallyWithContext(ctx context.Context) error {
 	return mo.WithOptions(Options{Context: ctx}).Run()
 }
 
-func (mo mockMultiOp) GenerateStatement() (string, []interface{}) {
-	return "", []interface{}{}
+func (mo mockMultiOp) GenerateStatement() Statement {
+	return noOpStatement
 }
 
 func (mo mockMultiOp) QueryExecutor() QueryExecutor {
@@ -390,16 +390,16 @@ func (t *MockTable) Create() error {
 	return nil
 }
 
-func (t *MockTable) CreateStatement() (string, error) {
-	return "", nil
+func (t *MockTable) CreateStatement() (Statement, error) {
+	return noOpStatement, nil
 }
 
 func (t *MockTable) CreateIfNotExist() error {
 	return nil
 }
 
-func (t *MockTable) CreateIfNotExistStatement() (string, error) {
-	return "", nil
+func (t *MockTable) CreateIfNotExistStatement() (Statement, error) {
+	return noOpStatement, nil
 }
 
 func (t *MockTable) Recreate() error {

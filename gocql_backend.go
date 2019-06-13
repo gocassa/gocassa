@@ -1,7 +1,6 @@
 package gocassa
 
 import (
-	"errors"
 	"github.com/gocql/gocql"
 )
 
@@ -9,12 +8,12 @@ type goCQLBackend struct {
 	session *gocql.Session
 }
 
-func (cb goCQLBackend) Query(stmt string, vals ...interface{}) ([]map[string]interface{}, error) {
-	return cb.QueryWithOptions(Options{}, stmt, vals...)
+func (cb goCQLBackend) Query(stmt Statement) ([]map[string]interface{}, error) {
+	return cb.QueryWithOptions(Options{}, stmt)
 }
 
-func (cb goCQLBackend) QueryWithOptions(opts Options, stmt string, vals ...interface{}) ([]map[string]interface{}, error) {
-	qu := cb.session.Query(stmt, vals...)
+func (cb goCQLBackend) QueryWithOptions(opts Options, stmt Statement) ([]map[string]interface{}, error) {
+	qu := cb.session.Query(stmt.Query(), stmt.Values()...)
 	if opts.Consistency != nil {
 		qu = qu.Consistency(*opts.Consistency)
 	}
@@ -28,33 +27,30 @@ func (cb goCQLBackend) QueryWithOptions(opts Options, stmt string, vals ...inter
 	return ret, iter.Close()
 }
 
-func (cb goCQLBackend) Execute(stmt string, vals ...interface{}) error {
-	return cb.ExecuteWithOptions(Options{}, stmt, vals...)
+func (cb goCQLBackend) Execute(stmt Statement) error {
+	return cb.ExecuteWithOptions(Options{}, stmt)
 }
 
-func (cb goCQLBackend) ExecuteWithOptions(opts Options, stmt string, vals ...interface{}) error {
-	qu := cb.session.Query(stmt, vals...)
+func (cb goCQLBackend) ExecuteWithOptions(opts Options, stmt Statement) error {
+	qu := cb.session.Query(stmt.Query(), stmt.Values()...)
 	if opts.Consistency != nil {
 		qu = qu.Consistency(*opts.Consistency)
 	}
 	return qu.Exec()
 }
 
-func (cb goCQLBackend) ExecuteAtomically(stmts []string, vals [][]interface{}) error {
-	return cb.ExecuteAtomicallyWithOptions(Options{}, stmts, vals)
+func (cb goCQLBackend) ExecuteAtomically(stmts []Statement) error {
+	return cb.ExecuteAtomicallyWithOptions(Options{}, stmts)
 }
 
-func (cb goCQLBackend) ExecuteAtomicallyWithOptions(opts Options, stmts []string, vals [][]interface{}) error {
-	if len(stmts) != len(vals) {
-		return errors.New("executeBatched: stmts length != param length")
-	}
-
+func (cb goCQLBackend) ExecuteAtomicallyWithOptions(opts Options, stmts []Statement) error {
 	if len(stmts) == 0 {
 		return nil
 	}
 	batch := cb.session.NewBatch(gocql.LoggedBatch)
 	for i := range stmts {
-		batch.Query(stmts[i], vals[i]...)
+		stmt := stmts[i]
+		batch.Query(stmt.Query(), stmt.Values()...)
 	}
 
 	if opts.Consistency != nil {
