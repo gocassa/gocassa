@@ -54,7 +54,7 @@ func (m mockOp) Options() Options {
 
 func (m mockOp) WithOptions(opt Options) Op {
 	return mockOp{
-		options: opt,
+		options: m.options.Merge(opt),
 		funcs:   m.funcs,
 	}
 }

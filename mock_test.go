@@ -1,6 +1,7 @@
 package gocassa
 
 import (
+	"context"
 	"reflect"
 	"testing"
 	"time"
@@ -404,6 +405,23 @@ func (s *MockSuite) TestTimeSeriesTableList() {
 	s.Len(ps, 2)
 	s.Equal(points[1], ps[0])
 	s.Equal(points[2], ps[1])
+}
+
+func (s *MockSuite) TestWithOptions() {
+	points := s.insertPoints()
+	var ps []point
+
+	// First two points, but with a limit of one
+	s.NoError(s.tsTbl.List(points[0].Time, points[1].Time, &ps).
+		WithOptions(Options{Limit: 1}).Run())
+	s.Len(ps, 1)
+	s.Equal(points[0], ps[0])
+
+	// First two points, but with a limit of one, but RunWithContext
+	s.NoError(s.tsTbl.List(points[0].Time, points[1].Time, &ps).
+		WithOptions(Options{Limit: 1}).RunWithContext(context.Background()))
+	s.Len(ps, 1)
+	s.Equal(points[0], ps[0])
 }
 
 func (s *MockSuite) TestTimeSeriesTableUpdate() {
