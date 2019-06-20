@@ -671,6 +671,8 @@ func newMockIterator(results []map[string]interface{}, fields []string) *mockIte
 	}
 }
 
+// Scan mocks a Scanner such as the one you get in gocql.Iter to assign results
+// TODO(suhail): Should this just call UnmarshalCQL under the hood?
 func (iter *mockIterator) Scan(dest ...interface{}) bool {
 	if len(iter.results) == 0 || iter.rowsRead >= len(iter.results) {
 		return false
@@ -693,13 +695,14 @@ func (iter *mockIterator) Scan(dest ...interface{}) bool {
 			continue
 		}
 
-		rv := reflect.ValueOf(dest[i])
-
 		// If it's a field to ignore, then ignore it ;)
-		if rv.Elem().Type() == reflect.TypeOf(ignoreFieldType{}) {
+		rv := reflect.ValueOf(dest[i])
+		if rv.Elem().Type() == reflect.TypeOf((*ignoreFieldType)(nil)).Elem() {
 			continue
 		}
 
+		// We need to handle the case where we're given a pointer to a type which is
+		// not the exact type of the value but we can convert over by casting
 		sv := reflect.ValueOf(value)
 		if sv.Type() != rv.Elem().Type() {
 			if !sv.Type().ConvertibleTo(rv.Elem().Type()) {
@@ -713,6 +716,12 @@ func (iter *mockIterator) Scan(dest ...interface{}) bool {
 
 	iter.rowsRead++
 	return true
+}
+
+// Reset resets the result list to the beginning of the slice. This should
+// only really be needed for tests
+func (iter *mockIterator) Reset() {
+	iter.rowsRead = 0
 }
 
 func assignRecords(m map[string]interface{}, record map[string]interface{}) error {
