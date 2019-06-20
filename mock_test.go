@@ -21,7 +21,7 @@ type user struct {
 type UserWithMap struct {
 	Id       string
 	Map      map[string]interface{}
-	OtherMap map[int]interface{}
+	OtherMap map[int]string
 }
 
 type point struct {
@@ -76,7 +76,7 @@ func (s *MockSuite) SetupTest() {
 	s.mmapTbl = s.ks.MultimapTable("users", "Pk1", "Pk2", user{})
 	s.tsTbl = s.ks.TimeSeriesTable("points", "Time", "Id", 1*time.Minute, point{})
 	s.mtsTbl = s.ks.MultiTimeSeriesTable("points", "User", "Time", "Id", 1*time.Minute, point{})
-	s.mkTsTbl = s.ks.MultiKeyTimeSeriesTable("points", []string{"X", "Y"}, "Time", []string{"Id"}, 1*time.Minute, user{})
+	s.mkTsTbl = s.ks.MultiKeyTimeSeriesTable("points", []string{"X", "Y"}, "Time", []string{"Id"}, 1*time.Minute, point{})
 
 	s.embMapTbl = s.ks.MapTable("addresses", "Id", address{})
 	s.embTsTbl = s.ks.TimeSeriesTable("addresses", "Time", "Id", 1*time.Minute, address{})
@@ -306,7 +306,7 @@ func (s *MockSuite) TestMapModifiers() {
 			"4": "Four",
 			"6": "Is Even",
 		},
-		OtherMap: map[int]interface{}{
+		OtherMap: map[int]string{
 			1: "One",
 			2: "Two",
 		},
