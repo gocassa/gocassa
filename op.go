@@ -3,18 +3,11 @@ package gocassa
 import (
 	"bytes"
 	"fmt"
-	"math/big"
-	"reflect"
-	"runtime"
 	"sort"
 	"strconv"
 	"strings"
 
 	"context"
-
-	"github.com/gocql/gocql"
-	"github.com/mitchellh/mapstructure"
-	rreflect "github.com/monzo/gocassa/reflect"
 )
 
 const (
@@ -65,29 +58,24 @@ func newWriteOp(qe QueryExecutor, f filter, opType uint8, m map[string]interface
 }
 
 func (w *singleOp) read() error {
-	stmt := w.generateRead(w.options)
-	maps, err := w.qe.QueryWithOptions(w.options, stmt)
+	stmt := w.generateRead(w.options).(statement)
+	scanner := newScanner(stmt, w.result)
+	err := w.qe.QueryWithOptions(w.options, stmt, scanner)
 	if err != nil {
 		return err
 	}
 
-	return decodeResult(maps, w.result)
+	return nil
 }
 
 func (w *singleOp) readOne() error {
-	stmt := w.generateRead(w.options)
-	maps, err := w.qe.QueryWithOptions(w.options, stmt)
+	stmt := w.generateRead(w.options).(statement)
+	scanner := newScanner(stmt, w.result)
+	err := w.qe.QueryWithOptions(w.options, stmt, scanner)
 	if err != nil {
 		return err
 	}
-	if len(maps) == 0 {
-		_, f, n, _ := runtime.Caller(3)
-		return RowNotFoundError{
-			file: f,
-			line: n,
-		}
-	}
-	return decodeResult(maps[0], w.result)
+	return nil
 }
 
 func (w *singleOp) write() error {
@@ -158,7 +146,6 @@ func (o *singleOp) generateRead(opt Options) Statement {
 	w, wv := generateWhere(o.f.rs)
 	mopt := o.f.t.options.Merge(opt)
 	fl := o.f.t.generateFieldList(mopt.Select)
-	ft := o.f.t.generateFieldTypes(fl)
 	ord, ov := o.generateOrderBy(mopt)
 	lim, lv := o.generateLimit(mopt)
 	stmt := fmt.Sprintf("SELECT %s FROM %s.%s", strings.Join(fl, ","), o.f.t.keySpace.name, o.f.t.Name())
@@ -187,7 +174,7 @@ func (o *singleOp) generateRead(opt Options) Statement {
 	if o.f.t.keySpace.debugMode {
 		fmt.Println(buf.String(), vals)
 	}
-	return newSelectStatement(buf.String(), vals, fl, ft)
+	return newSelectStatement(buf.String(), vals, fl)
 }
 
 func (o *singleOp) generateOrderBy(opt Options) (string, []interface{}) {
@@ -271,95 +258,6 @@ func updateStatement(kn, cfName string, fields map[string]interface{}, opts Opti
 	}
 
 	return buf.String(), ret
-}
-
-func decodeResult(m, result interface{}) error {
-	dec, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
-		ZeroFields:       true,
-		WeaklyTypedInput: true,
-		Result:           result,
-		TagName:          rreflect.TagName,
-		DecodeHook: mapstructure.ComposeDecodeHookFunc(
-			decodeBigIntHook,
-			decodeUnmarshalCQLHook,
-		),
-	})
-	if err != nil {
-		return err
-	}
-
-	return dec.Decode(m)
-}
-
-func decodeBigIntHook(f reflect.Kind, t reflect.Kind, data interface{}) (interface{}, error) {
-	if f != reflect.Ptr {
-		return data, nil
-	}
-
-	if i, ok := data.(*big.Int); ok {
-		switch t {
-		case reflect.Uint64:
-			return i.Uint64(), nil
-		case reflect.Uint32:
-			return uint32(i.Uint64()), nil
-		case reflect.Uint16:
-			return uint16(i.Uint64()), nil
-		case reflect.Uint8:
-			return uint8(i.Uint64()), nil
-		case reflect.Uint:
-			return uint(i.Uint64()), nil
-		case reflect.Int16:
-			return int16(i.Int64()), nil
-		case reflect.Int8:
-			return int8(i.Int64()), nil
-		}
-	}
-
-	return data, nil
-}
-
-// decodeUnmarshalCQLHook is hook function to decode custom type which
-// implements gocql.Unmarshaler into the its custom type.
-func decodeUnmarshalCQLHook(f, t reflect.Type, data interface{}) (interface{}, error) {
-	// Only consider string ([]byte) → custom type
-	if f == t || f.Kind() != reflect.String {
-		return data, nil
-	}
-
-	var (
-		rcvrType reflect.Type
-		tIsValue bool
-	)
-	switch t.Kind() {
-	case reflect.Ptr:
-		rcvrType = t
-	default:
-		// Unmarshaling a non-pointer type is possible iff pointer
-		// receiver of this type implements gocql.Unmarshaler
-		rcvrType = reflect.PtrTo(t)
-		tIsValue = true
-	}
-
-	unmarshaler := reflect.TypeOf((*gocql.Unmarshaler)(nil)).Elem()
-	if rcvrType.Implements(unmarshaler) {
-		// make sure obj is not nil by allocating
-		obj := reflect.New(rcvrType.Elem()) // obj := new(*t)
-		if !obj.CanInterface() || !obj.Elem().CanInterface() {
-			// Give up if cannot type switch against Unmarshaler
-			return data, nil
-		}
-		if u, ok := obj.Interface().(gocql.Unmarshaler); ok {
-			var info gocql.TypeInfo // dummy info
-			u.UnmarshalCQL(info, []byte(data.(string)))
-			if tIsValue {
-				// Convert this to non-reflect world
-				return obj.Elem().Interface().(interface{}), nil // return *obj
-			}
-			return u, nil
-		}
-	}
-
-	return data, nil
 }
 
 func sortedKeys(m map[string]interface{}) []string {
