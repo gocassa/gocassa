@@ -195,6 +195,10 @@ func (k *k) MultiFlakeSeriesTable(name, indexField, idField string, bucketSize t
 	}
 }
 
+type tableInfoMarshal struct {
+	TableName string `cql:"table_name"`
+}
+
 // Returns table names in a keyspace
 func (k *k) Tables() ([]string, error) {
 	const query = "SELECT table_name FROM system_schema.tables WHERE keyspace_name = ?"
@@ -203,14 +207,16 @@ func (k *k) Tables() ([]string, error) {
 		return nil, fmt.Errorf("no query executor configured")
 	}
 
-	stmt := newStatement(query, []interface{}{k.name})
-	maps, err := k.qe.Query(stmt)
+	res := []tableInfoMarshal{}
+	stmt := newSelectStatement(query, []interface{}{k.name}, []string{"table_name"})
+	err := k.qe.Query(stmt, newScanner(stmt, &res))
 	if err != nil {
 		return nil, err
 	}
+
 	ret := []string{}
-	for _, m := range maps {
-		ret = append(ret, m["table_name"].(string))
+	for _, v := range res {
+		ret = append(ret, v.TableName)
 	}
 	return ret, nil
 }
