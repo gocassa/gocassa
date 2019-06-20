@@ -6,8 +6,8 @@ import (
 	"sync"
 )
 
-// A field represents a single field found in a struct.
-type field struct {
+// Field represents a single field found in a struct.
+type Field struct {
 	name      string
 	nameBytes []byte // []byte(name)
 
@@ -17,7 +17,19 @@ type field struct {
 	omitEmpty bool
 }
 
-func fillField(f field) field {
+func (f Field) Name() string {
+	return f.name
+}
+
+func (f Field) Type() reflect.Type {
+	return f.typ
+}
+
+func (f Field) Index() []int {
+	return f.index
+}
+
+func fillField(f Field) Field {
 	f.nameBytes = []byte(f.name)
 
 	return f
@@ -26,7 +38,7 @@ func fillField(f field) field {
 // byName sorts field by name, breaking ties with depth,
 // then breaking ties with "name came from tag", then
 // breaking ties with index sequence.
-type byName []field
+type byName []Field
 
 func (x byName) Len() int { return len(x) }
 
@@ -46,7 +58,7 @@ func (x byName) Less(i, j int) bool {
 }
 
 // byIndex sorts field by index sequence.
-type byIndex []field
+type byIndex []Field
 
 func (x byIndex) Len() int { return len(x) }
 
@@ -67,10 +79,10 @@ func (x byIndex) Less(i, j int) bool {
 // typeFields returns a list of fields that should be recognized for the given type.
 // The algorithm is breadth-first search over the set of structs to include - the top struct
 // and then any reachable anonymous structs.
-func typeFields(t reflect.Type) []field {
+func typeFields(t reflect.Type) []Field {
 	// Anonymous fields to explore at the current level and the next.
-	current := []field{}
-	next := []field{{typ: t}}
+	current := []Field{}
+	next := []Field{{typ: t}}
 
 	// Count of queued names for current level and the next.
 	count := map[reflect.Type]int{}
@@ -80,7 +92,7 @@ func typeFields(t reflect.Type) []field {
 	visited := map[reflect.Type]bool{}
 
 	// Fields found.
-	var fields []field
+	var fields []Field
 
 	for len(next) > 0 {
 		current, next = next, current[:0]
@@ -122,7 +134,7 @@ func typeFields(t reflect.Type) []field {
 					if name == "" {
 						name = sf.Name
 					}
-					fields = append(fields, fillField(field{
+					fields = append(fields, fillField(Field{
 						name:      name,
 						tag:       tagged,
 						index:     index,
@@ -142,7 +154,7 @@ func typeFields(t reflect.Type) []field {
 				// Record new anonymous struct to explore in next round.
 				nextCount[ft]++
 				if nextCount[ft] == 1 {
-					next = append(next, fillField(field{name: ft.Name(), index: index, typ: ft}))
+					next = append(next, fillField(Field{name: ft.Name(), index: index, typ: ft}))
 				}
 			}
 		}
@@ -190,7 +202,7 @@ func typeFields(t reflect.Type) []field {
 // valid tags. If there are multiple top-level fields, the boolean
 // will be false: This condition is an error in Go and we skip all
 // the fields.
-func dominantField(fields []field) (field, bool) {
+func dominantField(fields []Field) (Field, bool) {
 	// The fields are sorted in increasing index-length order. The winner
 	// must therefore be one with the shortest index length. Drop all
 	// longer entries, which is easy: just truncate the slice.
@@ -205,7 +217,7 @@ func dominantField(fields []field) (field, bool) {
 			if tagged >= 0 {
 				// Multiple tagged fields at the same level: conflict.
 				// Return no field.
-				return field{}, false
+				return Field{}, false
 			}
 			tagged = i
 		}
@@ -217,18 +229,18 @@ func dominantField(fields []field) (field, bool) {
 	// we have a conflict (two fields named "X" at the same level) and we
 	// return no field.
 	if len(fields) > 1 {
-		return field{}, false
+		return Field{}, false
 	}
 	return fields[0], true
 }
 
 var fieldCache struct {
 	sync.RWMutex
-	m map[reflect.Type][]field
+	m map[reflect.Type][]Field
 }
 
 // cachedTypeFields is like typeFields but uses a cache to avoid repeated work.
-func cachedTypeFields(t reflect.Type) []field {
+func cachedTypeFields(t reflect.Type) []Field {
 	fieldCache.RLock()
 	f := fieldCache.m[t]
 	fieldCache.RUnlock()
@@ -240,12 +252,12 @@ func cachedTypeFields(t reflect.Type) []field {
 	// Might duplicate effort but won't hold other computations back.
 	f = typeFields(t)
 	if f == nil {
-		f = []field{}
+		f = []Field{}
 	}
 
 	fieldCache.Lock()
 	if fieldCache.m == nil {
-		fieldCache.m = map[reflect.Type][]field{}
+		fieldCache.m = map[reflect.Type][]Field{}
 	}
 	fieldCache.m[t] = f
 	fieldCache.Unlock()

@@ -2,7 +2,6 @@ package gocassa
 
 import (
 	"context"
-	"reflect"
 	"time"
 )
 
@@ -263,13 +262,6 @@ type Table interface {
 // Statement encapsulates a gocassa generated statement to be passed via
 // the QueryExecutor.
 type Statement interface {
-	// FieldNames contains the column names which will be selected
-	// This will only be populated for SELECT queries
-	FieldNames() []string
-	// FieldTypes contains the binding types of columns selected
-	// in their referenced struct. This will only be populated for
-	// SELECT queries
-	FieldTypes() []reflect.Type
 	// Values encapsulates binding values to be set within the CQL
 	// query string as binding parameters. If there are no binding
 	// parameters in the query, this will be the empty slice
@@ -278,13 +270,26 @@ type Statement interface {
 	Query() string
 }
 
+// Scannable is an interface Matches the iter.Scan method found in GoCQL
+type Scannable interface {
+	Scan(dest ...interface{}) bool
+}
+
+// Scanner encapsulates a scanner which scans rows from a GoCQL iterator.
+type Scanner interface {
+	// ScanAll takes in a Scannale iterator found in GoCQL and scans until
+	// the iterator giveth no more. It number of rows read and an optional
+	// error if anything goes wrong
+	ScanAll(iter Scannable) (int, error)
+}
+
 // QueryExecutor actually executes the queries - this is mostly useful for testing/mocking purposes,
 // ignore this otherwise. This library is using github.com/gocql/gocql as the query executor by default.
 type QueryExecutor interface {
-	// Query executes a query and returns the results.  It also takes Options to do things like set consistency
-	QueryWithOptions(opts Options, stmt Statement) ([]map[string]interface{}, error)
+	// Query executes a query and returns the results. It also takes Options to do things like set consistency
+	QueryWithOptions(opts Options, stmt Statement, scanner Scanner) error
 	// Query executes a query and returns the results
-	Query(stmt Statement) ([]map[string]interface{}, error)
+	Query(stmt Statement, scanner Scanner) error
 	// Execute executes a DML query. It also takes Options to do things like set consistency
 	ExecuteWithOptions(opts Options, stmt Statement) error
 	// Execute executes a DML query
@@ -292,7 +297,7 @@ type QueryExecutor interface {
 	// ExecuteAtomically executes multiple DML queries with a logged batch
 	ExecuteAtomically(stmt []Statement) error
 	// ExecuteAtomically executes multiple DML queries with a logged batch, and takes options
-	ExecuteAtomicallyWithOptions(opts Options, stmt []Statement) error
+	ExecuteAtomicallyWithOptions(opts Options, stmts []Statement) error
 }
 
 type Counter int
