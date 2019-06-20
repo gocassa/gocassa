@@ -274,13 +274,13 @@ type OptionCheckingQE struct {
 	opts *Options
 }
 
-func (qe OptionCheckingQE) QueryWithOptions(opts Options, stmt Statement) ([]map[string]interface{}, error) {
+func (qe OptionCheckingQE) QueryWithOptions(opts Options, stmt Statement, scanner Scanner) error {
 	qe.opts.Consistency = opts.Consistency
-	return []map[string]interface{}{}, nil
+	return nil
 }
 
-func (qe OptionCheckingQE) Query(stmt Statement) ([]map[string]interface{}, error) {
-	return qe.QueryWithOptions(Options{}, stmt)
+func (qe OptionCheckingQE) Query(stmt Statement, scanner Scanner) error {
+	return qe.QueryWithOptions(Options{}, stmt, scanner)
 }
 
 func (qe OptionCheckingQE) ExecuteWithOptions(opts Options, stmt Statement) error {
