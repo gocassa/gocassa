@@ -35,7 +35,20 @@ func StructToMap(val interface{}) (map[string]interface{}, bool) {
 	return mapVal, true
 }
 
-// StructFieldMap takes a struct and extracts the field types into a map
+// StructFieldMap takes a struct and extracts the Field info into a map by
+// field name. The "cql" key in the struct field's tag value is the key
+// name. Examples:
+//
+//   // Field appears in the resulting map as key "myName".
+//   Field int `cql:"myName"`
+//
+//   // Field appears in the resulting as key "Field"
+//   Field int
+//
+//   // Field appears in the resulting map as key "myName"
+//   Field int "myName"
+//
+// If lowercaseFields is set to true, field names are lowercased in the map
 func StructFieldMap(val interface{}, lowercaseFields bool) (map[string]Field, bool) {
 	// indirect so function works with both structs and pointers to them
 	structVal := r.Indirect(r.ValueOf(val))

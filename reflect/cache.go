@@ -123,10 +123,6 @@ func typeFields(t reflect.Type) []Field {
 				index[len(f.index)] = i
 
 				ft := sf.Type
-				if ft.Name() == "" && ft.Kind() == reflect.Ptr {
-					// Follow pointer.
-					ft = ft.Elem()
-				}
 
 				// Record found field and index sequence.
 				if name != "" || !sf.Anonymous || ft.Kind() != reflect.Struct {
