@@ -600,7 +600,7 @@ func (q *MockFilter) Read(out interface{}) Op {
 
 		stmt := newSelectStatement("", []interface{}{}, fieldNames)
 		iter := newMockIterator(result, stmt.FieldNames())
-		_, err = newScanner(stmt, out).ScanAll(iter)
+		_, err = newScanner(stmt, out).ScanIter(iter)
 		return err
 	})
 }

@@ -13,165 +13,111 @@ import (
 type scanner struct {
 	stmt statement
 
-	result   interface{}
-	rowCount int
+	result      interface{}
+	rowsScanned int
 }
 
 func newScanner(stmt statement, result interface{}) *scanner {
 	return &scanner{
-		stmt:     stmt,
-		result:   result,
-		rowCount: 0,
+		stmt:        stmt,
+		result:      result,
+		rowsScanned: 0,
 	}
 }
 
-func getType(in interface{}) reflect.Type {
-	elem := reflect.TypeOf(in)
-	for elem.Kind() == reflect.Ptr {
-		elem = elem.Elem()
-	}
-	return elem
-}
-
-func getSliceValueType(in interface{}) reflect.Type {
-	elem := getType(in).Elem()
-	if elem.Kind() == reflect.Ptr {
-		elem = elem.Elem()
-	}
-	return elem
-}
-
-func (s *scanner) ScanAll(iter Scannable) (int, error) {
-	switch getType(s.result).Kind() { // TODO: optimise this
+func (s *scanner) ScanIter(iter Scannable) (int, error) {
+	switch getNonPtrType(reflect.TypeOf(s.result)).Kind() {
 	case reflect.Slice:
 		return s.iterSlice(iter)
 	case reflect.Struct:
 		// We are reading a single element here, decode a single row
 		return s.iterSingle(iter)
 	}
-
 	return 0, fmt.Errorf("can only decode into a struct or slice of structs, not %T", s.result)
 }
 
 func (s *scanner) iterSlice(iter Scannable) (int, error) {
+	// If we're given a pointer address to nil, we are responsible for
+	// allocating it before we assign. Note that this could be a ptr to
+	// a ptr (and so forth)
+	allocateNilReference(s.result)
+
 	// Extract the type of the slice
-	// TODO(suhail): Name these better!
-	sliceType := getType(s.result)
+	sliceType := getNonPtrType(reflect.TypeOf(s.result))
 	sliceElemType := sliceType.Elem()
-	sliceElemValType := getSliceValueType(s.result)
+	sliceElemValType := getNonPtrType(sliceType.Elem())
 
 	// To preserve prior bebaviour, if the result slice is not empty
 	// then allocate a new slice and set it as the value
-	slice := reflect.ValueOf(s.result).Elem()
-	if slice.Len() != 0 {
-		slice.Set(reflect.Zero(sliceType))
+	sliceElem := reflect.ValueOf(s.result)
+	for sliceElem.Kind() == reflect.Ptr {
+		sliceElem = sliceElem.Elem()
+	}
+	if sliceElem.Len() != 0 {
+		sliceElem.Set(reflect.Zero(sliceType))
 	}
 
-	fmPtr := reflect.New(sliceElemValType).Interface() // TODO: could we not do this
-	m, ok := r.StructFieldMap(fmPtr, true)
-	if !ok {
-		return 0, fmt.Errorf("could not decode struct of type %T", fmPtr)
+	// Extract the type of the underlying struct
+	structFields, err := s.structFields(sliceElemValType)
+	if err != nil {
+		return 0, err
 	}
 
-	structFields := s.structFields(m)
-	generatePtrs := func() []interface{} {
-		ptrs := []interface{}{}
-		for _, sf := range structFields {
-			if sf != nil {
-				val := reflect.New(sf.Type())
-				ptrs = append(ptrs, val.Interface())
-			} else {
-				ptrs = append(ptrs, &ignoreFieldType{})
-			}
-		}
-		return ptrs
-	}
-
-	ptrs := generatePtrs()
-
+	ptrs := generatePtrs(structFields)
+	rowsScanned := 0
 	for iter.Scan(ptrs...) {
-		outPtr := reflect.New(sliceElemValType)
-		outVal := outPtr.Elem()
+		outVal := reflect.New(sliceElemValType).Elem()
+		setPtrs(structFields, ptrs, outVal)
 
-		for index, field := range structFields {
-			if field == nil {
-				continue
-			}
-
-			outField := outVal.FieldByIndex(field.Index())
-			if outField.CanSet() {
-				outField.Set(reflect.ValueOf(ptrs[index]).Elem())
-			}
-		}
-
-		if sliceElemType.Kind() == reflect.Ptr {
-			slice.Set(reflect.Append(slice, outPtr))
-		} else {
-			slice.Set(reflect.Append(slice, outVal))
-		}
-
-		ptrs = generatePtrs()
-		s.rowCount++
+		sliceElem.Set(reflect.Append(sliceElem, wrapPtrValue(outVal, sliceElemType)))
+		ptrs = generatePtrs(structFields)
+		rowsScanned++
 	}
-	return s.rowCount, nil
+
+	s.rowsScanned += rowsScanned
+	return rowsScanned, nil
 }
 
 func (s *scanner) iterSingle(iter Scannable) (int, error) {
-	resultBaseType := getType(s.result)
-	fmPtr := reflect.New(resultBaseType).Interface() // TODO: could we not do this
-	m, ok := r.StructFieldMap(fmPtr, true)
-	if !ok {
-		return 0, fmt.Errorf("could not decode struct of type %T", fmPtr)
-	}
+	// If we're given a pointer address to nil, we are responsible for
+	// allocating it before we assign. Note that this could be a ptr to
+	// a ptr (and so forth)
+	allocateNilReference(s.result)
 
-	// If we're given a pointer to a ptr which is nil, we are
-	// responsible for allocating it before we assign. Note that
-	// this could be a ptr to a ptr (and so forth)
 	outPtr := reflect.ValueOf(s.result)
 	outVal := outPtr.Elem()
-	if outVal.Kind() == reflect.Ptr && outVal.IsNil() {
-		allocateResult(s.result)
-	}
 	for outVal.Kind() == reflect.Ptr {
-		outVal = outVal.Elem() // we will eventually get to the underlying type
+		outVal = outVal.Elem() // we will eventually get to the underlying value
 	}
 
-	structFields := s.structFields(m)
-	generatePtrs := func() []interface{} {
-		ptrs := []interface{}{}
-		for _, sf := range structFields {
-			if sf != nil {
-				val := reflect.New(sf.Type())
-				ptrs = append(ptrs, val.Interface())
-			} else {
-				ptrs = append(ptrs, &ignoreFieldType{})
-			}
-		}
-		return ptrs
+	// Extract the type of the underlying struct
+	resultBaseType := getNonPtrType(reflect.TypeOf(s.result))
+	structFields, err := s.structFields(resultBaseType)
+	if err != nil {
+		return 0, err
 	}
 
-	ptrs := generatePtrs()
+	ptrs := generatePtrs(structFields)
 	scanOk := iter.Scan(ptrs...) // we only need to scan once
 	if !scanOk {
 		return 0, RowNotFoundError{}
 	}
 
-	for index, field := range structFields {
-		if field == nil {
-			continue
-		}
+	setPtrs(structFields, ptrs, outVal)
 
-		outField := outVal.FieldByIndex(field.Index())
-		if outField.CanSet() {
-			outField.Set(reflect.ValueOf(ptrs[index]).Elem())
-		}
-	}
-
-	s.rowCount++
-	return s.rowCount, nil
+	s.rowsScanned++
+	return 1, nil
 }
 
-func (s *scanner) structFields(m map[string]r.Field) []*r.Field {
+// structFields matches the statement field names selected to names of fields
+// within the target struct type
+func (s *scanner) structFields(structType reflect.Type) ([]*r.Field, error) {
+	fmPtr := reflect.New(structType).Interface()
+	m, ok := r.StructFieldMap(fmPtr, true)
+	if !ok {
+		return nil, fmt.Errorf("could not decode struct of type %T", fmPtr)
+	}
+
 	structFields := []*r.Field{}
 	for _, fieldName := range s.stmt.fieldNames {
 		field, ok := m[strings.ToLower(fieldName)]
@@ -181,37 +127,119 @@ func (s *scanner) structFields(m map[string]r.Field) []*r.Field {
 			structFields = append(structFields, &field)
 		}
 	}
-	return structFields
+	return structFields, nil
 }
 
-func allocateResult(in interface{}) {
-	resultType := reflect.TypeOf(in)
-	resultValType := resultType.Elem()
+// generatePtrs takes in a list of Fields and generates an interface pointer.
+// If a structField is nil, it means it couldn't be matched and we insert
+// a ignoreFieldType pointer instead. This means you will always get back
+// len(structFields) pointers initialized
+func generatePtrs(structFields []*r.Field) []interface{} {
+	ptrs := make([]interface{}, len(structFields))
+	for i, sf := range structFields {
+		if sf != nil {
+			val := reflect.New(sf.Type())
+			ptrs[i] = val.Interface()
+		} else {
+			ptrs[i] = &ignoreFieldType{}
+		}
+	}
+	return ptrs
+}
+
+// setPtrs takes a list of fields and the associated pointers and sets them
+// in order to the targetStruct
+func setPtrs(structFields []*r.Field, ptrs []interface{}, targetStruct reflect.Value) {
+	for index, field := range structFields {
+		if field == nil {
+			continue
+		}
+		elem := targetStruct.FieldByIndex(field.Index())
+		if elem.CanSet() {
+			elem.Set(reflect.ValueOf(ptrs[index]).Elem())
+		}
+	}
+}
+
+// allocateRefToNil checks to see if the in is not nil itself but points to an
+// object which itself is nil. Note that it only checks one depth down. Returns
+// true if any allocation has happened, false if no allocation was needed
+func allocateNilReference(in interface{}) bool {
+	val := reflect.ValueOf(in)
+	if val.Kind() != reflect.Ptr {
+		return false
+	}
+
+	if val.IsNil() {
+		panic("pointer passed in was nil itself (not addressable)")
+	}
+
+	// Don't re-allocate if we don't need to. If the underlying element is not
+	// nil then we can avoid an alloc (only checks depth = 1)
+	switch val.Elem().Kind() {
+	case reflect.Map, reflect.Slice:
+		if !val.Elem().IsNil() {
+			return false
+		}
+	}
 
 	// Here we unravel the underlying base type, it's just
 	// pointer turtles all the way down
-	baseType := resultType
+	topLevelType := reflect.TypeOf(in)
+	baseType := reflect.TypeOf(in)
 	for baseType.Kind() == reflect.Ptr {
 		baseType = baseType.Elem()
 	}
 
+	var basePtr reflect.Value
+	switch baseType.Kind() {
+	case reflect.Array, reflect.Chan, reflect.Func, reflect.Interface, reflect.Ptr, reflect.UnsafePointer:
+		panic(fmt.Sprintf("type of kind %v is not supported", baseType.Kind()))
+	case reflect.Map:
+		basePtr = reflect.MakeMap(baseType)
+	case reflect.Slice:
+		basePtr = reflect.MakeSlice(baseType, 0, 0)
+	default:
+		basePtr = reflect.New(baseType)
+	}
+
 	// Then we work our way backwards by wrapping pointers with
 	// more pointers until we get the result type
-	structPtr := reflect.New(baseType)
-	resultPtr := structPtr
-	for resultPtr.Type() != resultValType {
+	resultPtr := wrapPtrValue(basePtr, topLevelType)
+	reflect.ValueOf(in).Elem().Set(resultPtr.Elem())
+	return true
+}
+
+// getNonPtrType keeps digging to find the top level non-pointer type
+// of an instance (of a struct or otherwise) passed in. For example:
+//  - If you pass in a int, you'll get back int
+//  - If you pass in a *int, you'll get back int
+//  - If you pass in a *[]*int, you'll get back []*int
+//  - If you pass in a **[]*int, you'll get back []*int
+func getNonPtrType(in reflect.Type) reflect.Type {
+	elem := in
+	for elem.Kind() == reflect.Ptr {
+		elem = elem.Elem()
+	}
+	return elem
+}
+
+// wrapPtrValue takes in a value and keeps wrapping in pointers until it
+// reaches the target type
+func wrapPtrValue(ptr reflect.Value, target reflect.Type) reflect.Value {
+	resultPtr := ptr
+	for resultPtr.Type() != target {
 		ptr := reflect.New(resultPtr.Type())
 		ptr.Elem().Set(resultPtr)
 		resultPtr = ptr
 	}
-
-	reflect.ValueOf(in).Elem().Set(resultPtr)
+	return resultPtr
 }
 
-// This struct is for fields we want to ignore, we specify a custom unmarshal
-// type which literally is a no-op and does nothing with this data. In the
-// future, maybe we can be smarter of only extracting fields which we are
-// able to unmarshal into our target struct
+// ignoreFieldType struct is for fields we want to ignore, we specify a custom
+// unmarshal type which literally is a no-op and does nothing with this data.
+// In the future, maybe we can be smarter of only extracting fields which we
+// are able to unmarshal into our target struct and get rid of this
 type ignoreFieldType struct{}
 
 func (i *ignoreFieldType) UnmarshalCQL(_ gocql.TypeInfo, _ []byte) error {

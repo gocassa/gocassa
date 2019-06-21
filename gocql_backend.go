@@ -19,7 +19,7 @@ func (cb goCQLBackend) QueryWithOptions(opts Options, stmt Statement, scanner Sc
 	}
 
 	iter := qu.Iter()
-	_, err := scanner.ScanAll(iter)
+	_, err := scanner.ScanIter(iter)
 	errClose := iter.Close()
 
 	if err != nil {
