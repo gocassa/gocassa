@@ -2,10 +2,16 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## v2.0.0 - 2019-06-11
+## v2.0.0 - 2019-06-22
+
+*Note*: This is a major version change and quite a lot of the internals have changed to make decoding substantially faster. You will need to make some tweaks to your code if you are upgrading from v1. Please see the updated `interfaces.go` and the example in `gocql_backend.go` for updated usage.
 
 ### Changed
  - QueryExecutor now returns statements as a Statement interface object rather than a raw string
+ - MapStructure has been completely removed as a dependency. Gocassa now does custom reflection coordinated with gocql
+ - The use of the QueryExecutor has changed completely. See `gocql_backend.go` for an updated example.
+ - Public interfaces now use Statement objects rather than just plain strings and values for queries
+ - Using the scanner will also encapsulate decoding the objects into your structs (previously this happened after the QueryExeuctor returned on `Query` and `QueryWithOptions` function calls)
 
 ## v1.2.0 - 2015-12-22
 
