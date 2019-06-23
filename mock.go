@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strings"
 	"sync"
 
 	"context"
@@ -689,9 +690,20 @@ func (iter *mockIterator) Scan(dest ...interface{}) bool {
 
 		value, ok := result[fieldName]
 		if !ok {
-			// We could panic here but ultimately this will be the zero value of
-			// the resulting pointer and is a valid use case so soldier on
-			continue
+			// See if any fields in result are equal (case insensitive)
+			for k, v := range result {
+				if strings.EqualFold(k, fieldName) {
+					value = v
+					ok = true
+					break
+				}
+			}
+
+			if !ok {
+				// We could panic here but ultimately this will be the zero value of
+				// the resulting pointer and is a valid use case so soldier on
+				continue
+			}
 		}
 
 		// If it's a field to ignore, then ignore it ;)
