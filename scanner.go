@@ -137,12 +137,13 @@ func (s *scanner) structFields(structType reflect.Type) ([]*r.Field, error) {
 func generatePtrs(structFields []*r.Field) []interface{} {
 	ptrs := make([]interface{}, len(structFields))
 	for i, sf := range structFields {
-		if sf != nil {
-			val := reflect.New(sf.Type())
-			ptrs[i] = val.Interface()
-		} else {
+		if sf == nil {
 			ptrs[i] = &ignoreFieldType{}
+			continue
 		}
+
+		val := reflect.New(sf.Type())
+		ptrs[i] = val.Interface()
 	}
 	return ptrs
 }
@@ -154,9 +155,25 @@ func setPtrs(structFields []*r.Field, ptrs []interface{}, targetStruct reflect.V
 		if field == nil {
 			continue
 		}
+
 		elem := targetStruct.FieldByIndex(field.Index())
 		if elem.CanSet() {
-			elem.Set(reflect.ValueOf(ptrs[index]).Elem())
+			data := reflect.ValueOf(ptrs[index]).Elem()
+
+			// To preserve old behaviour, if we got a nil element back, we need
+			// to initialize it ourselves
+			switch data.Kind() {
+			case reflect.Map:
+				if data.IsNil() {
+					data = reflect.MakeMap(elem.Type())
+				}
+			case reflect.Slice:
+				if data.IsNil() {
+					data = reflect.MakeSlice(elem.Type(), 0, 0)
+				}
+			}
+
+			elem.Set(data)
 		}
 	}
 }

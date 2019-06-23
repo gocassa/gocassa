@@ -183,6 +183,37 @@ func TestScanIterStruct(t *testing.T) {
 	assert.EqualError(t, err, ":0: No rows returned")
 }
 
+func TestScanIterComposite(t *testing.T) {
+	results := []map[string]interface{}{
+		{"id": "acc_abcd1", "name": "John", "created": "2018-05-01 19:00:00+0000"},
+		{"id": "acc_abcd2", "name": "Jane", "created": "2018-05-02 20:00:00+0000"},
+	}
+
+	stmt := newSelectStatement("", []interface{}{}, []string{"id", "name", "metadata", "tags"})
+	iter := newMockIterator(results, stmt.FieldNames())
+
+	// Test decoding into a sturct with maps and slices
+	type metadataType map[string]string
+	type compositeAccountStruct struct {
+		ID       string
+		Name     string
+		Metadata metadataType
+		Tags     []string
+	}
+	var j1 []compositeAccountStruct
+	assert.Nil(t, j1)
+	rowsRead, err := newScanner(stmt, &j1).ScanIter(iter)
+	assert.NoError(t, err)
+	assert.Equal(t, 2, rowsRead)
+	assert.Equal(t, "acc_abcd1", j1[0].ID)
+	assert.Equal(t, metadataType(map[string]string{}), j1[0].Metadata)
+	assert.Equal(t, []string{}, j1[0].Tags)
+	assert.Equal(t, "acc_abcd2", j1[1].ID)
+	assert.Equal(t, metadataType(map[string]string{}), j1[1].Metadata)
+	assert.Equal(t, []string{}, j1[1].Tags)
+	iter.Reset()
+}
+
 func TestAllocateNilReference(t *testing.T) {
 	// Test non pointer, should do nothing
 	var a string
