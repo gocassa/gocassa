@@ -156,6 +156,16 @@ func setPtrs(structFields []*r.Field, ptrs []interface{}, targetStruct reflect.V
 			continue
 		}
 
+		// Handle the case where the embedded struct hasn't been allocated yet
+		// if it's a pointer. Because these are anonymous, if they are nil we
+		// can't access them! We could be smarter here in the future...
+		if len(field.Index()) > 1 {
+			elem := targetStruct.FieldByIndex([]int{field.Index()[0]})
+			if elem.Kind() == reflect.Ptr && elem.IsNil() {
+				continue
+			}
+		}
+
 		elem := targetStruct.FieldByIndex(field.Index())
 		if elem.CanSet() {
 			data := reflect.ValueOf(ptrs[index]).Elem()

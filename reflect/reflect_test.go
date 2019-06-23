@@ -193,6 +193,43 @@ func TestStructFieldMap(t *testing.T) {
 	}
 }
 
+func TestStructFieldMapEmbeddedStruct(t *testing.T) {
+	type EmbeddedTweet struct {
+		*Tweet   `cql:",squash"`
+		Embedder string
+	}
+
+	m, ok := StructFieldMap(EmbeddedTweet{}, false)
+	if !ok {
+		t.Fatalf("expected field map to be created")
+	}
+
+	if timeline, ok := m["Timeline"]; ok {
+		if timeline.Name() != "Timeline" {
+			t.Errorf("Timeline should have name 'Timeline' but got %s", timeline.Name())
+		}
+
+		if timeline.Type() != reflect.TypeOf("") {
+			t.Errorf("Timeline have type 'string' but got %s", timeline.Type())
+		}
+	} else {
+		t.Errorf("Timeline should be present but wasn't: %+v", m)
+	}
+
+	if embedder, ok := m["Embedder"]; ok {
+		if embedder.Name() != "Embedder" {
+			t.Errorf("Embedder should have name 'Embedder' but got %s", embedder.Name())
+		}
+
+		if embedder.Type() != reflect.TypeOf("") {
+			t.Errorf("Embedder have type 'string' but got %s", embedder.Type())
+		}
+	} else {
+		t.Errorf("Embedder should be present but wasn't: %+v", m)
+	}
+
+}
+
 func TestFieldsAndValues(t *testing.T) {
 	var emptyUUID gocql.UUID
 	id := gocql.TimeUUID()

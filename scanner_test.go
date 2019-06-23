@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type account struct {
+type Account struct {
 	ID   string
 	Name string
 }
@@ -21,13 +21,13 @@ func TestScanIterSlice(t *testing.T) {
 	stmt := newSelectStatement("", []interface{}{}, []string{"id", "name", "created"})
 	iter := newMockIterator(results, stmt.FieldNames())
 
-	expected := []account{
+	expected := []Account{
 		{ID: "acc_abcd1", Name: "John"},
 		{ID: "acc_abcd2", Name: "Jane"},
 	}
 
 	// Test with decoding into a slice of structs
-	a1 := []account{}
+	a1 := []Account{}
 	rowsRead, err := newScanner(stmt, &a1).ScanIter(iter)
 	assert.NoError(t, err)
 	assert.Equal(t, 2, rowsRead)
@@ -35,7 +35,7 @@ func TestScanIterSlice(t *testing.T) {
 	iter.Reset()
 
 	// Test with decoding into a pointer of slice of structs
-	b1 := &[]account{}
+	b1 := &[]Account{}
 	rowsRead, err = newScanner(stmt, &b1).ScanIter(iter)
 	assert.NoError(t, err)
 	assert.Equal(t, 2, rowsRead)
@@ -44,7 +44,7 @@ func TestScanIterSlice(t *testing.T) {
 
 	// Test with decoding into a pre-populated struct. It should
 	// remove existing elements
-	c1 := &[]account{{ID: "acc_abcd3", Name: "Joe"}}
+	c1 := &[]Account{{ID: "acc_abcd3", Name: "Joe"}}
 	rowsRead, err = newScanner(stmt, &c1).ScanIter(iter)
 	assert.NoError(t, err)
 	assert.Equal(t, 2, rowsRead)
@@ -52,7 +52,7 @@ func TestScanIterSlice(t *testing.T) {
 	iter.Reset()
 
 	// Test decoding into a nil slice
-	var d1 []account
+	var d1 []Account
 	assert.Nil(t, d1)
 	rowsRead, err = newScanner(stmt, &d1).ScanIter(iter)
 	assert.NoError(t, err)
@@ -61,7 +61,7 @@ func TestScanIterSlice(t *testing.T) {
 	iter.Reset()
 
 	// Test decoding into a pointer of pointer of nil-ness
-	var e1 **[]account
+	var e1 **[]Account
 	assert.Nil(t, e1)
 	rowsRead, err = newScanner(stmt, &e1).ScanIter(iter)
 	assert.NoError(t, err)
@@ -70,7 +70,7 @@ func TestScanIterSlice(t *testing.T) {
 	iter.Reset()
 
 	// Test decoding into a slice of pointers
-	var f1 []*account
+	var f1 []*Account
 	assert.Nil(t, f1)
 	rowsRead, err = newScanner(stmt, &f1).ScanIter(iter)
 	assert.NoError(t, err)
@@ -124,13 +124,13 @@ func TestScanIterStruct(t *testing.T) {
 	stmt := newSelectStatement("", []interface{}{}, []string{"id", "name", "created"})
 	iter := newMockIterator(results, stmt.FieldNames())
 
-	expected := []account{
+	expected := []Account{
 		{ID: "acc_abcd1", Name: "John"},
 		{ID: "acc_abcd2", Name: "Jane"},
 	}
 
 	// Test with decoding into a struct
-	a1 := account{}
+	a1 := Account{}
 	rowsRead, err := newScanner(stmt, &a1).ScanIter(iter)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, rowsRead)
@@ -138,7 +138,7 @@ func TestScanIterStruct(t *testing.T) {
 	iter.Reset()
 
 	// Test decoding into a pointer of pointer to struct
-	b1 := &account{}
+	b1 := &Account{}
 	rowsRead, err = newScanner(stmt, &b1).ScanIter(iter)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, rowsRead)
@@ -146,7 +146,7 @@ func TestScanIterStruct(t *testing.T) {
 	iter.Reset()
 
 	// Test decoding into a nil struct
-	var c1 *account
+	var c1 *Account
 	assert.Nil(t, c1)
 	rowsRead, err = newScanner(stmt, &c1).ScanIter(iter)
 	assert.NoError(t, err)
@@ -155,7 +155,7 @@ func TestScanIterStruct(t *testing.T) {
 	iter.Reset()
 
 	// Test decoding into a pointer of pointer of pointer to struct
-	var d1 **account
+	var d1 **Account
 	assert.Nil(t, d1)
 	rowsRead, err = newScanner(stmt, &d1).ScanIter(iter)
 	assert.NoError(t, err)
@@ -164,8 +164,8 @@ func TestScanIterStruct(t *testing.T) {
 	iter.Reset()
 
 	// Test with multiple scans into different structs
-	var e1 *account
-	var e2 ****account
+	var e1 *Account
+	var e2 ****Account
 	rowsRead, err = newScanner(stmt, &e1).ScanIter(iter)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, rowsRead)
@@ -177,7 +177,7 @@ func TestScanIterStruct(t *testing.T) {
 	iter.Reset()
 
 	// Test for row not found
-	var f1 *account
+	var f1 *Account
 	noResultsIter := newMockIterator([]map[string]interface{}{}, stmt.FieldNames())
 	rowsRead, err = newScanner(stmt, &f1).ScanIter(noResultsIter)
 	assert.EqualError(t, err, ":0: No rows returned")
@@ -211,6 +211,30 @@ func TestScanIterComposite(t *testing.T) {
 	assert.Equal(t, "acc_abcd2", j1[1].ID)
 	assert.Equal(t, metadataType(map[string]string{}), j1[1].Metadata)
 	assert.Equal(t, []string{}, j1[1].Tags)
+	iter.Reset()
+}
+
+func TestScanIterEmbedded(t *testing.T) {
+	results := []map[string]interface{}{
+		{"id": "acc_abcd1", "name": "John", "created": "2018-05-01 19:00:00+0000"},
+		{"id": "acc_abcd2", "name": "Jane", "created": "2018-05-02 20:00:00+0000"},
+	}
+
+	stmt := newSelectStatement("", []interface{}{}, []string{"id", "name", "created"})
+	iter := newMockIterator(results, stmt.FieldNames())
+
+	type embeddedStruct struct {
+		*Account
+		Created string
+	}
+
+	account := Account{}
+	a1 := embeddedStruct{Account: &account}
+	assert.NotPanics(t, func() {
+		rowsRead, err := newScanner(stmt, &a1).ScanIter(iter)
+		assert.NoError(t, err)
+		assert.Equal(t, 1, rowsRead)
+	})
 	iter.Reset()
 }
 
