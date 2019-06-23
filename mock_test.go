@@ -761,3 +761,14 @@ func (s *MockIteratorSuite) TestConvertableTypes() {
 	s.Panics(func() { iter.Scan(&a3, &b3) })
 	iter.Reset()
 }
+
+func (s *MockIteratorSuite) TestValidValues() {
+	t, _ := time.Parse("2006-01-02 15:04:05-0700", "2018-11-13 14:05:36+0000")
+	result := map[string]interface{}{"a": t, "b": nil}
+	iter := newMockIterator([]map[string]interface{}{result}, []string{"a", "b"})
+
+	var a1, b1 time.Time
+	s.True(iter.Scan(&a1, &b1))
+	s.Equal(t, a1)
+	s.Equal(time.Time{}, b1)
+}

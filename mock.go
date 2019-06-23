@@ -701,6 +701,9 @@ func (iter *mockIterator) Scan(dest ...interface{}) bool {
 		}
 
 		sv := reflect.ValueOf(value)
+		if !sv.IsValid() { //  Ensure we're not working with the zero value
+			continue
+		}
 
 		// Maps are stored in the mock as map[<KeyType>]interface{}. The receiving value
 		// may be of a different map type so we need to accommodate for this.
