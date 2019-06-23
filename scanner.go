@@ -118,13 +118,13 @@ func (s *scanner) structFields(structType reflect.Type) ([]*r.Field, error) {
 		return nil, fmt.Errorf("could not decode struct of type %T", fmPtr)
 	}
 
-	structFields := []*r.Field{}
-	for _, fieldName := range s.stmt.fieldNames {
+	structFields := make([]*r.Field, len(s.stmt.fieldNames))
+	for i, fieldName := range s.stmt.fieldNames {
 		field, ok := m[strings.ToLower(fieldName)]
 		if !ok { // the field doesn't have a destination
-			structFields = append(structFields, nil)
+			structFields[i] = nil
 		} else {
-			structFields = append(structFields, &field)
+			structFields[i] = &field
 		}
 	}
 	return structFields, nil
