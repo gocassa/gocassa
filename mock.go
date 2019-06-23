@@ -672,7 +672,6 @@ func newMockIterator(results []map[string]interface{}, fields []string) *mockIte
 }
 
 // Scan mocks a Scanner such as the one you get in gocql.Iter to assign results
-// TODO(suhail): Should this just call UnmarshalCQL under the hood?
 func (iter *mockIterator) Scan(dest ...interface{}) bool {
 	if len(iter.results) == 0 || iter.rowsRead >= len(iter.results) {
 		return false
@@ -690,7 +689,7 @@ func (iter *mockIterator) Scan(dest ...interface{}) bool {
 
 		value, ok := result[fieldName]
 		if !ok {
-			// We could panic here but ultiamtely this will be the zero value of
+			// We could panic here but ultimately this will be the zero value of
 			// the resulting pointer and is a valid use case so soldier on
 			continue
 		}
@@ -701,9 +700,32 @@ func (iter *mockIterator) Scan(dest ...interface{}) bool {
 			continue
 		}
 
+		sv := reflect.ValueOf(value)
+
+		// Maps are stored in the mock as map[<KeyType>]interface{}. The receiving value
+		// may be of a different map type so we need to accommodate for this.
+		if sv.Kind() == reflect.Map && sv.Type().Elem() != rv.Elem().Type().Elem() {
+			targetMap := reflect.MakeMap(rv.Elem().Type())
+			for _, key := range sv.MapKeys() {
+				// Need to do a type assertion here to set the underlying rv map value type
+				switch v := sv.MapIndex(key).Interface().(type) {
+				case int, int8, int16, int64:
+					targetMap.SetMapIndex(key, reflect.ValueOf(v))
+				case float32, float64, bool:
+					targetMap.SetMapIndex(key, reflect.ValueOf(v))
+				case byte, []byte, string, []string:
+					targetMap.SetMapIndex(key, reflect.ValueOf(v))
+				case interface{}, gocql.Unmarshaler:
+					targetMap.SetMapIndex(key, reflect.ValueOf(v))
+				default:
+					panic(fmt.Sprintf("mock doesn't support map value type %T", v))
+				}
+			}
+			sv = targetMap
+		}
+
 		// We need to handle the case where we're given a pointer to a type which is
 		// not the exact type of the value but we can convert over by casting
-		sv := reflect.ValueOf(value)
 		if sv.Type() != rv.Elem().Type() {
 			if !sv.Type().ConvertibleTo(rv.Elem().Type()) {
 				panic(fmt.Sprintf("could not unmarshal %T into %v", value, rv.Elem().Type()))

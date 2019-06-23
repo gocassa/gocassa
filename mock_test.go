@@ -21,7 +21,7 @@ type user struct {
 type UserWithMap struct {
 	Id       string
 	Map      map[string]interface{}
-	OtherMap map[int]string
+	OtherMap map[int]interface{}
 }
 
 type point struct {
@@ -306,7 +306,7 @@ func (s *MockSuite) TestMapModifiers() {
 			"4": "Four",
 			"6": "Is Even",
 		},
-		OtherMap: map[int]string{
+		OtherMap: map[int]interface{}{
 			1: "One",
 			2: "Two",
 		},
@@ -718,6 +718,23 @@ func (s *MockIteratorSuite) TestIgnorableFields() {
 	s.Equal("", e3)
 	s.Equal("", f3)
 	iter.Reset()
+}
+
+func (s *MockIteratorSuite) TestMapConversionTypes() {
+	result := map[string]interface{}{
+		"a": map[string]interface{}{"a1": "1", "a2": "2"},
+		"b": map[string]interface{}{"b1": 1, "b2": 2},
+		"c": map[string]interface{}{"c1": float32(1.0), "c2": float32(2.0)},
+	}
+
+	iter := newMockIterator([]map[string]interface{}{result}, []string{"a", "b", "c"})
+	var a map[string]string
+	var b map[string]int
+	var c map[string]float32
+	s.True(iter.Scan(&a, &b, &c))
+	s.Equal("1", a["a1"])
+	s.Equal(2, b["b2"])
+	s.Equal(float32(1.0), c["c1"])
 }
 
 func (s *MockIteratorSuite) TestConvertableTypes() {
