@@ -122,9 +122,9 @@ func (s *scanner) iterSingle(iter Scannable) (int, error) {
 // within the target struct type
 func (s *scanner) structFields(structType reflect.Type) ([]*r.Field, error) {
 	fmPtr := reflect.New(structType).Interface()
-	m, ok := r.StructFieldMap(fmPtr, true)
-	if !ok {
-		return nil, fmt.Errorf("could not decode struct of type %T", fmPtr)
+	m, err := r.StructFieldMap(fmPtr, true)
+	if err != nil {
+		return nil, fmt.Errorf("could not decode struct of type %T: %v", fmPtr, err)
 	}
 
 	structFields := make([]*r.Field, len(s.stmt.fieldNames))

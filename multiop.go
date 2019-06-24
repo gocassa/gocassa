@@ -33,13 +33,12 @@ func (mo multiOp) RunAtomically() error {
 		return err
 	}
 	stmts := make([]Statement, len(mo))
-	var qe QueryExecutor
 	for i, op := range mo {
 		s := op.GenerateStatement()
-		qe = op.QueryExecutor()
 		stmts[i] = s
 	}
 
+	qe := mo.QueryExecutor()
 	return qe.ExecuteAtomicallyWithOptions(mo.Options(), stmts)
 }
 

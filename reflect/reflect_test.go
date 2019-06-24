@@ -138,9 +138,9 @@ func TestMapToStruct(t *testing.T) {
 }
 
 func TestStructFieldMap(t *testing.T) {
-	m, ok := StructFieldMap(Tweet{}, false)
-	if !ok {
-		t.Fatalf("expected field map to be created")
+	m, err := StructFieldMap(Tweet{}, false)
+	if err != nil {
+		t.Fatalf("expected field map to be created, err: %v", err)
 	}
 
 	if timeline, ok := m["Timeline"]; ok {
@@ -185,7 +185,11 @@ func TestStructFieldMap(t *testing.T) {
 	}
 
 	// Test lowercasing fields
-	m2, ok := StructFieldMap(Tweet{}, true)
+	m2, err := StructFieldMap(Tweet{}, true)
+	if err != nil {
+		t.Fatalf("expected field map to be created, err: %v", err)
+	}
+
 	if timeline, ok := m2["timeline"]; !ok {
 		if timeline.Name() != "Timeline" {
 			t.Errorf("Timeline should have name 'Timeline' but got %s", timeline.Name())
@@ -199,9 +203,9 @@ func TestStructFieldMapEmbeddedStruct(t *testing.T) {
 		Embedder string
 	}
 
-	m, ok := StructFieldMap(EmbeddedTweet{}, false)
-	if !ok {
-		t.Fatalf("expected field map to be created")
+	m, err := StructFieldMap(EmbeddedTweet{}, false)
+	if err != nil {
+		t.Fatalf("expected field map to be created, err: %v", err)
 	}
 
 	if timeline, ok := m["Timeline"]; ok {
@@ -227,7 +231,13 @@ func TestStructFieldMapEmbeddedStruct(t *testing.T) {
 	} else {
 		t.Errorf("Embedder should be present but wasn't: %+v", m)
 	}
+}
 
+func TestStructFieldMapNonStruct(t *testing.T) {
+	_, err := StructFieldMap(42, false)
+	if err == nil {
+		t.Fatalf("expected StructFieldMap to have an error, got nil error")
+	}
 }
 
 func TestFieldsAndValues(t *testing.T) {
