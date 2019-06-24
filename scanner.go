@@ -43,7 +43,10 @@ func (s *scanner) iterSlice(iter Scannable) (int, error) {
 	// If we're given a pointer address to nil, we are responsible for
 	// allocating it before we assign. Note that this could be a ptr to
 	// a ptr (and so forth)
-	allocateNilReference(s.result)
+	err := allocateNilReference(s.result)
+	if err != nil {
+		return 0, err
+	}
 
 	// Extract the type of the slice
 	sliceType := getNonPtrType(reflect.TypeOf(s.result))
@@ -85,7 +88,10 @@ func (s *scanner) iterSingle(iter Scannable) (int, error) {
 	// If we're given a pointer address to nil, we are responsible for
 	// allocating it before we assign. Note that this could be a ptr to
 	// a ptr (and so forth)
-	allocateNilReference(s.result)
+	err := allocateNilReference(s.result)
+	if err != nil {
+		return 0, err
+	}
 
 	outPtr := reflect.ValueOf(s.result)
 	outVal := outPtr.Elem()
@@ -196,14 +202,14 @@ func setPtrs(structFields []*r.Field, ptrs []interface{}, targetStruct reflect.V
 // allocateNilReference checks to see if the in is not nil itself but points to
 // an object which itself is nil. Note that it only checks one depth down.
 // Returns true if any allocation has happened, false if no allocation was needed
-func allocateNilReference(in interface{}) bool {
+func allocateNilReference(in interface{}) error {
 	val := reflect.ValueOf(in)
 	if val.Kind() != reflect.Ptr {
-		return false
+		return nil
 	}
 
 	if val.IsNil() {
-		panic("pointer passed in was nil itself (not addressable)")
+		return fmt.Errorf("pointer passed in was nil itself (not addressable)")
 	}
 
 	// Don't re-allocate if we don't need to. If the underlying element is not
@@ -211,7 +217,7 @@ func allocateNilReference(in interface{}) bool {
 	switch val.Elem().Kind() {
 	case reflect.Map, reflect.Slice:
 		if !val.Elem().IsNil() {
-			return false
+			return nil
 		}
 	}
 
@@ -226,7 +232,7 @@ func allocateNilReference(in interface{}) bool {
 	var basePtr reflect.Value
 	switch baseType.Kind() {
 	case reflect.Array, reflect.Chan, reflect.Func, reflect.Interface, reflect.Ptr, reflect.UnsafePointer:
-		panic(fmt.Sprintf("type of kind %v is not supported", baseType.Kind()))
+		return fmt.Errorf("type of kind %v is not supported", baseType.Kind())
 	case reflect.Map:
 		basePtr = reflect.MakeMap(baseType)
 	case reflect.Slice:
@@ -239,7 +245,7 @@ func allocateNilReference(in interface{}) bool {
 	// more pointers until we get the result type
 	resultPtr := wrapPtrValue(basePtr, topLevelType)
 	reflect.ValueOf(in).Elem().Set(resultPtr.Elem())
-	return true
+	return nil
 }
 
 // getNonPtrType keeps digging to find the top level non-pointer type

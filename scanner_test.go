@@ -242,49 +242,49 @@ func TestAllocateNilReference(t *testing.T) {
 	// Test non pointer, should do nothing
 	var a string
 	assert.Equal(t, "", a)
-	assert.False(t, allocateNilReference(a))
+	assert.NoError(t, allocateNilReference(a))
 	assert.Equal(t, "", a)
 
-	// Test pointer which hasn't been passed in by reference, should panic
+	// Test pointer which hasn't been passed in by reference, should err
 	var b *string
 	assert.Nil(t, b)
-	assert.Panics(t, func() { allocateNilReference(b) })
+	assert.Error(t, allocateNilReference(b))
 
 	// Test pointer which is passed in by ref
 	assert.Nil(t, b)
-	assert.True(t, allocateNilReference(&b))
+	assert.NoError(t, allocateNilReference(&b))
 	assert.Equal(t, "", *b)
 
 	// Test with a struct
 	type test struct{}
 	var c *test
 	assert.Nil(t, c)
-	assert.True(t, allocateNilReference(&c))
+	assert.NoError(t, allocateNilReference(&c))
 	assert.Equal(t, test{}, *c)
 
 	// Test with a slice
 	var d *[]test
 	assert.Nil(t, d)
-	assert.True(t, allocateNilReference(&d))
+	assert.NoError(t, allocateNilReference(&d))
 	assert.Equal(t, []test{}, *d)
 
 	// Test with a slice of pointers
 	var e *[]*test
 	assert.Nil(t, e)
-	assert.True(t, allocateNilReference(&e))
+	assert.NoError(t, allocateNilReference(&e))
 	assert.Equal(t, []*test{}, *e)
 
 	// Test with a map
 	var f map[string]test
 	assert.Nil(t, f)
-	assert.True(t, allocateNilReference(&f))
+	assert.NoError(t, allocateNilReference(&f))
 	assert.Equal(t, map[string]test{}, f)
 
 	// Test with an allocated struct, it should just return
 	g := []*test{}
 	ref := &g
-	assert.False(t, allocateNilReference(&g))
-	assert.Equal(t, ref, &g)
+	assert.NoError(t, allocateNilReference(&g))
+	assert.True(t, &g == ref) // These should be the same pointer
 }
 
 func TestGetNonPtrType(t *testing.T) {
