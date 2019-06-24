@@ -54,7 +54,7 @@ func TestStructToMap(t *testing.T) {
 		t.Errorf("Expected %v but got %s", tweet.OriginalTweet, m["OriginalTweet"])
 	}
 	if _, ok := m["Ignored"]; ok {
-		t.Errorf("Igonred should be empty but got %s instead", m["Ignored"])
+		t.Errorf("Ignored should be empty but got %s instead", m["Ignored"])
 	}
 
 	id := gocql.TimeUUID()

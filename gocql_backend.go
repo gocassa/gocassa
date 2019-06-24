@@ -19,14 +19,12 @@ func (cb goCQLBackend) QueryWithOptions(opts Options, stmt Statement, scanner Sc
 	}
 
 	iter := qu.Iter()
-	_, err := scanner.ScanIter(iter)
-	errClose := iter.Close()
-
-	if err != nil {
+	if _, err := scanner.ScanIter(iter); err != nil {
+		iter.Close() // try and close the iterator to release any resources
 		return err
 	}
 
-	return errClose
+	return iter.Close()
 }
 
 func (cb goCQLBackend) Execute(stmt Statement) error {

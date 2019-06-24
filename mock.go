@@ -658,6 +658,8 @@ func (q *MockFilter) ReadOne(out interface{}) Op {
 	})
 }
 
+// mockIterator takes in a slice of maps and implements a Scannable iterator
+// which goes row by row within the slice.
 type mockIterator struct {
 	results  []map[string]interface{}
 	fields   []string

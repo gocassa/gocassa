@@ -60,22 +60,13 @@ func newWriteOp(qe QueryExecutor, f filter, opType uint8, m map[string]interface
 func (w *singleOp) read() error {
 	stmt := w.generateRead(w.options).(statement)
 	scanner := newScanner(stmt, w.result)
-	err := w.qe.QueryWithOptions(w.options, stmt, scanner)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return w.qe.QueryWithOptions(w.options, stmt, scanner)
 }
 
 func (w *singleOp) readOne() error {
 	stmt := w.generateRead(w.options).(statement)
 	scanner := newScanner(stmt, w.result)
-	err := w.qe.QueryWithOptions(w.options, stmt, scanner)
-	if err != nil {
-		return err
-	}
-	return nil
+	return w.qe.QueryWithOptions(w.options, stmt, scanner)
 }
 
 func (w *singleOp) write() error {

@@ -10,6 +10,9 @@ import (
 	r "github.com/monzo/gocassa/reflect"
 )
 
+// scanner implements the Scanner interface which takes in a Scannable
+// iterator and is responsible for unmarshalling into the struct or slice
+// of structs provided.
 type scanner struct {
 	stmt statement
 
@@ -47,7 +50,7 @@ func (s *scanner) iterSlice(iter Scannable) (int, error) {
 	sliceElemType := sliceType.Elem()
 	sliceElemValType := getNonPtrType(sliceType.Elem())
 
-	// To preserve prior bebaviour, if the result slice is not empty
+	// To preserve prior behaviour, if the result slice is not empty
 	// then allocate a new slice and set it as the value
 	sliceElem := reflect.ValueOf(s.result)
 	for sliceElem.Kind() == reflect.Ptr {
@@ -158,7 +161,9 @@ func setPtrs(structFields []*r.Field, ptrs []interface{}, targetStruct reflect.V
 
 		// Handle the case where the embedded struct hasn't been allocated yet
 		// if it's a pointer. Because these are anonymous, if they are nil we
-		// can't access them! We could be smarter here in the future...
+		// can't access them! We could be smarter here by allocating embedded
+		// pointers (if they aren't allocated already) and traversing the
+		// struct allocating all the way down as necessary
 		if len(field.Index()) > 1 {
 			elem := targetStruct.FieldByIndex([]int{field.Index()[0]})
 			if elem.Kind() == reflect.Ptr && elem.IsNil() {
@@ -188,9 +193,9 @@ func setPtrs(structFields []*r.Field, ptrs []interface{}, targetStruct reflect.V
 	}
 }
 
-// allocateRefToNil checks to see if the in is not nil itself but points to an
-// object which itself is nil. Note that it only checks one depth down. Returns
-// true if any allocation has happened, false if no allocation was needed
+// allocateNilReference checks to see if the in is not nil itself but points to
+// an object which itself is nil. Note that it only checks one depth down.
+// Returns true if any allocation has happened, false if no allocation was needed
 func allocateNilReference(in interface{}) bool {
 	val := reflect.ValueOf(in)
 	if val.Kind() != reflect.Ptr {
