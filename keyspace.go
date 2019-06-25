@@ -195,21 +195,28 @@ func (k *k) MultiFlakeSeriesTable(name, indexField, idField string, bucketSize t
 	}
 }
 
+type tableInfoMarshal struct {
+	TableName string `cql:"table_name"`
+}
+
 // Returns table names in a keyspace
 func (k *k) Tables() ([]string, error) {
-	const stmt = "SELECT table_name FROM system_schema.tables WHERE keyspace_name = ?"
+	const query = "SELECT table_name FROM system_schema.tables WHERE keyspace_name = ?"
 
 	if k.qe == nil {
 		return nil, fmt.Errorf("no query executor configured")
 	}
 
-	maps, err := k.qe.Query(stmt, k.name)
+	res := []tableInfoMarshal{}
+	stmt := newSelectStatement(query, []interface{}{k.name}, []string{"table_name"})
+	err := k.qe.Query(stmt, newScanner(stmt, &res))
 	if err != nil {
 		return nil, err
 	}
+
 	ret := []string{}
-	for _, m := range maps {
-		ret = append(ret, m["table_name"].(string))
+	for _, v := range res {
+		ret = append(ret, v.TableName)
 	}
 	return ret, nil
 }
@@ -228,7 +235,8 @@ func (k *k) Exists(cf string) (bool, error) {
 }
 
 func (k *k) DropTable(cf string) error {
-	stmt := fmt.Sprintf("DROP TABLE IF EXISTS %s.%s", k.name, cf)
+	query := fmt.Sprintf("DROP TABLE IF EXISTS %s.%s", k.name, cf)
+	stmt := newStatement(query, []interface{}{})
 	return k.qe.Execute(stmt)
 }
 

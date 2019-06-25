@@ -21,13 +21,13 @@ type flakeSeriesT struct {
 	bucketSize time.Duration
 }
 
-func (o *flakeSeriesT) Table() Table                     { return o.t }
-func (o *flakeSeriesT) Create() error                    { return o.Table().Create() }
-func (o *flakeSeriesT) CreateIfNotExist() error          { return o.Table().CreateIfNotExist() }
-func (o *flakeSeriesT) Name() string                     { return o.Table().Name() }
-func (o *flakeSeriesT) Recreate() error                  { return o.Table().Recreate() }
-func (o *flakeSeriesT) CreateStatement() (string, error) { return o.Table().CreateStatement() }
-func (o *flakeSeriesT) CreateIfNotExistStatement() (string, error) {
+func (o *flakeSeriesT) Table() Table                        { return o.t }
+func (o *flakeSeriesT) Create() error                       { return o.Table().Create() }
+func (o *flakeSeriesT) CreateIfNotExist() error             { return o.Table().CreateIfNotExist() }
+func (o *flakeSeriesT) Name() string                        { return o.Table().Name() }
+func (o *flakeSeriesT) Recreate() error                     { return o.Table().Recreate() }
+func (o *flakeSeriesT) CreateStatement() (Statement, error) { return o.Table().CreateStatement() }
+func (o *flakeSeriesT) CreateIfNotExistStatement() (Statement, error) {
 	return o.Table().CreateIfNotExistStatement()
 }
 

@@ -31,13 +31,15 @@ func NewConnection(q QueryExecutor) Connection {
 
 // CreateKeySpace creates a keyspace with the given name. Only used to create test keyspaces.
 func (c *connection) CreateKeySpace(name string) error {
-	stmt := fmt.Sprintf("CREATE KEYSPACE %s WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1 };", name)
+	query := fmt.Sprintf("CREATE KEYSPACE %s WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1 };", name)
+	stmt := newStatement(query, []interface{}{})
 	return c.q.Execute(stmt)
 }
 
 // DropKeySpace drops the keyspace having the given name.
 func (c *connection) DropKeySpace(name string) error {
-	stmt := fmt.Sprintf("DROP KEYSPACE IF EXISTS %s", name)
+	query := fmt.Sprintf("DROP KEYSPACE IF EXISTS %s", name)
+	stmt := newStatement(query, []interface{}{})
 	return c.q.Execute(stmt)
 }
 

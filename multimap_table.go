@@ -6,13 +6,13 @@ type multimapT struct {
 	idField        string
 }
 
-func (mm *multimapT) Table() Table                     { return mm.t }
-func (mm *multimapT) Create() error                    { return mm.Table().Create() }
-func (mm *multimapT) CreateIfNotExist() error          { return mm.Table().CreateIfNotExist() }
-func (mm *multimapT) Name() string                     { return mm.Table().Name() }
-func (mm *multimapT) Recreate() error                  { return mm.Table().Recreate() }
-func (mm *multimapT) CreateStatement() (string, error) { return mm.Table().CreateStatement() }
-func (mm *multimapT) CreateIfNotExistStatement() (string, error) {
+func (mm *multimapT) Table() Table                        { return mm.t }
+func (mm *multimapT) Create() error                       { return mm.Table().Create() }
+func (mm *multimapT) CreateIfNotExist() error             { return mm.Table().CreateIfNotExist() }
+func (mm *multimapT) Name() string                        { return mm.Table().Name() }
+func (mm *multimapT) Recreate() error                     { return mm.Table().Recreate() }
+func (mm *multimapT) CreateStatement() (Statement, error) { return mm.Table().CreateStatement() }
+func (mm *multimapT) CreateIfNotExistStatement() (Statement, error) {
 	return mm.Table().CreateIfNotExistStatement()
 }
 

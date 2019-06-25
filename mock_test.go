@@ -76,7 +76,7 @@ func (s *MockSuite) SetupTest() {
 	s.mmapTbl = s.ks.MultimapTable("users", "Pk1", "Pk2", user{})
 	s.tsTbl = s.ks.TimeSeriesTable("points", "Time", "Id", 1*time.Minute, point{})
 	s.mtsTbl = s.ks.MultiTimeSeriesTable("points", "User", "Time", "Id", 1*time.Minute, point{})
-	s.mkTsTbl = s.ks.MultiKeyTimeSeriesTable("points", []string{"X", "Y"}, "Time", []string{"Id"}, 1*time.Minute, user{})
+	s.mkTsTbl = s.ks.MultiKeyTimeSeriesTable("points", []string{"X", "Y"}, "Time", []string{"Id"}, 1*time.Minute, point{})
 
 	s.embMapTbl = s.ks.MapTable("addresses", "Id", address{})
 	s.embTsTbl = s.ks.TimeSeriesTable("addresses", "Time", "Id", 1*time.Minute, address{})
@@ -643,4 +643,132 @@ func (s *MockSuite) parseTime(value string) time.Time {
 	t, err := time.Parse("2006-01-02 15:04:05", value)
 	s.NoError(err)
 	return t
+}
+
+func TestRunMockIteratorSuite(t *testing.T) {
+	suite.Run(t, new(MockIteratorSuite))
+}
+
+type MockIteratorSuite struct {
+	suite.Suite
+	*require.Assertions
+}
+
+func (s *MockIteratorSuite) SetupTest() {
+	s.Assertions = require.New(s.T())
+}
+
+func (s *MockIteratorSuite) TestBaseBehaviour() {
+	// Test with no results
+	iter := newMockIterator([]map[string]interface{}{}, []string{})
+	s.False(iter.Scan(), "expected scan to fail as there were no results")
+
+	// Test with results but no fields
+	result := map[string]interface{}{"a": "1"}
+	iter = newMockIterator([]map[string]interface{}{result}, []string{})
+	s.True(iter.Scan(), "expected scan to fail as there was one result")
+	s.False(iter.Scan(), "expected scan to fail as there were no more results")
+	s.Equal(1, iter.rowsRead)
+
+	// Test with mismatched fields vs destination ptrs
+	iter = newMockIterator([]map[string]interface{}{result}, []string{"a"})
+	s.Panics(func() { iter.Scan() })
+
+	// Test for passing a struct as a value
+	var res string
+	s.Panics(func() { iter.Scan(res) })
+
+	// Sanity check the happy case, we unmarshal
+	s.True(iter.Scan(&res))
+	s.Equal(1, iter.rowsRead)
+	s.Equal("1", res)
+}
+
+func (s *MockIteratorSuite) TestIgnorableFields() {
+	result := map[string]interface{}{"a": "1", "b": "2", "c": "3"}
+	iter := newMockIterator([]map[string]interface{}{result}, []string{"a", "b"})
+
+	// Test reading all the things
+	var a1, b1 string
+	s.True(iter.Scan(&a1, &b1))
+	s.Equal("1", a1)
+	s.Equal("2", b1)
+	iter.Reset()
+
+	// Test ignorable things
+	var a2, b2 string
+	s.True(iter.Scan(&a2, &ignoreFieldType{}))
+	s.Equal("1", a2)
+	s.Equal("", b2)
+	iter.Reset()
+	s.True(iter.Scan(&ignoreFieldType{}, &b2))
+	s.Equal("2", b2)
+	iter.Reset()
+
+	// Test ignoring everything
+	s.True(iter.Scan(&ignoreFieldType{}, &ignoreFieldType{}))
+	iter.Reset()
+
+	result = map[string]interface{}{"a": "1", "b": "2", "c": "3"}
+	iter = newMockIterator([]map[string]interface{}{result}, []string{"e", "f"})
+
+	// Test fields not present in results
+	var e3, f3 string
+	s.True(iter.Scan(&e3, &f3))
+	s.Equal("", e3)
+	s.Equal("", f3)
+	iter.Reset()
+}
+
+func (s *MockIteratorSuite) TestMapConversionTypes() {
+	result := map[string]interface{}{
+		"a": map[string]interface{}{"a1": "1", "a2": "2"},
+		"b": map[string]interface{}{"b1": 1, "b2": 2},
+		"c": map[string]interface{}{"c1": float32(1.0), "c2": float32(2.0)},
+	}
+
+	iter := newMockIterator([]map[string]interface{}{result}, []string{"a", "b", "c"})
+	var a map[string]string
+	var b map[string]int
+	var c map[string]float32
+	s.True(iter.Scan(&a, &b, &c))
+	s.Equal("1", a["a1"])
+	s.Equal(2, b["b2"])
+	s.Equal(float32(1.0), c["c1"])
+}
+
+func (s *MockIteratorSuite) TestConvertableTypes() {
+	type Status string
+
+	result := map[string]interface{}{"a": "1", "b": "2", "c": "3"}
+	iter := newMockIterator([]map[string]interface{}{result}, []string{"a", "b"})
+
+	// Test we can convert between sensible types
+	var a1, b1 Status
+	s.True(iter.Scan(&a1, &b1))
+	s.Equal(Status("1"), a1)
+	s.Equal(Status("2"), b1)
+	iter.Reset()
+
+	var a2, b2 []byte
+	s.True(iter.Scan(&a2, &b2))
+	s.Equal("1", string(a2))
+	s.Equal("2", string(b2))
+	iter.Reset()
+
+	// Test we can't convert into a nonsense type
+	var a3, b3 int
+	s.Panics(func() { iter.Scan(&a3, &b3) })
+	iter.Reset()
+}
+
+func (s *MockIteratorSuite) TestValidValues() {
+	t, _ := time.Parse("2006-01-02 15:04:05-0700", "2018-11-13 14:05:36+0000")
+	result := map[string]interface{}{"a": t, "b": nil}
+	iter := newMockIterator([]map[string]interface{}{result}, []string{"a", "b"})
+
+	var a1, b1 time.Time
+	s.True(iter.Scan(&a1, &b1))
+	s.Equal(t, a1)
+	s.Equal(time.Time{}, b1)
 }

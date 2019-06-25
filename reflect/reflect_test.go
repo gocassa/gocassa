@@ -1,6 +1,8 @@
 package reflect
 
 import (
+	"reflect"
+
 	"github.com/gocql/gocql"
 
 	"testing"
@@ -9,7 +11,7 @@ import (
 type Tweet struct {
 	Timeline      string
 	ID            gocql.UUID `cql:"id"`
-	Ingored       string     `cql:"-"`
+	Ignored       string     `cql:"-"`
 	Text          string
 	OriginalTweet *gocql.UUID `json:"origin"`
 }
@@ -51,8 +53,8 @@ func TestStructToMap(t *testing.T) {
 	if m["OriginalTweet"] != tweet.OriginalTweet {
 		t.Errorf("Expected %v but got %s", tweet.OriginalTweet, m["OriginalTweet"])
 	}
-	if _, ok := m["Ignore"]; ok {
-		t.Errorf("Igonred should be empty but got %s instead", m["Ignored"])
+	if _, ok := m["Ignored"]; ok {
+		t.Errorf("Ignored should be empty but got %s instead", m["Ignored"])
 	}
 
 	id := gocql.TimeUUID()
@@ -64,7 +66,6 @@ func TestStructToMap(t *testing.T) {
 }
 
 func TestMapToStruct(t *testing.T) {
-
 	m := make(map[string]interface{})
 	assert := func() {
 		tweet := Tweet{}
@@ -116,9 +117,9 @@ func TestMapToStruct(t *testing.T) {
 			}
 		}
 		//Ignored should be always empty
-		if tweet.Ingored != "" {
+		if tweet.Ignored != "" {
 			t.Errorf("Expected ignored to be empty but got %s",
-				tweet.Ingored)
+				tweet.Ignored)
 		}
 	}
 
@@ -134,6 +135,109 @@ func TestMapToStruct(t *testing.T) {
 	assert()
 	m["Ignored"] = "ignored"
 	assert()
+}
+
+func TestStructFieldMap(t *testing.T) {
+	m, err := StructFieldMap(Tweet{}, false)
+	if err != nil {
+		t.Fatalf("expected field map to be created, err: %v", err)
+	}
+
+	if timeline, ok := m["Timeline"]; ok {
+		if timeline.Name() != "Timeline" {
+			t.Errorf("Timeline should have name 'Timeline' but got %s", timeline.Name())
+		}
+
+		if timeline.Type() != reflect.TypeOf("") {
+			t.Errorf("Timeline have type 'string' but got %s", timeline.Type())
+		}
+	} else {
+		t.Errorf("Timeline should be present but wasn't: %+v", m)
+	}
+
+	if id, ok := m["id"]; ok {
+		if id.Name() != "id" {
+			t.Errorf("ID should have name 'id' but got %s", id.Name())
+		}
+
+		if id.Type() != reflect.TypeOf(gocql.UUID([16]byte{})) {
+			t.Errorf("ID have type 'gocql.UUID' but got %s", id.Type())
+		}
+	} else {
+		t.Errorf("ID should be present but wasn't: %+v", m)
+	}
+
+	if ot, ok := m["OriginalTweet"]; ok {
+		if ot.Name() != "OriginalTweet" {
+			t.Errorf("OriginalTweet should have name 'OriginalTweet' but got %s", ot.Name())
+		}
+
+		u := gocql.UUID([16]byte{})
+		if ot.Type() != reflect.TypeOf(&u) {
+			t.Errorf("OriginalTweet have type '*gocql.UUID' but got %s", ot.Type())
+		}
+	} else {
+		t.Errorf("OriginalTweet should be present but wasn't: %+v", m)
+	}
+
+	if _, ok := m["Ignored"]; ok {
+		t.Errorf("Ignored should not be present but got %v instead", m["Ignored"])
+	}
+
+	// Test lowercasing fields
+	m2, err := StructFieldMap(Tweet{}, true)
+	if err != nil {
+		t.Fatalf("expected field map to be created, err: %v", err)
+	}
+
+	if timeline, ok := m2["timeline"]; !ok {
+		if timeline.Name() != "Timeline" {
+			t.Errorf("Timeline should have name 'Timeline' but got %s", timeline.Name())
+		}
+	}
+}
+
+func TestStructFieldMapEmbeddedStruct(t *testing.T) {
+	type EmbeddedTweet struct {
+		*Tweet   `cql:",squash"`
+		Embedder string
+	}
+
+	m, err := StructFieldMap(EmbeddedTweet{}, false)
+	if err != nil {
+		t.Fatalf("expected field map to be created, err: %v", err)
+	}
+
+	if timeline, ok := m["Timeline"]; ok {
+		if timeline.Name() != "Timeline" {
+			t.Errorf("Timeline should have name 'Timeline' but got %s", timeline.Name())
+		}
+
+		if timeline.Type() != reflect.TypeOf("") {
+			t.Errorf("Timeline have type 'string' but got %s", timeline.Type())
+		}
+	} else {
+		t.Errorf("Timeline should be present but wasn't: %+v", m)
+	}
+
+	if embedder, ok := m["Embedder"]; ok {
+		if embedder.Name() != "Embedder" {
+			t.Errorf("Embedder should have name 'Embedder' but got %s", embedder.Name())
+		}
+
+		if embedder.Type() != reflect.TypeOf("") {
+			t.Errorf("Embedder have type 'string' but got %s", embedder.Type())
+		}
+	} else {
+		t.Errorf("Embedder should be present but wasn't: %+v", m)
+	}
+}
+
+func TestStructFieldMapNonStruct(t *testing.T) {
+	_, err := StructFieldMap(42, false)
+	if err == nil {
+		t.Fatalf("expected StructFieldMap to have an error, got nil error")
+	}
 }
 
 func TestFieldsAndValues(t *testing.T) {

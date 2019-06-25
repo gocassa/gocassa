@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strings"
 	"sync"
 
 	"context"
@@ -67,8 +68,8 @@ func (m mockOp) RunAtomicallyWithContext(ctx context.Context) error {
 	return m.WithOptions(Options{Context: ctx}).Run()
 }
 
-func (m mockOp) GenerateStatement() (string, []interface{}) {
-	return "", []interface{}{}
+func (m mockOp) GenerateStatement() Statement {
+	return noOpStatement
 }
 
 func (m mockOp) QueryExecutor() QueryExecutor {
@@ -105,8 +106,8 @@ func (mo mockMultiOp) RunAtomicallyWithContext(ctx context.Context) error {
 	return mo.WithOptions(Options{Context: ctx}).Run()
 }
 
-func (mo mockMultiOp) GenerateStatement() (string, []interface{}) {
-	return "", []interface{}{}
+func (mo mockMultiOp) GenerateStatement() Statement {
+	return noOpStatement
 }
 
 func (mo mockMultiOp) QueryExecutor() QueryExecutor {
@@ -154,14 +155,23 @@ func (mo mockMultiOp) Preflight() error {
 	return nil
 }
 
-func (ks *mockKeySpace) NewTable(name string, entity interface{}, fields map[string]interface{}, keys Keys) Table {
-	return &MockTable{
-		name:   name,
-		entity: entity,
-		keys:   keys,
-		rows:   map[rowKey]*btree.BTree{},
-		mtx:    &sync.RWMutex{},
+func (ks *mockKeySpace) NewTable(name string, entity interface{}, fieldSource map[string]interface{}, keys Keys) Table {
+	mt := &MockTable{
+		name:        name,
+		entity:      entity,
+		keys:        keys,
+		fieldSource: fieldSource,
+		rows:        map[rowKey]*btree.BTree{},
+		mtx:         &sync.RWMutex{},
 	}
+
+	fields := []string{}
+	for _, k := range sortedKeys(fieldSource) {
+		fields = append(fields, k)
+	}
+	mt.fields = fields
+
+	return mt
 }
 
 func NewMockKeySpace() KeySpace {
@@ -175,12 +185,14 @@ type MockTable struct {
 	sync.RWMutex
 
 	// rows is mapping from row key to column group key to column map
-	mtx     *sync.RWMutex
-	name    string
-	rows    map[rowKey]*btree.BTree
-	entity  interface{}
-	keys    Keys
-	options Options
+	mtx         *sync.RWMutex
+	name        string
+	rows        map[rowKey]*btree.BTree
+	entity      interface{}
+	fieldSource map[string]interface{}
+	fields      []string
+	keys        Keys
+	options     Options
 }
 
 type rowKey string
@@ -390,16 +402,16 @@ func (t *MockTable) Create() error {
 	return nil
 }
 
-func (t *MockTable) CreateStatement() (string, error) {
-	return "", nil
+func (t *MockTable) CreateStatement() (Statement, error) {
+	return noOpStatement, nil
 }
 
 func (t *MockTable) CreateIfNotExist() error {
 	return nil
 }
 
-func (t *MockTable) CreateIfNotExistStatement() (string, error) {
-	return "", nil
+func (t *MockTable) CreateIfNotExistStatement() (Statement, error) {
+	return noOpStatement, nil
 }
 
 func (t *MockTable) Recreate() error {
@@ -408,12 +420,14 @@ func (t *MockTable) Recreate() error {
 
 func (t *MockTable) WithOptions(o Options) Table {
 	return &MockTable{
-		name:    t.name,
-		rows:    t.rows,
-		entity:  t.entity,
-		keys:    t.keys,
-		options: t.options.Merge(o),
-		mtx:     t.mtx,
+		name:        t.name,
+		rows:        t.rows,
+		entity:      t.entity,
+		keys:        t.keys,
+		fieldSource: t.fieldSource,
+		fields:      t.fields,
+		options:     t.options.Merge(o),
+		mtx:         t.mtx,
 	}
 }
 
@@ -580,7 +594,15 @@ func (q *MockFilter) Read(out interface{}) Op {
 			result = result[:opt.Limit]
 		}
 
-		return q.assignResult(result, out)
+		fieldNames := opt.Select
+		if len(opt.Select) == 0 {
+			fieldNames = q.table.fields
+		}
+
+		stmt := newSelectStatement("", []interface{}{}, fieldNames)
+		iter := newMockIterator(result, stmt.FieldNames())
+		_, err = newScanner(stmt, out).ScanIter(iter)
+		return err
 	})
 }
 
@@ -630,26 +652,115 @@ func (q *MockFilter) readAllRows() []map[string]interface{} {
 	return result
 }
 
-func (q *MockFilter) assignResult(records interface{}, out interface{}) error {
-	return decodeResult(records, out)
-}
-
 func (q *MockFilter) ReadOne(out interface{}) Op {
 	return newOp(func(m mockOp) error {
-		slicePtrVal := reflect.New(reflect.SliceOf(reflect.ValueOf(out).Elem().Type()))
-
-		err := q.Read(slicePtrVal.Interface()).Run()
-		if err != nil {
-			return err
-		}
-
-		sliceVal := slicePtrVal.Elem()
-		if sliceVal.Len() < 1 {
-			return RowNotFoundError{}
-		}
-		q.assignResult(sliceVal.Index(0).Interface(), out)
-		return nil
+		return q.Read(out).Run()
 	})
+}
+
+// mockIterator takes in a slice of maps and implements a Scannable iterator
+// which goes row by row within the slice.
+type mockIterator struct {
+	results  []map[string]interface{}
+	fields   []string
+	rowsRead int
+}
+
+func newMockIterator(results []map[string]interface{}, fields []string) *mockIterator {
+	return &mockIterator{
+		results:  results,
+		fields:   fields,
+		rowsRead: 0,
+	}
+}
+
+// Scan mocks a Scanner such as the one you get in gocql.Iter to assign results
+func (iter *mockIterator) Scan(dest ...interface{}) bool {
+	if len(iter.results) == 0 || iter.rowsRead >= len(iter.results) {
+		return false
+	}
+
+	if len(dest) != len(iter.fields) {
+		panic(fmt.Sprintf("expected %d pointers for unmarshalling %d fields", len(dest), len(iter.fields)))
+	}
+
+	result := iter.results[iter.rowsRead]
+	for i, fieldName := range iter.fields {
+		if reflect.TypeOf(dest[i]).Kind() != reflect.Ptr {
+			panic(fmt.Sprintf("expected pointer but got %T", dest[i]))
+		}
+
+		value, ok := result[fieldName]
+		if !ok {
+			// See if any fields in result are equal (case insensitive)
+			for k, v := range result {
+				if strings.EqualFold(k, fieldName) {
+					value = v
+					ok = true
+					break
+				}
+			}
+
+			if !ok {
+				// We could panic here but ultimately this will be the zero value of
+				// the resulting pointer and is a valid use case so soldier on
+				continue
+			}
+		}
+
+		// If it's a field to ignore, then ignore it ;)
+		rv := reflect.ValueOf(dest[i])
+		if rv.Elem().Type() == reflect.TypeOf((*ignoreFieldType)(nil)).Elem() {
+			continue
+		}
+
+		sv := reflect.ValueOf(value)
+		if !sv.IsValid() { //  Ensure we're not working with the zero value
+			continue
+		}
+
+		// Maps are stored in the mock as map[<KeyType>]interface{}. The receiving value
+		// may be of a different map type so we need to accommodate for this.
+		if sv.Kind() == reflect.Map && sv.Type().Elem() != rv.Elem().Type().Elem() {
+			targetMap := reflect.MakeMap(rv.Elem().Type())
+			for _, key := range sv.MapKeys() {
+				// Need to do a type assertion here to set the underlying rv map value type
+				switch v := sv.MapIndex(key).Interface().(type) {
+				case int, int8, int16, int64:
+					targetMap.SetMapIndex(key, reflect.ValueOf(v))
+				case float32, float64, bool:
+					targetMap.SetMapIndex(key, reflect.ValueOf(v))
+				case byte, []byte, string, []string:
+					targetMap.SetMapIndex(key, reflect.ValueOf(v))
+				case interface{}, gocql.Unmarshaler:
+					targetMap.SetMapIndex(key, reflect.ValueOf(v))
+				default:
+					panic(fmt.Sprintf("mock doesn't support map value type %T", v))
+				}
+			}
+			sv = targetMap
+		}
+
+		// We need to handle the case where we're given a pointer to a type which is
+		// not the exact type of the value but we can convert over by casting
+		if sv.Type() != rv.Elem().Type() {
+			if !sv.Type().ConvertibleTo(rv.Elem().Type()) {
+				panic(fmt.Sprintf("could not unmarshal %T into %v", value, rv.Elem().Type()))
+			}
+			sv = sv.Convert(rv.Elem().Type())
+		}
+
+		rv.Elem().Set(sv)
+	}
+
+	iter.rowsRead++
+	return true
+}
+
+// Reset resets the result list to the beginning of the slice. This should
+// only really be needed for tests
+func (iter *mockIterator) Reset() {
+	iter.rowsRead = 0
 }
 
 func assignRecords(m map[string]interface{}, record map[string]interface{}) error {

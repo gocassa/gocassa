@@ -12,13 +12,13 @@ type multiKeyTimeSeriesT struct {
 	bucketSize  time.Duration
 }
 
-func (o *multiKeyTimeSeriesT) Table() Table                     { return o.t }
-func (o *multiKeyTimeSeriesT) Create() error                    { return o.Table().Create() }
-func (o *multiKeyTimeSeriesT) CreateIfNotExist() error          { return o.Table().CreateIfNotExist() }
-func (o *multiKeyTimeSeriesT) Name() string                     { return o.Table().Name() }
-func (o *multiKeyTimeSeriesT) Recreate() error                  { return o.Table().Recreate() }
-func (o *multiKeyTimeSeriesT) CreateStatement() (string, error) { return o.Table().CreateStatement() }
-func (o *multiKeyTimeSeriesT) CreateIfNotExistStatement() (string, error) {
+func (o *multiKeyTimeSeriesT) Table() Table                        { return o.t }
+func (o *multiKeyTimeSeriesT) Create() error                       { return o.Table().Create() }
+func (o *multiKeyTimeSeriesT) CreateIfNotExist() error             { return o.Table().CreateIfNotExist() }
+func (o *multiKeyTimeSeriesT) Name() string                        { return o.Table().Name() }
+func (o *multiKeyTimeSeriesT) Recreate() error                     { return o.Table().Recreate() }
+func (o *multiKeyTimeSeriesT) CreateStatement() (Statement, error) { return o.Table().CreateStatement() }
+func (o *multiKeyTimeSeriesT) CreateIfNotExistStatement() (Statement, error) {
 	return o.Table().CreateIfNotExistStatement()
 }
 
