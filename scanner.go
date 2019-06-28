@@ -112,8 +112,7 @@ func (s *scanner) iterSingle(iter Scannable) (int, error) {
 	}
 
 	ptrs := generatePtrs(structFields)
-	ok := iter.Next()
-	if !ok {
+	if !iter.Next() {
 		err := iter.Err()
 		if err == nil || err == gocql.ErrNotFound {
 			return 0, RowNotFoundError{}
