@@ -661,33 +661,59 @@ func (q *MockFilter) ReadOne(out interface{}) Op {
 // mockIterator takes in a slice of maps and implements a Scannable iterator
 // which goes row by row within the slice.
 type mockIterator struct {
-	results  []map[string]interface{}
-	fields   []string
-	rowsRead int
+	results      []map[string]interface{}
+	fields       []string
+	currRowIndex int
+	closed       bool
+	err          error
 }
 
 func newMockIterator(results []map[string]interface{}, fields []string) *mockIterator {
 	return &mockIterator{
-		results:  results,
-		fields:   fields,
-		rowsRead: 0,
+		results:      results,
+		fields:       fields,
+		currRowIndex: -1,
+		closed:       false,
 	}
 }
 
-// Scan mocks a Scanner such as the one you get in gocql.Iter to assign results
-func (iter *mockIterator) Scan(dest ...interface{}) bool {
-	if len(iter.results) == 0 || iter.rowsRead >= len(iter.results) {
+// Next checks to see if there a result to be read
+func (iter *mockIterator) Next() bool {
+	if iter.closed {
 		return false
 	}
 
-	if len(dest) != len(iter.fields) {
-		panic(fmt.Sprintf("expected %d pointers for unmarshalling %d fields", len(dest), len(iter.fields)))
+	// Check if reading the next row will get us out of bounds
+	if iter.currRowIndex+1 >= len(iter.results) {
+		return false
 	}
 
-	result := iter.results[iter.rowsRead]
+	iter.currRowIndex++
+	return true
+}
+
+// Scan mocks a Scanner such as the one you get in gocql.Iter to assign results
+func (iter *mockIterator) Scan(dest ...interface{}) error {
+	if iter.closed {
+		// We don't explictly assign this error to iter.err so we don't lose the
+		// original error in the iterator
+		return fmt.Errorf("called iterator after resources released")
+	}
+
+	if iter.currRowIndex < 0 {
+		return fmt.Errorf("called Scan without calling Next")
+	}
+
+	if len(dest) != len(iter.fields) {
+		iter.err = fmt.Errorf("got %d pointers for unmarshalling %d fields", len(dest), len(iter.fields))
+		return iter.err
+	}
+
+	result := iter.results[iter.currRowIndex]
 	for i, fieldName := range iter.fields {
 		if reflect.TypeOf(dest[i]).Kind() != reflect.Ptr {
-			panic(fmt.Sprintf("expected pointer but got %T", dest[i]))
+			iter.err = fmt.Errorf("expected pointer but got %T", dest[i])
+			return iter.err
 		}
 
 		value, ok := result[fieldName]
@@ -735,7 +761,8 @@ func (iter *mockIterator) Scan(dest ...interface{}) bool {
 				case interface{}, gocql.Unmarshaler:
 					targetMap.SetMapIndex(key, reflect.ValueOf(v))
 				default:
-					panic(fmt.Sprintf("mock doesn't support map value type %T", v))
+					iter.err = fmt.Errorf("mock doesn't support map value type %T", v)
+					return iter.err
 				}
 			}
 			sv = targetMap
@@ -745,7 +772,8 @@ func (iter *mockIterator) Scan(dest ...interface{}) bool {
 		// not the exact type of the value but we can convert over by casting
 		if sv.Type() != rv.Elem().Type() {
 			if !sv.Type().ConvertibleTo(rv.Elem().Type()) {
-				panic(fmt.Sprintf("could not unmarshal %T into %v", value, rv.Elem().Type()))
+				iter.err = fmt.Errorf("could not unmarshal %T into %v", value, rv.Elem().Type())
+				return iter.err
 			}
 			sv = sv.Convert(rv.Elem().Type())
 		}
@@ -753,14 +781,22 @@ func (iter *mockIterator) Scan(dest ...interface{}) bool {
 		rv.Elem().Set(sv)
 	}
 
-	iter.rowsRead++
-	return true
+	return nil
+}
+
+// Err returns the active error in the iterator. Once called, the 'resources'
+// should be released and thus this iterator is closed
+func (iter *mockIterator) Err() error {
+	iter.closed = true
+	return iter.err
 }
 
 // Reset resets the result list to the beginning of the slice. This should
 // only really be needed for tests
 func (iter *mockIterator) Reset() {
-	iter.rowsRead = 0
+	iter.closed = false
+	iter.err = nil
+	iter.currRowIndex = -1
 }
 
 func assignRecords(m map[string]interface{}, record map[string]interface{}) error {

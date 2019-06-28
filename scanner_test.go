@@ -1,6 +1,7 @@
 package gocassa
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -111,7 +112,8 @@ func TestScanIterSlice(t *testing.T) {
 	}
 	var i1 []badStruct
 	assert.Nil(t, i1)
-	assert.Panics(t, func() { newScanner(stmt, &i1).ScanIter(iter) })
+	_, err = newScanner(stmt, &i1).ScanIter(iter)
+	assert.Error(t, err)
 	iter.Reset()
 }
 
@@ -181,6 +183,16 @@ func TestScanIterStruct(t *testing.T) {
 	noResultsIter := newMockIterator([]map[string]interface{}{}, stmt.FieldNames())
 	rowsRead, err = newScanner(stmt, &f1).ScanIter(noResultsIter)
 	assert.EqualError(t, err, ":0: No rows returned")
+
+	// Test for a non-rows-not-found error
+	var g1 *Account
+	errorerIter := newMockIterator([]map[string]interface{}{}, stmt.FieldNames())
+	errorScanner := newScanner(stmt, &g1)
+	expectedErr := fmt.Errorf("Something went baaaad")
+	errorerIter.err = expectedErr
+	rowsRead, err = errorScanner.ScanIter(errorerIter)
+	assert.Equal(t, 0, rowsRead)
+	assert.Equal(t, err, expectedErr)
 }
 
 func TestScanIterComposite(t *testing.T) {

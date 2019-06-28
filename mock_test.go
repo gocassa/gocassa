@@ -661,26 +661,31 @@ func (s *MockIteratorSuite) SetupTest() {
 func (s *MockIteratorSuite) TestBaseBehaviour() {
 	// Test with no results
 	iter := newMockIterator([]map[string]interface{}{}, []string{})
-	s.False(iter.Scan(), "expected scan to fail as there were no results")
+	s.False(iter.Next(), "expected next to fail as there were no results")
 
 	// Test with results but no fields
 	result := map[string]interface{}{"a": "1"}
 	iter = newMockIterator([]map[string]interface{}{result}, []string{})
-	s.True(iter.Scan(), "expected scan to fail as there was one result")
-	s.False(iter.Scan(), "expected scan to fail as there were no more results")
-	s.Equal(1, iter.rowsRead)
+	s.True(iter.Next(), "expected next to succeed as there was one result")
+	s.False(iter.Next(), "expected next to fail as there were no more results")
+	s.Equal(0, iter.currRowIndex)
 
 	// Test with mismatched fields vs destination ptrs
 	iter = newMockIterator([]map[string]interface{}{result}, []string{"a"})
-	s.Panics(func() { iter.Scan() })
+	s.True(iter.Next())
+	s.Error(iter.Scan())
 
 	// Test for passing a struct as a value
-	var res string
-	s.Panics(func() { iter.Scan(res) })
+	iter = newMockIterator([]map[string]interface{}{result}, []string{"a"})
+	s.True(iter.Next())
+	s.Error(iter.Scan())
 
 	// Sanity check the happy case, we unmarshal
-	s.True(iter.Scan(&res))
-	s.Equal(1, iter.rowsRead)
+	var res string
+	iter = newMockIterator([]map[string]interface{}{result}, []string{"a"})
+	s.True(iter.Next())
+	s.NoError(iter.Scan(&res))
+	s.Equal(0, iter.currRowIndex)
 	s.Equal("1", res)
 }
 
@@ -690,23 +695,27 @@ func (s *MockIteratorSuite) TestIgnorableFields() {
 
 	// Test reading all the things
 	var a1, b1 string
-	s.True(iter.Scan(&a1, &b1))
+	s.True(iter.Next())
+	s.NoError(iter.Scan(&a1, &b1))
 	s.Equal("1", a1)
 	s.Equal("2", b1)
 	iter.Reset()
 
 	// Test ignorable things
 	var a2, b2 string
-	s.True(iter.Scan(&a2, &ignoreFieldType{}))
+	s.True(iter.Next())
+	s.NoError(iter.Scan(&a2, &ignoreFieldType{}))
 	s.Equal("1", a2)
 	s.Equal("", b2)
 	iter.Reset()
-	s.True(iter.Scan(&ignoreFieldType{}, &b2))
+	s.True(iter.Next())
+	s.NoError(iter.Scan(&ignoreFieldType{}, &b2))
 	s.Equal("2", b2)
 	iter.Reset()
 
 	// Test ignoring everything
-	s.True(iter.Scan(&ignoreFieldType{}, &ignoreFieldType{}))
+	s.True(iter.Next())
+	s.NoError(iter.Scan(&ignoreFieldType{}, &ignoreFieldType{}))
 	iter.Reset()
 
 	result = map[string]interface{}{"a": "1", "b": "2", "c": "3"}
@@ -714,7 +723,8 @@ func (s *MockIteratorSuite) TestIgnorableFields() {
 
 	// Test fields not present in results
 	var e3, f3 string
-	s.True(iter.Scan(&e3, &f3))
+	s.True(iter.Next())
+	s.NoError(iter.Scan(&e3, &f3))
 	s.Equal("", e3)
 	s.Equal("", f3)
 	iter.Reset()
@@ -731,7 +741,8 @@ func (s *MockIteratorSuite) TestMapConversionTypes() {
 	var a map[string]string
 	var b map[string]int
 	var c map[string]float32
-	s.True(iter.Scan(&a, &b, &c))
+	s.True(iter.Next())
+	s.NoError(iter.Scan(&a, &b, &c))
 	s.Equal("1", a["a1"])
 	s.Equal(2, b["b2"])
 	s.Equal(float32(1.0), c["c1"])
@@ -745,20 +756,23 @@ func (s *MockIteratorSuite) TestConvertableTypes() {
 
 	// Test we can convert between sensible types
 	var a1, b1 Status
-	s.True(iter.Scan(&a1, &b1))
+	s.True(iter.Next())
+	s.NoError(iter.Scan(&a1, &b1))
 	s.Equal(Status("1"), a1)
 	s.Equal(Status("2"), b1)
 	iter.Reset()
 
 	var a2, b2 []byte
-	s.True(iter.Scan(&a2, &b2))
+	s.True(iter.Next())
+	s.NoError(iter.Scan(&a2, &b2))
 	s.Equal("1", string(a2))
 	s.Equal("2", string(b2))
 	iter.Reset()
 
 	// Test we can't convert into a nonsense type
 	var a3, b3 int
-	s.Panics(func() { iter.Scan(&a3, &b3) })
+	s.True(iter.Next())
+	s.Error(iter.Scan(&a3, &b3))
 	iter.Reset()
 }
 
@@ -768,7 +782,8 @@ func (s *MockIteratorSuite) TestValidValues() {
 	iter := newMockIterator([]map[string]interface{}{result}, []string{"a", "b"})
 
 	var a1, b1 time.Time
-	s.True(iter.Scan(&a1, &b1))
+	s.True(iter.Next())
+	s.NoError(iter.Scan(&a1, &b1))
 	s.Equal(t, a1)
 	s.Equal(time.Time{}, b1)
 }
