@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## v2.0.1 - 2019-06-28
+
+### Changed
+ - Scannable has been expanded to take in a gocql Scannable. This is so the error handling can be greatly improved
+
+### Fixed
+ - Fixed issue masking all gocql iterator errors as RowNotFound when reading a single row
+
 ## v2.0.0 - 2019-06-22
 
 *Note*: This is a major version change and quite a lot of the internals have changed to make decoding substantially faster. You will need to make some tweaks to your code if you are upgrading from v1. Please see the updated `interfaces.go` and the example in `gocql_backend.go` for updated usage.
