@@ -111,7 +111,8 @@ func TestScanIterSlice(t *testing.T) {
 	}
 	var i1 []badStruct
 	assert.Nil(t, i1)
-	assert.Panics(t, func() { newScanner(stmt, &i1).ScanIter(iter) })
+	_, err = newScanner(stmt, &i1).ScanIter(iter)
+	assert.Error(t, err)
 	iter.Reset()
 }
 

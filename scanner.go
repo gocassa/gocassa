@@ -69,9 +69,14 @@ func (s *scanner) iterSlice(iter Scannable) (int, error) {
 		return 0, err
 	}
 
-	ptrs := generatePtrs(structFields)
 	rowsScanned := 0
-	for iter.Scan(ptrs...) {
+	for iter.Next() {
+		ptrs := generatePtrs(structFields)
+		err := iter.Scan(ptrs...)
+		if err != nil {
+			return rowsScanned, err
+		}
+
 		outVal := reflect.New(sliceElemValType).Elem()
 		setPtrs(structFields, ptrs, outVal)
 
@@ -107,9 +112,17 @@ func (s *scanner) iterSingle(iter Scannable) (int, error) {
 	}
 
 	ptrs := generatePtrs(structFields)
-	scanOk := iter.Scan(ptrs...) // we only need to scan once
-	if !scanOk {
-		return 0, RowNotFoundError{}
+	ok := iter.Next()
+	if !ok {
+		err := iter.Err()
+		if err == nil || err == gocql.ErrNotFound {
+			return 0, RowNotFoundError{}
+		}
+		return 0, err
+	}
+	err = iter.Scan(ptrs...) // we only need to scan once
+	if err != nil {
+		return 0, err
 	}
 
 	setPtrs(structFields, ptrs, outVal)
