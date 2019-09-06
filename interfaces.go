@@ -15,15 +15,49 @@ type Connection interface {
 
 // KeySpace is used to obtain tables from.
 type KeySpace interface {
-	MapTable(tableName, id string, row interface{}) MapTable
-	MultimapTable(tableName, fieldToIndexBy, uniqueKey string, row interface{}) MultimapTable
-	MultimapMultiKeyTable(tableName string, fieldToIndexBy, uniqueKey []string, row interface{}) MultimapMkTable
-	TimeSeriesTable(tableName, timeField, uniqueKey string, bucketSize time.Duration, row interface{}) TimeSeriesTable
-	MultiTimeSeriesTable(tableName, fieldToIndexByField, timeField, uniqueKey string, bucketSize time.Duration, row interface{}) MultiTimeSeriesTable
-	MultiKeyTimeSeriesTable(tableName string, fieldToIndexByField []string, timeField string, uniqueKey []string, bucketSize time.Duration, row interface{}) MultiKeyTimeSeriesTable
-	FlakeSeriesTable(tableName, idField string, bucketSize time.Duration, row interface{}) FlakeSeriesTable
-	MultiFlakeSeriesTable(tableName, indexField, idField string, bucketSize time.Duration, row interface{}) MultiFlakeSeriesTable
-	Table(tableName string, row interface{}, keys Keys) Table
+	// MapTable is a simple key-value store.
+	MapTable(prefixForTableName, partitionKey string, rowDefinition interface{}) MapTable
+	/*
+		MultimapTable lets you list rows based on a field equality but allows for a single partitionKey.
+		It uses the partitionKey for partitioning the data.
+		The ordering within a partition is determined using the clusteringKey.
+	*/
+	MultimapTable(prefixForTableName, partitionKey, clusteringKey string, rowDefinition interface{}) MultimapTable
+	/*
+		MultimapMultiKeyTable lets you list rows based on several fields equality but allows for more than one partitionKey.
+		It uses the partitionKeys for partitioning the data.
+		The ordering within a partition is determined by a set of clusteringKeys.
+	*/
+	MultimapMultiKeyTable(prefixForTableName string, partitionKeys, clusteringKeys []string, rowDefinition interface{}) MultimapMkTable
+	/*
+		TimeSeriesTable lets you list rows which have a field value between two date ranges.
+		timeField is used as the partition key alongside the bucket.
+		bucketSize is used to determine for what duration the data will be stored on the same partition.
+	*/
+	TimeSeriesTable(prefixForTableName, timeField, clusteringKey string, bucketSize time.Duration, rowDefinition interface{}) TimeSeriesTable
+	/*
+		MultiTimeSeriesTable is a cross between TimeSeries and Multimap tables.
+		The partitionKey and timeField make up the composite partitionKey.
+		The ordering within a partition is decided by the clusteringKey.
+		bucketSize is used to determine for what duration the data will be stored on the same partition.
+	*/
+	MultiTimeSeriesTable(prefixForTableName, partitionKey, timeField, clusteringKey string, bucketSize time.Duration, rowDefinition interface{}) MultiTimeSeriesTable
+	/*
+		MultiKeyTimeSeriesTable is a cross between TimeSeries and MultimapMultikey tables.
+		The partitionKeys and timeField make up the composite partitionKey.
+		The ordering within a partition is decided by the clusteringKey.
+		bucketSize is used to determine for what duration the data will be stored on the same partition.
+	*/
+	MultiKeyTimeSeriesTable(prefixForTableName string, partitionKeys []string, timeField string, clusteringKeys []string, bucketSize time.Duration, rowDefinition interface{}) MultiKeyTimeSeriesTable
+	/*
+		FlakeSeriesTable is similar to TimeSeriesTable.
+		flakeIDField is used as the partition key along with the bucket field.
+		(FlakeIDs encode time of ID generation within them and can be used as a replacement for timestamps)
+		bucketSize is used to determine for what duration the data will be stored on the same partition.
+	*/
+	FlakeSeriesTable(prefixForTableName, flakeIDField string, bucketSize time.Duration, rowDefinition interface{}) FlakeSeriesTable
+	MultiFlakeSeriesTable(prefixForTableName, partitionKey, flakeIDField string, bucketSize time.Duration, rowDefinition interface{}) MultiFlakeSeriesTable
+	Table(prefixForTableName string, rowDefinition interface{}, keys Keys) Table
 	// DebugMode enables/disables debug mode depending on the value of the input boolean.
 	// When DebugMode is enabled, all built CQL statements are printe to stdout.
 	DebugMode(bool)
@@ -41,11 +75,13 @@ type KeySpace interface {
 
 // MapTable gives you basic CRUD functionality. If you need fancier ways to query your data set have a look at the other tables.
 type MapTable interface {
-	Set(v interface{}) Op
-	Update(id interface{}, m map[string]interface{}) Op
-	Delete(id interface{}) Op
-	Read(id, pointer interface{}) Op
-	MultiRead(ids []interface{}, pointerToASlice interface{}) Op
+	// Set Inserts, or Replaces your row with the supplied struct. Be aware that what is not in your struct
+	// will be deleted. To only overwrite some of the fields, Update()
+	Set(rowStruct interface{}) Op
+	Update(partitionKey interface{}, valuesToUpdate map[string]interface{}) Op
+	Delete(partitionKey interface{}) Op
+	Read(partitionKey, pointer interface{}) Op
+	MultiRead(partitionKeys []interface{}, pointerToASlice interface{}) Op
 	WithOptions(Options) MapTable
 	Table() Table
 	TableChanger
@@ -55,24 +91,26 @@ type MapTable interface {
 // Multimap recipe
 //
 
-// MultimapTable lets you list rows based on a field equality, eg. 'list all sales where seller id = v'.
 type MultimapTable interface {
-	Set(v interface{}) Op
-	Update(v, id interface{}, m map[string]interface{}) Op
-	Delete(v, id interface{}) Op
-	DeleteAll(v interface{}) Op
-	List(v, startId interface{}, limit int, pointerToASlice interface{}) Op
-	Read(v, id, pointer interface{}) Op
-	MultiRead(v interface{}, ids []interface{}, pointerToASlice interface{}) Op
+	// Set Inserts, or Replaces your row with the supplied struct. Be aware that what is not in your struct
+	// will be deleted. To only overwrite some of the fields, Update()
+	Set(rowStruct interface{}) Op
+	Update(value, id interface{}, valuesToUpdate map[string]interface{}) Op
+	Delete(value, id interface{}) Op
+	DeleteAll(value interface{}) Op
+	List(partitionKey, clusteringKey interface{}, limit int, pointerToASlice interface{}) Op
+	Read(partitionKey, clusteringKey, pointer interface{}) Op
+	MultiRead(partitionKey interface{}, ids []interface{}, pointerToASlice interface{}) Op
 	WithOptions(Options) MultimapTable
 	Table() Table
 	TableChanger
 }
 
-// MultimapMkTable lets you list rows based on several fields equality, eg. 'list all sales where seller id = v and name = 'john'.
 type MultimapMkTable interface {
-	Set(v interface{}) Op
-	Update(v, id map[string]interface{}, m map[string]interface{}) Op
+	// Set Inserts, or Replaces your row with the supplied struct. Be aware that what is not in your struct
+	// will be deleted. To only overwrite some of the fields, Update()
+	Set(rowStruct interface{}) Op
+	Update(v, id map[string]interface{}, valuesToUpdate map[string]interface{}) Op
 	Delete(v, id map[string]interface{}) Op
 	DeleteAll(v map[string]interface{}) Op
 	List(v, startId map[string]interface{}, limit int, pointerToASlice interface{}) Op
@@ -87,11 +125,13 @@ type MultimapMkTable interface {
 // TimeSeries recipe
 //
 
-// TimeSeriesTable lets you list rows which have a field value between two date ranges.
 type TimeSeriesTable interface {
 	// timeField and idField must be present
-	Set(v interface{}) Op
-	Update(timeStamp time.Time, id interface{}, m map[string]interface{}) Op
+
+	// Set Inserts, or Replaces your row with the supplied struct. Be aware that what is not in your struct
+	// will be deleted. To only overwrite some of the fields, Update()
+	Set(rowStruct interface{}) Op
+	Update(timeStamp time.Time, id interface{}, valuesToUpdate map[string]interface{}) Op
 	Delete(timeStamp time.Time, id interface{}) Op
 	Read(timeStamp time.Time, id, pointer interface{}) Op
 	List(start, end time.Time, pointerToASlice interface{}) Op
@@ -105,11 +145,13 @@ type TimeSeriesTable interface {
 // TimeSeries B recipe
 //
 
-// MultiTimeSeriesTable is a cross between TimeSeries and Multimap tables.
 type MultiTimeSeriesTable interface {
 	// timeField and idField must be present
-	Set(v interface{}) Op
-	Update(v interface{}, timeStamp time.Time, id interface{}, m map[string]interface{}) Op
+
+	// Set Inserts, or Replaces your row with the supplied struct. Be aware that what is not in your struct
+	// will be deleted. To only overwrite some of the fields, Update()
+	Set(rowStruct interface{}) Op
+	Update(v interface{}, timeStamp time.Time, id interface{}, valuesToUpdate map[string]interface{}) Op
 	Delete(v interface{}, timeStamp time.Time, id interface{}) Op
 	Read(v interface{}, timeStamp time.Time, id, pointer interface{}) Op
 	List(v interface{}, start, end time.Time, pointerToASlice interface{}) Op
@@ -122,8 +164,11 @@ type MultiTimeSeriesTable interface {
 // MultiKeyTimeSeriesTable is a cross between TimeSeries and MultimapMkTable tables.
 type MultiKeyTimeSeriesTable interface {
 	// timeField and idField must be present
-	Set(v interface{}) Op
-	Update(v map[string]interface{}, timeStamp time.Time, id map[string]interface{}, m map[string]interface{}) Op
+
+	// Set Inserts, or Replaces your row with the supplied struct. Be aware that what is not in your struct
+	// will be deleted. To only overwrite some of the fields, Update()
+	Set(rowStruct interface{}) Op
+	Update(v map[string]interface{}, timeStamp time.Time, id map[string]interface{}, valuesToUpdate map[string]interface{}) Op
 	Delete(v map[string]interface{}, timeStamp time.Time, id map[string]interface{}) Op
 	Read(v map[string]interface{}, timeStamp time.Time, id map[string]interface{}, pointer interface{}) Op
 	List(v map[string]interface{}, start, end time.Time, pointerToASlice interface{}) Op
@@ -134,8 +179,10 @@ type MultiKeyTimeSeriesTable interface {
 }
 
 type FlakeSeriesTable interface {
-	Set(v interface{}) Op
-	Update(id string, m map[string]interface{}) Op
+	// Set Inserts, or Replaces your row with the supplied struct. Be aware that what is not in your struct
+	// will be deleted. To only overwrite some of the fields, Update()
+	Set(rowStruct interface{}) Op
+	Update(id string, valuesToUpdate map[string]interface{}) Op
 	Delete(id string) Op
 	Read(id string, pointer interface{}) Op
 	List(start, end time.Time, pointerToASlice interface{}) Op
@@ -149,8 +196,10 @@ type FlakeSeriesTable interface {
 }
 
 type MultiFlakeSeriesTable interface {
-	Set(v interface{}) Op
-	Update(v interface{}, id string, m map[string]interface{}) Op
+	// Set Inserts, or Replaces your row with the supplied struct. Be aware that what is not in your struct
+	// will be deleted. To only overwrite some of the fields, Update()
+	Set(rowStruct interface{}) Op
+	Update(v interface{}, id string, valuesToUpdate map[string]interface{}) Op
 	Delete(v interface{}, id string) Op
 	Read(v interface{}, id string, pointer interface{}) Op
 	List(v interface{}, start, end time.Time, pointerToASlice interface{}) Op
@@ -171,7 +220,7 @@ type MultiFlakeSeriesTable interface {
 // You can do writes or reads on a filter.
 type Filter interface {
 	// Update does a partial update. Use this if you don't want to overwrite your whole row, but you want to modify fields atomically.
-	Update(m map[string]interface{}) Op // Probably this is danger zone (can't be implemented efficiently) on a selectuinb with more than 1 document
+	Update(valuesToUpdate map[string]interface{}) Op // Probably this is danger zone (can't be implemented efficiently) on a selectuinb with more than 1 document
 	// Delete all rows matching the filter.
 	Delete() Op
 	// Reads all results. Make sure you pass in a pointer to a slice.
@@ -251,7 +300,7 @@ type TableChanger interface {
 type Table interface {
 	// Set Inserts, or Replaces your row with the supplied struct. Be aware that what is not in your struct
 	// will be deleted. To only overwrite some of the fields, use Query.Update.
-	Set(v interface{}) Op
+	Set(rowStruct interface{}) Op
 	// Where accepts a bunch of realtions and returns a filter. See the documentation for Relation and Filter to understand what that means.
 	Where(relations ...Relation) Filter // Because we provide selections
 	// Name returns the underlying table name, as stored in C*
