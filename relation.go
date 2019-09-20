@@ -56,6 +56,16 @@ func convertToPrimitive(i interface{}) interface{} {
 		return v.UnixNano()
 	case time.Duration:
 		return v.Nanoseconds()
+	case []byte:
+		// This case works as strings in Go are simply defined as the following:
+		// "A string value is a (possibly empty) sequence of bytes" (from the go lang spec)
+		// and
+		// "Converting a slice of bytes to a string type yields a string whose successive bytes are the elements of the slice."
+		// Finally:
+		// "String values are comparable and ordered, lexically byte-wise."
+		// We mostly want this to allow comparisons of blob types in the primary key of a table,
+		// since []byte are not `==` comparable in go, but strings are
+		return string(v)
 	default:
 		return i
 	}

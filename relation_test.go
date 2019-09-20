@@ -18,6 +18,7 @@ func TestAnyEquals(t *testing.T) {
 		{time.Minute * 2, makeInterfaceArray(time.Second * 120)},
 		{testTime1, makeInterfaceArray(testTime2)},
 		{1950, makeInterfaceArray(1950)},
+		{[]byte{0x00, 0xFF, 0x01, 0x99, 0xEA}, makeInterfaceArray("\x00\xFF\x01\x99\xEA")},
 	}
 
 	for _, tc := range testCases {
