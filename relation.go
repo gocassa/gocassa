@@ -1,6 +1,8 @@
 package gocassa
 
 import (
+	"fmt"
+	"reflect"
 	"strings"
 	"time"
 )
@@ -67,6 +69,11 @@ func convertToPrimitive(i interface{}) interface{} {
 		// since []byte are not `==` comparable in go, but strings are
 		return string(v)
 	default:
+		// If the underlying type is a string, we want to represent this value
+		// as a string for comparison across proxy types.
+		if reflect.ValueOf(i).Kind() == reflect.String {
+			return fmt.Sprintf("%v", i)
+		}
 		return i
 	}
 }
