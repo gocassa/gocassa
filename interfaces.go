@@ -244,8 +244,11 @@ type Keys struct {
 // It represents one or more operations.
 type Op interface {
 	// Run the operation.
+	//
+	// Deprecated: Run is deprecated and all usages should be replaced with RunWithContext. If there
+	// is no appropriate context to pass to RunWithContext, one should use context.TODO().
 	Run() error
-	// Run the operation, providing context to the executor.
+	// RunWithContext runs the operation, providing context to the executor.
 	RunWithContext(context.Context) error
 	// You do not need this in 95% of the use cases, use Run!
 	// Using atomic batched writes (logged batches in Cassandra terminology) comes at a high performance cost!
