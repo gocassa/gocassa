@@ -56,7 +56,7 @@ type Options struct {
 	Compressor string
 }
 
-// Returns a new Options which is a right biased merge of the two initial Options.
+// Merge returns a new Options which is a right biased merge of the two initial Options.
 func (o Options) Merge(neu Options) Options {
 	ret := Options{
 		TTL:             o.TTL,
