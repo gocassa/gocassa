@@ -94,8 +94,12 @@ func (o *singleOp) RunAtomically() error {
 	return o.Run()
 }
 
-func (o *singleOp) RunAtomicallyWithContext(ctx context.Context) error {
+func (o *singleOp) RunLoggedBatchWithContext(ctx context.Context) error {
 	return o.WithOptions(Options{Context: ctx}).Run()
+}
+
+func (o *singleOp) RunAtomicallyWithContext(ctx context.Context) error {
+	return o.RunLoggedBatchWithContext(ctx)
 }
 
 func (o *singleOp) GenerateStatement() Statement {

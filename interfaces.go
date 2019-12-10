@@ -250,10 +250,16 @@ type Op interface {
 	Run() error
 	// RunWithContext runs the operation, providing context to the executor.
 	RunWithContext(context.Context) error
-	// You do not need this in 95% of the use cases, use Run!
-	// Using atomic batched writes (logged batches in Cassandra terminology) comes at a high performance cost!
+
+	// Run the operation as a logged batch. This provides some atomicity guarantees (all writes will complete,
+	// or none at all) but not all (it does not provide isolation, for example)
+	//
+	// This comes at a performance cost
+	RunLoggedBatchWithContext(context.Context) error
+
+	// Deprecated: The name "RunAtomically" is a misnomer, and "RunLoggedBatchWithContext" should be used instead
 	RunAtomically() error
-	// Run the operation as an atomic (logged) batch, providing context to the executor.
+	// Deprecated: The name "RunAtomically" is a misnomer, and "RunLoggedBatchWithContext" should be used instead
 	RunAtomicallyWithContext(context.Context) error
 	// Add an other Op to this one.
 	Add(...Op) Op
@@ -270,7 +276,7 @@ type Op interface {
 	// Options lets you read the `Options` for this `Op`
 	Options() Options
 	// Preflight performs any pre-execution validation that confirms the op considers itself "valid".
-	// NOTE: Run() and RunAtomically() should call this method before execution, and abort if any errors are returned.
+	// NOTE: Run() and RunLoggedBatch() should call this method before execution, and abort if any errors are returned.
 	Preflight() error
 	// GenerateStatement generates the statement to perform the operation
 	GenerateStatement() Statement
