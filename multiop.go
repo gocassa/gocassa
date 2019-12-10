@@ -24,7 +24,7 @@ func (mo multiOp) RunWithContext(ctx context.Context) error {
 	return mo.WithOptions(Options{Context: ctx}).Run()
 }
 
-func (mo multiOp) RunAtomically() error {
+func (mo multiOp) runLoggedBatch() error {
 	if len(mo) == 0 {
 		return nil
 	}
@@ -42,8 +42,16 @@ func (mo multiOp) RunAtomically() error {
 	return qe.ExecuteAtomicallyWithOptions(mo.Options(), stmts)
 }
 
-func (mo multiOp) RunAtomicallyWithContext(ctx context.Context) error {
+func (mo multiOp) RunLoggedBatchWithContext(ctx context.Context) error {
 	return mo.WithOptions(Options{Context: ctx}).RunAtomically()
+}
+
+func (mo multiOp) RunAtomically() error {
+	return mo.runLoggedBatch()
+}
+
+func (mo multiOp) RunAtomicallyWithContext(ctx context.Context) error {
+	return mo.RunLoggedBatchWithContext(ctx)
 }
 
 func (mo multiOp) GenerateStatement() Statement {

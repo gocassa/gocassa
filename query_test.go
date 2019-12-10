@@ -1,6 +1,7 @@
 package gocassa
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"reflect"
@@ -113,7 +114,7 @@ func TestMultipleRowResults(t *testing.T) {
 	}
 }
 
-func TestRunAtomically(t *testing.T) {
+func TestRunLoggedBatch(t *testing.T) {
 	name := "customer_multipletest2"
 	cs := ns.Table(name, Customer{}, Keys{
 		PartitionKeys:     []string{"Name"},
@@ -129,7 +130,7 @@ func TestRunAtomically(t *testing.T) {
 	}).Add(cs.Set(Customer{
 		Id:   "13",
 		Name: "John",
-	})).RunAtomically()
+	})).RunLoggedBatchWithContext(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}

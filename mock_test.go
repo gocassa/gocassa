@@ -169,7 +169,7 @@ func (s *MockSuite) TestTableRead() {
 	s.Equal(u4, u)
 
 	s.NoError(op1.Add(op2).Run())
-	s.NoError(op1.Add(op2).RunAtomically())
+	s.NoError(op1.Add(op2).RunLoggedBatchWithContext(context.Background()))
 }
 
 func (s *MockSuite) TestTableUpdate() {

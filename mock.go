@@ -64,8 +64,12 @@ func (m mockOp) RunAtomically() error {
 	return m.Run()
 }
 
-func (m mockOp) RunAtomicallyWithContext(ctx context.Context) error {
+func (m mockOp) RunLoggedBatchWithContext(ctx context.Context) error {
 	return m.WithOptions(Options{Context: ctx}).Run()
+}
+
+func (m mockOp) RunAtomicallyWithContext(ctx context.Context) error {
+	return m.RunLoggedBatchWithContext(ctx)
 }
 
 func (m mockOp) GenerateStatement() Statement {
@@ -102,8 +106,12 @@ func (mo mockMultiOp) RunAtomically() error {
 	return mo.Run()
 }
 
-func (mo mockMultiOp) RunAtomicallyWithContext(ctx context.Context) error {
+func (mo mockMultiOp) RunLoggedBatchWithContext(ctx context.Context) error {
 	return mo.WithOptions(Options{Context: ctx}).Run()
+}
+
+func (mo mockMultiOp) RunAtomicallyWithContext(ctx context.Context) error {
+	return mo.RunLoggedBatchWithContext(ctx)
 }
 
 func (mo mockMultiOp) GenerateStatement() Statement {
