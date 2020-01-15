@@ -16,6 +16,7 @@ const (
 	deleteOpType
 	updateOpType
 	insertOpType
+	deleteKeyOpType
 )
 
 type singleOp struct {
@@ -76,7 +77,7 @@ func (w *singleOp) write() error {
 
 func (o *singleOp) Run() error {
 	switch o.opType {
-	case updateOpType, insertOpType, deleteOpType:
+	case updateOpType, insertOpType, deleteOpType, deleteKeyOpType:
 		return o.write()
 	case readOpType:
 		return o.read()
@@ -128,6 +129,11 @@ func (o *singleOp) generateWrite(opt Options) Statement {
 	case deleteOpType:
 		str, vals = generateWhere(o.f.rs)
 		str = fmt.Sprintf("DELETE FROM %s.%s%s", o.f.t.keySpace.name, o.f.t.Name(), str)
+	case deleteKeyOpType:
+		str, vals = generateWhere(o.f.rs)
+		key, _ := o.m["key"]
+		columnName, _ := o.m["column"]
+		str = fmt.Sprintf("DELETE %s['%s'] FROM %s.%s%s", columnName.(string), key.(string), o.f.t.keySpace.name, o.f.t.Name(), str)
 	case insertOpType:
 		str, vals = insertStatement(o.f.t.keySpace.name, o.f.t.Name(), o.m, o.f.t.options.Merge(opt))
 	}

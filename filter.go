@@ -21,6 +21,10 @@ func (f filter) Delete() Op {
 	return newWriteOp(f.t.keySpace.qe, f, deleteOpType, nil)
 }
 
+func (f filter) DeleteKey(m map[string]interface{}) Op {
+	return newWriteOp(f.t.keySpace.qe, f, deleteKeyOpType, m)
+}
+
 //
 // Reads
 //

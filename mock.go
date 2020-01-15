@@ -545,6 +545,10 @@ func (f *MockFilter) Update(m map[string]interface{}) Op {
 	return f.UpdateWithOptions(m, Options{})
 }
 
+func (q *MockFilter) DeleteKey(m map[string]interface{}) Op {
+	return Noop()
+}
+
 func (f *MockFilter) Delete() Op {
 	return newOp(func(m mockOp) error {
 		f.table.Lock()
