@@ -210,6 +210,6 @@ func cassaTypeToString(t gocql.Type) (string, error) {
 	case gocql.TypeCounter:
 		return "counter", nil
 	default:
-		return "", errors.New("unkown cassandra type")
+		return "", errors.New("unknown cassandra type")
 	}
 }
